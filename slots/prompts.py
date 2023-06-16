@@ -18,7 +18,7 @@ class Slot:  # pylint: disable=E1101,R0903
     @web.slot('prompts_scripts')
     @auth.decorators.check_slot(["models.prompts"])
     def scripts(self, context, slot, payload):
-        # log.info('slot: [%s], payload: %s', slot, payload)
+        log.info('slot scripts: [%s], payload: %s', slot, payload)
         with context.app.app_context():
             return self.descriptor.render_template(
                 'scripts.html',
@@ -27,7 +27,7 @@ class Slot:  # pylint: disable=E1101,R0903
     @web.slot('prompts_styles')
     @auth.decorators.check_slot(["models.prompts"])
     def styles(self, context, slot, payload):
-        # log.info('slot: [%s], payload: %s', slot, payload)
+        log.info('slot styles: [%s], payload: %s', slot, payload)
         with context.app.app_context():
             return self.descriptor.render_template(
                 'styles.html',

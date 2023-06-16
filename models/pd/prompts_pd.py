@@ -13,24 +13,24 @@ class PromptType(str, enum.Enum):
 
 
 class PromptModel(BaseModel):
-    id: int
     name: str
     description: str | None
     type: PromptType = PromptType.freeform
     prompt: str
-    created_at: str
-    updated_at: str
 
     class Config:
         use_enum_values = True
+
+
+class PromptUpdateModel(PromptModel):
+    id: int
 
 
 class ExampleModel(BaseModel):
-    id: int
     prompt_id: int
     input: str
     output: str
-    created_at: str
 
-    class Config:
-        use_enum_values = True
+
+class ExampleUpdateModel(ExampleModel):
+    id: int

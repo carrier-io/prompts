@@ -16,7 +16,7 @@ class Prompt(
     type = Column(String(64))
     prompt = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
-    updated_at = Column(DateTime, nullable=False, onupdate=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
 
 
 class Example(
