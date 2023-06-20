@@ -13,6 +13,7 @@ class ProjectAPI(api_tools.APIModeHandler):
     def get(self, project_id):
         log.info('Getting all prompts for project %s', project_id)
         prompts = self.module.get_all(project_id)
+
         return prompts
 
     def post(self, project_id):
