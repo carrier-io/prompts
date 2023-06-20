@@ -47,26 +47,29 @@ class ProjectAPI(api_tools.APIModeHandler):
             project_id,
             data["integration_id"]
         )
-        service_account = SecretField.parse_obj(integration.settings['service_account_info'])
+        settings = integration.settings
+        service_account = SecretField.parse_obj(settings['service_account_info'])
         service_info = json.loads(
             service_account.unsecret(project_id))
         credentials = Credentials.from_service_account_info(service_info)
-        log.info(f'{integration.settings=}')
+        log.info(f'{settings=}')
         log.info(f'testing prompt {data} for project {project_id}')
-        prompt = self.module.get_by_id(project_id, data["prompt_id"])
-        log.info('Getting prompt %s for project %s', data["prompt_id"], project_id)
-        text_prompt = ""
-        text_prompt += prompt['prompt']
 
-        for example in prompt['examples']:
-            text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
+        text_prompt = self.module.prepare_text_prompt(
+            project_id, data["prompt_id"], data['input']
+        )
 
-        text_prompt += f"""\ninput: {data['input']}\n output:"""
         return predict_large_language_model_sample(
-            credentials,
-            integration.settings['project'],
-            "text-bison@001",
-            0.2, 256, 0.8, 40, text_prompt
+            credentials=credentials,
+            project_id=settings['project'],
+            model_name=settings['model_name'],
+            temperature=settings['temperature'],
+            max_decode_steps=settings['max_decode_steps'],
+            top_p=settings['top_p'],
+            top_k=settings['top_k'],
+            content=text_prompt,
+            location=settings['zone'],
+            tuned_model_name=settings['tuned_model_name'],
         )
 
 

@@ -102,3 +102,16 @@ class RPC:
                 session.delete(example)
                 session.commit()
             return True
+
+    @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
+    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: int, input_: str) -> str:
+        prompt = self.get_by_id(project_id, prompt_id)
+
+        text_prompt = ""
+        text_prompt += prompt['prompt']
+
+        for example in prompt['examples']:
+            text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
+
+        text_prompt += f"""\ninput: {input_}\n output:"""
+        return text_prompt
