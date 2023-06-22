@@ -48,9 +48,10 @@ class ProjectAPI(api_tools.APIModeHandler):
             data["integration_id"]
         )
         settings = integration.settings
+        request_settings = data.get('integration_settings', {})
+
         service_account = SecretField.parse_obj(settings['service_account_info'])
-        service_info = json.loads(
-            service_account.unsecret(project_id))
+        service_info = json.loads(service_account.unsecret(project_id))
         credentials = Credentials.from_service_account_info(service_info)
         log.info(f'{settings=}')
         log.info(f'testing prompt {data} for project {project_id}')
@@ -62,14 +63,16 @@ class ProjectAPI(api_tools.APIModeHandler):
         return predict_large_language_model_sample(
             credentials=credentials,
             project_id=settings['project'],
-            model_name=settings['model_name'],
-            temperature=settings['temperature'],
-            max_decode_steps=settings['max_decode_steps'],
-            top_p=settings['top_p'],
-            top_k=settings['top_k'],
+            model_name=request_settings.get('model_name') or settings['model_name'],
+            temperature=request_settings.get('temperature') or settings['temperature'],
+            max_decode_steps=request_settings.get('max_decode_steps') or settings[
+                'max_decode_steps'],
+            top_p=request_settings.get('top_p') or settings['top_p'],
+            top_k=request_settings.get('top_k') or settings['top_k'],
             content=text_prompt,
             location=settings['zone'],
-            tuned_model_name=settings['tuned_model_name'],
+            tuned_model_name=request_settings.get('tuned_model_name') or settings[
+                'tuned_model_name'],
         )
 
 

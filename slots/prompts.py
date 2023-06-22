@@ -10,9 +10,17 @@ class Slot:  # pylint: disable=E1101,R0903
                                 access_denied_reply=theme.access_denied_part)
     def content(self, context, slot, payload):
         log.info('slot: [%s], payload: %s', slot, payload)
+        ai_integrations = context.rpc_manager.call.integrations_get_all_integrations_by_section(
+            context.rpc_manager.call.project_get_id(), "ai"
+        )
+        ai_integrations = [integration.dict(
+            exclude={'section'}
+        ) for integration in ai_integrations]
+
         with context.app.app_context():
             return self.descriptor.render_template(
                 'content.html',
+                integrations=ai_integrations,
             )
 
     @web.slot('prompts_scripts')

@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Column, String, DateTime, UniqueConstraint, func
+from sqlalchemy import Integer, Column, String, DateTime, UniqueConstraint, func, JSON
 
 from tools import db_tools, db, rpc_tools
 from pylon.core.tools import log  # pylint: disable=E0611,E0401
@@ -15,6 +15,7 @@ class Prompt(
     description = Column(String(256), nullable=True)
     type = Column(String(64))
     prompt = Column(String, nullable=True)
+    model_settings = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 
