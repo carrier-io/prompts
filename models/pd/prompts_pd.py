@@ -7,11 +7,6 @@ from pydantic.fields import ModelField
 from pylon.core.tools import log
 
 
-class PromptType(str, enum.Enum):
-    structured = 'structured'
-    freeform = 'freeform'
-
-
 class VertexAISettings(BaseModel):
     model_name: str = 'text-bison@001'
     temperature: float = 1.0
@@ -32,7 +27,6 @@ class OpenAISettings(BaseModel):
 class PromptModel(BaseModel):
     name: str
     description: str | None
-    type: PromptType = PromptType.freeform
     prompt: str
     model_settings: VertexAISettings | OpenAISettings | None = None
 
@@ -48,6 +42,7 @@ class ExampleModel(BaseModel):
     prompt_id: int
     input: str
     output: str
+    is_active: bool = True
 
 
 class ExampleUpdateModel(ExampleModel):
