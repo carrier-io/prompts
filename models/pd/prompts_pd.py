@@ -7,6 +7,12 @@ from pydantic.fields import ModelField
 from pylon.core.tools import log
 
 
+class PromptType(str, enum.Enum):
+    chat = 'chat'
+    structured = 'structured'
+    freeform = 'freeform'
+
+
 class VertexAISettings(BaseModel):
     model_name: str = 'text-bison@001'
     temperature: float = 1.0
@@ -17,17 +23,17 @@ class VertexAISettings(BaseModel):
 
 
 class OpenAISettings(BaseModel):
-    engine: str = 'davinci'
+    model: str = 'text-davinci-003'
     temperature: float = 1.0
-    max_decode_steps: int = 256
+    max_tokens: int = 7
     top_p: float = 0.8
-    top_k: int = 40
 
 
 class PromptModel(BaseModel):
     name: str
     description: str | None
     prompt: str
+    type: PromptType = PromptType.structured
     model_settings: VertexAISettings | OpenAISettings | None = None
 
     class Config:
