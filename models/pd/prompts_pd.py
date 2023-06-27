@@ -23,7 +23,7 @@ class VertexAISettings(BaseModel):
 
 
 class OpenAISettings(BaseModel):
-    model: str = 'text-davinci-003'
+    model_name: str = 'text-davinci-003'
     temperature: float = 1.0
     max_tokens: int = 7
     top_p: float = 0.8
