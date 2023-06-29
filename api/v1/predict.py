@@ -17,10 +17,14 @@ class ProjectAPI(api_tools.APIModeHandler):
             integration_id=data["integration_id"],
             request_settings=request_settings
         )
-
-        text_prompt = self.module.prepare_text_prompt(
-            project_id, data["prompt_id"], data['input']
-        )
+        if text_input := data.get('input'):
+            text_prompt = self.module.prepare_text_prompt(
+                project_id, data["prompt_id"], text_input
+            )
+        elif full_context := data.get('context'):
+            text_prompt = full_context
+        else:
+            raise ValueError("No input or context provided")
 
         return ai_integration.predict(text_prompt)
 

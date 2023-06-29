@@ -111,6 +111,8 @@ class RPC:
         text_prompt += prompt['prompt']
 
         for example in prompt['examples']:
+            if not example['is_active']:
+                continue
             text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
 
         text_prompt += f"""\ninput: {input_}\n output:"""
