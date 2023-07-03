@@ -1,0 +1,6 @@
+{
+  "name": "Pylon Prompts plugin",
+  "version": "0.1",
+  "depends_on": ["integrations"],
+  "init_after": []
+}
