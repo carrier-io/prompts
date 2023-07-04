@@ -104,12 +104,12 @@ class RPC:
             return True
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
-    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: int, input_: str, context: str = '', examples: list = []) -> str:
+    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int], input_: str, context: str = '', examples: list = []) -> str:
         text_prompt = ""
         if prompt_id:
             prompt = self.get_by_id(project_id, prompt_id)
             text_prompt += prompt['prompt']
-            
+
             for example in prompt['examples']:
                 if not example['is_active']:
                     continue
