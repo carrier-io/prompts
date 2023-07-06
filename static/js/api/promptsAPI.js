@@ -1,5 +1,3 @@
-const OPEN_AI_KEY = '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';
-
 const ApiFetchPrompts = async () => {
     const api_url = V.build_api_url('prompts', 'prompts')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
