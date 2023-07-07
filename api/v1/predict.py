@@ -13,7 +13,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         request_settings = data.get('integration_settings', {})
 
         ai_integration = AIProvider.from_integration(
-            project_id=project_id,
+            project_id=data["project_id"],
             integration_id=data["integration_id"],
             request_settings=request_settings
         )
