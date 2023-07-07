@@ -1,4 +1,7 @@
 <div>
-    Here comes the content
-    {{ integrations }}
+    <Prompts
+        @register="register"
+        instance_name="prompts"
+        :integrations="{{ integrations }}">
+    </Prompts>
 </div>
