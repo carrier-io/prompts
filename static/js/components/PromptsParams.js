@@ -55,8 +55,8 @@ const PromptsParams = {
         },
         selectedIntegration: {
             handler: function (newVal, oldVal) {
+                if (!newVal) return
                 const integrationNames = this.integrations.map(integration => integration.name.toLowerCase());
-
                 if (integrationNames.includes(newVal.toLowerCase())) {
                     this.selectedComponentInt = newVal.toLowerCase();
                 }
@@ -119,7 +119,7 @@ const PromptsParams = {
                     selectedSetting[setting] = settings[setting];
                 }
             }
-            this.editablePrompt.model_settings = Object.assign({}, selectedSetting);
+            this.editablePrompt.integration_settings = Object.assign({}, selectedSetting);
         },
         addTestResult() {
             const rowId = Date.now() + Math.floor(Math.random() * 1000)
@@ -235,17 +235,21 @@ const PromptsParams = {
                             <tr>
                                 <td class="p-2">
                                     <div class="custom-input" :class="{ 'invalid-input': isInvalidTestInput }">
-                                        <input type="text" class="form-control form-control-alternative"
+                                        <textarea type="text" class="form-control form-control-alternative"
+                                            style="resize: none; height: 300px;"
                                             v-model="testInput">
+                                        </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
                                 <td class="p-2">
                                     <div>
-                                        <input disabled type="text" 
-                                            style="color: var(--green)"
+                                        <textarea disabled type="text"
+                                            rows="5"
+                                            style="color: var(--green); resize: none; height: 300px;"
                                             v-model="testOutput"
                                             class="form-control form-control-alternative">
+                                        </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
