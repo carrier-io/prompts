@@ -31,11 +31,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         )
         # if data.input:
         text_prompt = self.module.prepare_text_prompt(
-            project_id, **data.dict(
-                exclude={'integration_settings'},
-                exclude_unset=True,
-                exclude_defaults=True
-            )
+            project_id, data.prompt_id, data.input_, data.context, data.examples
         )
 
         # else:
