@@ -1,7 +1,7 @@
 from flask import request
 from tools import api_tools
 
-from ...models.pd.prompts_pd import PromptUpdateModel, PredictPostModel
+from ...models.pd.prompts_pd import PredictPostModel
 from ...utils.ai_providers import AIProvider
 
 
@@ -9,13 +9,15 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def post(self, project_id):
         data = PredictPostModel.parse_obj(request.json)
+        if 'project_id' not in request.json:
+            data.project_id = project_id
 
-        self.module.update(project_id, PromptUpdateModel(
+        self.module.update(project_id, dict(
             id=data.prompt_id,
             model_settings=data.integration_settings,
             test_input=data.input_,
             integration_id=data.integration_id
-        ).dict(include={'id', 'model_settings', 'test_input', 'integration_id'}))
+        ))
 
         ai_integration = AIProvider.from_integration(
             project_id=project_id,
