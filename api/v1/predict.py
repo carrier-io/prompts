@@ -2,7 +2,11 @@ from flask import request
 from tools import api_tools
 
 from ...models.pd.prompts_pd import PredictPostModel
+from ...models.prompts import Prompt
 from ...utils.ai_providers import AIProvider
+
+
+from tools import rpc_tools, db
 
 
 class ProjectAPI(api_tools.APIModeHandler):
@@ -12,12 +16,15 @@ class ProjectAPI(api_tools.APIModeHandler):
         if 'project_id' not in request.json:
             data.project_id = project_id
 
-        self.module.update(project_id, dict(
-            id=data.prompt_id,
-            model_settings=data.integration_settings,
-            test_input=data.input_,
-            integration_id=data.integration_id
-        ))
+        with db.with_project_schema_session(project_id) as session:
+            session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
+                dict(
+                    model_settings=data.integration_settings,
+                    test_input=data.input_,
+                    integration_id=data.integration_id
+                )
+            )
+            session.commit()
 
         ai_integration = AIProvider.from_integration(
             project_id=project_id,
