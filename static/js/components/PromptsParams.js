@@ -8,7 +8,7 @@ const PromptsParams = {
                 "examples": []
             }
         },
-        integrations: {},
+        integrations: [],
     },
     components: {
         "vertex_ai": PromptsVertexIntegration,
@@ -42,14 +42,30 @@ const PromptsParams = {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-                this.testInput = '';
-                this.testOutput = '';
-                this.isRunClicked = false;
+                // TODO: select existed settings
+                // if (newVal.model_settings) {
+                //     this.integrations.forEach(integration => {
+                //         if (integration.id === newVal.integration_id) {
+                //             this.selectedIntegration = integration.name;
+                //             this.selectedComponentInt = integration.name;
+                //             this.$nextTick(() => {
+                //                 $("#selectIntegration").val(integration.name).selectpicker('refresh')
+                //             })
+                //         }
+                //     })
+                // } else {
+                //     this.selectedComponentInt = "";
+                //     this.selectedIntegration = "";
+                //     this.$nextTick(() => {
+                //         $('#selectIntegration').val('').selectpicker('refresh');
+                //     })
+                // }
+                $('#selectIntegration').val('').selectpicker('refresh');
                 this.selectedComponentInt = "";
                 this.selectedIntegration = "";
-                this.$nextTick(() => {
-                    $('#selectIntegration').selectpicker().val('').selectpicker('refresh');
-                })
+                this.testInput = newVal.test_input ? newVal.test_input : "";
+                this.testOutput = '';
+                this.isRunClicked = false;
             },
             deep: true
         },
@@ -60,10 +76,10 @@ const PromptsParams = {
                 if (integrationNames.includes(newVal.toLowerCase())) {
                     this.selectedComponentInt = newVal.toLowerCase();
                 }
-                if (this.selectedPrompt.model_settings === null) {
+                // if (this.selectedPrompt.model_settings === null) {
                     this.editablePrompt.model_settings = this.integrations
                         .find(integration => integration.name.toLowerCase() === newVal.toLowerCase()).settings
-                }
+                // }
             },
             deep: true
         }
@@ -143,6 +159,7 @@ const PromptsParams = {
     <div class="d-flex">
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
+            
                 <div class="d-flex justify-content-between mb-2">
                     <p class="font-h5 font-bold font-uppercase">{{ editablePrompt.name }}</p>
                     <button type="button" class="btn btn-basic d-flex align-items-center" @click="runTest">Run
@@ -174,13 +191,13 @@ const PromptsParams = {
                             <tr>
                                 <th data-field="id" data-visible="false"></th>
                                 <th data-field="input"
-                                    data-formatter="ParamsTable.inputFormatter"
+                                    data-formatter="ParamsTable.textareaFormatter"
                                 >
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Input</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
                                 </th>
                                 <th data-field="output"
-                                    data-formatter="ParamsTable.inputFormatter"
+                                    data-formatter="ParamsTable.textareaFormatter"
                                 >
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
@@ -236,7 +253,7 @@ const PromptsParams = {
                                 <td class="p-2">
                                     <div class="custom-input" :class="{ 'invalid-input': isInvalidTestInput }">
                                         <textarea type="text" class="form-control form-control-alternative"
-                                            style="resize: none; height: 300px;"
+                                            rows="5"
                                             v-model="testInput">
                                         </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
@@ -246,7 +263,7 @@ const PromptsParams = {
                                     <div>
                                         <textarea disabled type="text"
                                             rows="5"
-                                            style="color: var(--green); resize: none; height: 300px;"
+                                            style="color: var(--green)"
                                             v-model="testOutput"
                                             class="form-control form-control-alternative">
                                         </textarea>
