@@ -91,7 +91,7 @@ const PromptsParams = {
             const integrationId = this.integrations.find(integration => integration.name === this.selectedIntegration)
             if (this.editablePrompt.prompt && this.testInput && this.selectedIntegration) {
                 this.isRunLoading = true;
-                ApiRunTest(this.editablePrompt, this.testInput, integrationId.id).then(data => {
+                ApiRunTest(this.editablePrompt, this.testInput, integrationId.id, integrationId.project_id).then(data => {
                     this.testOutput = data;
                 }).catch(err => {
                     showNotify('ERROR', err)
