@@ -27,16 +27,14 @@ class ProjectAPI(api_tools.APIModeHandler):
             session.commit()
 
         ai_integration = AIProvider.from_integration(
-            project_id=project_id,
-            integration_id=data.integration_id,
-            request_settings=data.integration_settings
+            project_id=data.get('project_id', project_id),
+            integration_id=data["integration_id"],
+            request_settings=request_settings
         )
-        # if data.input:
-        text_prompt = self.module.prepare_text_prompt(
-            project_id, **data.dict(
-                exclude={'integration_settings', 'project_id'},
-                exclude_unset=True,
-                exclude_defaults=True
+        if text_input := data.get('input'):
+            text_prompt = self.module.prepare_text_prompt(
+                project_id, data.get("prompt_id", None),
+                text_input, data.get('context', ""), data.get('examples', [])
             )
         )
 
