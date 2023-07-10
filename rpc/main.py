@@ -75,11 +75,15 @@ class RPC:
             return [example.to_json() for example in examples]
 
     @web.rpc(f'prompts_create_example', "create_example")
-    def prompts_create_example(self, project_id: int, example: dict, **kwargs) -> dict:
+    def prompts_create_example(self, project_id: int, example: dict, from_test_input: bool = False, **kwargs) -> dict:
         example = ExampleModel.validate(example)
         with db.with_project_schema_session(project_id) as session:
             example = Example(**example.dict())
             session.add(example)
+            if from_test_input:
+                session.query(Prompt).filter(Prompt.id == example.prompt_id).update(
+                    {'test_input': None}
+                )
             session.commit()
             return example.to_json()
 
@@ -104,8 +108,11 @@ class RPC:
             return True
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
-    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int], input_: str, context: str = '', examples: list = []) -> str:
+    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
+                                    input_: str, context: str = '', examples: list = (),
+                                    **kwargs) -> str:
         text_prompt = ""
+        prompt_template = '\ninput: {input}\noutput: {output}'
         if prompt_id:
             prompt = self.get_by_id(project_id, prompt_id)
             text_prompt += prompt['prompt']
@@ -113,11 +120,14 @@ class RPC:
             for example in prompt['examples']:
                 if not example['is_active']:
                     continue
-                text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
+                # text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
+                text_prompt += prompt_template.format(**example)
         else:
             text_prompt += context
             for example in examples:
-                text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
+                text_prompt += prompt_template.format(**example)
+                # text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
 
-        text_prompt += f"""\ninput: {input_}\n output:"""
+        # text_prompt += f"""\ninput: {input_}\n output:"""
+        text_prompt += prompt_template.format(input=input_, output='')
         return text_prompt
