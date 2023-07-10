@@ -1,7 +1,4 @@
-from math import floor
-
 from flask import request
-from flask_restful import Resource
 from pydantic import ValidationError
 from pylon.core.tools import log
 
@@ -12,7 +9,8 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def post(self, project_id):
         try:
-            prompt = self.module.create_example(project_id, request.json)
+            from_test_input = request.json.pop('from_test_input', False)
+            prompt = self.module.create_example(project_id, request.json, from_test_input=from_test_input)
             return prompt, 201
         except ValidationError as e:
             return e.errors(), 400

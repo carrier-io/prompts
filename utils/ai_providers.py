@@ -8,9 +8,9 @@ from pylon.core.tools import log
 
 class AiIntegration(ABC):
 
-    @abstractmethod
     def __init__(self, project_id: int, integration_settings: dict):
-        pass
+        self.project_id = project_id
+        self.settings = integration_settings
 
     @abstractmethod
     def predict(self, content: str) -> str:
@@ -18,11 +18,6 @@ class AiIntegration(ABC):
 
 
 class OpenAiIntegration(AiIntegration):
-
-    def __init__(self, project_id: int, integration_settings: dict):
-        self.project_id = project_id
-        self.settings = integration_settings
-
     def predict(self, content: str) -> str:
         import openai
         api_key = SecretField.parse_obj(self.settings['api_token']).unsecret(self.project_id)
@@ -39,11 +34,6 @@ class OpenAiIntegration(AiIntegration):
 
 
 class VertexAiIntegration(AiIntegration):
-
-    def __init__(self, project_id: int, integration_settings: dict):
-        self.project_id = project_id
-        self.settings = integration_settings
-
     def predict(self, content: str) -> str:
         import vertexai
         from google.oauth2.service_account import Credentials
