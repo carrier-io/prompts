@@ -14,6 +14,15 @@ var ParamsTable = {
             <div class="invalid-tooltip invalid-tooltip-custom"></div>
         `
     },
+    textareaFormatter(value, row, index, field) {
+        return `
+            <div class="pb-1">
+                <textarea type="text" class="form-control form-control-alternative"
+                rows="3"
+                onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" value="${value}">${value}</textarea>
+            </div>
+        `
+    },
     deleteParams: (index, source, exampleId) => {
         const $table = $(source).closest('.params-table').bootstrapTable('remove', {
             field: '$index',
