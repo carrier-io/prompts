@@ -62,7 +62,6 @@ class PredictPostModel(BaseModel):
     prompt_id: Optional[int] = None
     examples: Optional[list] = []
     context: Optional[str] = ''
-    project_id: Optional[int] = None
 
     class Config:
         fields = {'input_': 'input'}

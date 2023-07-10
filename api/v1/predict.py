@@ -13,8 +13,6 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def post(self, project_id):
         data = PredictPostModel.parse_obj(request.json)
-        if 'project_id' not in request.json:
-            data.project_id = project_id
 
         with db.with_project_schema_session(project_id) as session:
             session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
@@ -27,14 +25,14 @@ class ProjectAPI(api_tools.APIModeHandler):
             session.commit()
 
         ai_integration = AIProvider.from_integration(
-            project_id=project_id,
+            project_id=request.json.get('project_id', project_id),
             integration_id=data.integration_id,
             request_settings=data.integration_settings
         )
         # if data.input:
         text_prompt = self.module.prepare_text_prompt(
             project_id, **data.dict(
-                exclude={'integration_settings', 'project_id'},
+                exclude={'integration_settings'},
                 exclude_unset=True,
                 exclude_defaults=True
             )
