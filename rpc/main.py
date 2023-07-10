@@ -1,8 +1,6 @@
 from typing import Optional
 from pylon.core.tools import log
 from pylon.core.tools import web
-from pydantic import parse_obj_as, ValidationError
-from requests import HTTPError
 
 from ..models.prompts import Prompt, Example
 from tools import rpc_tools, db
