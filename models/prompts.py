@@ -10,9 +10,11 @@ class Prompt(
     __table_args__ = {'schema': 'tenant'}
 
     id = Column(Integer, primary_key=True)
+    integration_id = Column(Integer, nullable=True)
     name = Column(String(128), unique=True, nullable=False)
     description = Column(String(256), nullable=True)
     prompt = Column(String, nullable=True)
+    test_input = Column(String, nullable=True)
     type = Column(String(128), nullable=False)
     model_settings = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())

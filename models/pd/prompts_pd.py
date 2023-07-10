@@ -1,9 +1,7 @@
 import enum
-from typing import Optional, List, Union
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
-from pydantic.class_validators import validator
-from pydantic.fields import ModelField
 from pylon.core.tools import log
 
 
@@ -33,6 +31,8 @@ class PromptModel(BaseModel):
     name: str
     description: str | None
     prompt: str
+    test_input: Optional[str] = None
+    integration_id: Optional[int] = None
     type: PromptType = PromptType.structured
     model_settings: VertexAISettings | OpenAISettings | None = None
 
@@ -53,3 +53,15 @@ class ExampleModel(BaseModel):
 
 class ExampleUpdateModel(ExampleModel):
     id: int
+
+
+class PredictPostModel(BaseModel):
+    input_: str
+    integration_id: int
+    integration_settings: Optional[dict] = {}
+    prompt_id: Optional[int] = None
+    examples: Optional[list] = []
+    context: Optional[str] = ''
+
+    class Config:
+        fields = {'input_': 'input'}
