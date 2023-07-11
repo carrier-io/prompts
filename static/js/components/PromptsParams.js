@@ -13,6 +13,8 @@ const PromptsParams = {
     components: {
         "vertex_ai": PromptsVertexIntegration,
         "open_ai": PromptsOpenaiIntegration,
+        PromptsVertexIntegration,
+        PromptsOpenaiIntegration,
     },
     data() {
         return {
@@ -41,28 +43,27 @@ const PromptsParams = {
     watch: {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
+                if (newVal.id === oldVal.id) return
                 this.editablePrompt = Object.assign({}, newVal);
-                // TODO: select existed settings
-                // if (newVal.model_settings) {
-                //     this.integrations.forEach(integration => {
-                //         if (integration.id === newVal.integration_id) {
-                //             this.selectedIntegration = integration.name;
-                //             this.selectedComponentInt = integration.name;
-                //             this.$nextTick(() => {
-                //                 $("#selectIntegration").val(integration.name).selectpicker('refresh')
-                //             })
-                //         }
-                //     })
-                // } else {
-                //     this.selectedComponentInt = "";
-                //     this.selectedIntegration = "";
-                //     this.$nextTick(() => {
-                //         $('#selectIntegration').val('').selectpicker('refresh');
-                //     })
-                // }
-                $('#selectIntegration').val('').selectpicker('refresh');
-                this.selectedComponentInt = "";
-                this.selectedIntegration = "";
+
+                if (newVal.model_settings) {
+                    this.integrations.forEach(integration => {
+                        if (integration.id === newVal.integration_id) {
+                            this.selectedIntegration = integration.name;
+                            this.selectedComponentInt = integration.name;
+                            this.changeIntegration(integration.name)
+                            this.$nextTick(() => {
+                                $("#selectIntegration").val(integration.name).selectpicker('refresh')
+                            })
+                        }
+                    })
+                } else {
+                    this.selectedComponentInt = "";
+                    this.selectedIntegration = "";
+                    this.$nextTick(() => {
+                        $('#selectIntegration').val('').selectpicker('refresh');
+                    })
+                }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
@@ -72,22 +73,35 @@ const PromptsParams = {
         selectedIntegration: {
             handler: function (newVal, oldVal) {
                 if (!newVal) return
-                const integrationNames = this.integrations.map(integration => integration.name.toLowerCase());
-                if (integrationNames.includes(newVal.toLowerCase())) {
-                    this.selectedComponentInt = newVal.toLowerCase();
-                }
-                // if (this.selectedPrompt.model_settings === null) {
-                    this.editablePrompt.model_settings = this.integrations
-                        .find(integration => integration.name.toLowerCase() === newVal.toLowerCase()).settings
-                // }
+                this.changeIntegration(newVal)
             },
             deep: true
         }
     },
     mounted() {
-      $('#promptsParamsTable').bootstrapTable()
+        $('#promptsParamsTable').bootstrapTable()
+        $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
+        changeIntegration(newVal) {
+            if (this.selectedPrompt.integration_id) {
+                const existedInt = this.integrations
+                    .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
+                this.selectedComponentInt = newVal;
+                if (existedInt.id === this.selectedPrompt.integration_id) {
+                    this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
+                    return;
+                }
+            }
+            const integrationNames = this.integrations.map(integration => integration.name.toLowerCase());
+            if (integrationNames.includes(newVal.toLowerCase())) {
+                this.selectedComponentInt = newVal.toLowerCase();
+            }
+            this.editablePrompt.model_settings = this.integrations
+                .find(integration => integration.name.toLowerCase() === newVal.toLowerCase()).settings
+
+            this.selectedComponentInt = newVal;
+        },
         addEmptyParamsRow()  {
             $('#promptsParamsTable').bootstrapTable(
                 'append',
@@ -98,9 +112,16 @@ const PromptsParams = {
             const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
             if (row.input && row.output) {
                 ApiCreateExample(this.editablePrompt.id, row.input, row.output).then(data => {
-                    showNotify('SUCCESS', `Condition of Input/Output saved.`);
+                    $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).attr("data-uniqueid",data.id);
+                    showNotify('SUCCESS', `Input/Output saved.`);
                 })
             }
+        },
+        updateField(rowId) {
+            const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
+            ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output).then(data => {
+                showNotify('INFO', `Input/Output updated.`);
+            })
         },
         runTest() {
             this.isRunClicked = true;
@@ -285,23 +306,30 @@ const PromptsParams = {
         <div class="card p-4" style="width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Integration</p>
-<!--                <button type="button" class="btn btn-secondary btn-icon btn-icon__purple" @click="saveSettings">-->
-<!--                    <i class="icon__14x14 icon-save"></i>-->
-<!--                </button>-->
             </div>
             <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                 <p class="font-h5 font-semibold mb-1">Select integration</p>
                 <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
                     v-model="selectedIntegration"
                     data-style="btn">
-                    <option v-for="integration in integrations">{{ integration.name }}</option>
+                    <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
                 </select>
                 <span class="select_error-msg">Integration is require.</span>
             </div>
-            <component :is="selectedComponentInt"
+            <PromptsVertexIntegration 
                 :is-run-clicked="isRunClicked"
                 :selected-prompt="editablePrompt"
-                @update-setting="updateSetting"/>
+                @update-setting="updateSetting"
+                :key="selectedPrompt"
+                v-if="selectedIntegration === 'vertex_ai'">
+            </PromptsVertexIntegration>
+            <PromptsOpenaiIntegration 
+                :is-run-clicked="isRunClicked"
+                :selected-prompt="editablePrompt"
+                @update-setting="updateSetting"
+                :key="selectedPrompt"
+                v-if="selectedIntegration === 'open_ai'">
+            </PromptsOpenaiIntegration>
         </div>
     </div>  
     `
