@@ -48,6 +48,25 @@ const ApiUpdatePrompt = async (prompt) => {
     return res.json();
 }
 
+const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
+    const api_url = V.build_api_url('prompts', 'example')
+
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "prompt_id": promptId,
+            "id": exampleId,
+            "input": input,
+            "output": output,
+            "is_active": true,
+        })
+    })
+    return res.json();
+}
+
 const ApiCreateExample = async (promptId, input, output) => {
     const api_url = V.build_api_url('prompts', 'example')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {

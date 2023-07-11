@@ -1,7 +1,6 @@
 function highlightOnClick() {
     const selectedUniqId = this.getAttribute('data-uniqueid');
     const selected = vueVm.registered_components['prompts'].promptsList.find(row => row.id === +selectedUniqId);
-    vueVm.registered_components['prompts'].selectedPrompt = selected;
     $(this).addClass('highlight').siblings().removeClass('highlight');
     vueVm.registered_components['prompts'].FetchPromptById(selected.id);
 }
@@ -44,7 +43,7 @@ const Prompts = {
     methods: {
         FetchPromptById(promptId) {
             ApiFetchPromptById(promptId).then(data => {
-                this.selectedPrompt = data;
+                this.selectedPrompt = { ...data };
                 $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
             })
         },

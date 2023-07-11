@@ -7,13 +7,6 @@ var ParamsTable = {
             </button>
         `
     },
-    inputFormatter(value, row, index, field) {
-        return `
-            <input type="text" class="form-control form-control-alternative"
-                onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" value="${value}">
-            <div class="invalid-tooltip invalid-tooltip-custom"></div>
-        `
-    },
     textareaFormatter(value, row, index, field) {
         return `
             <div class="pb-1">
@@ -32,10 +25,15 @@ var ParamsTable = {
         if (exampleId.length < 10) vueVm.registered_components['prompts-params'].deleteExample(exampleId);
     },
     updateCell: (el, row, field, id) => {
-        $(el.closest('table')).bootstrapTable(
-            'updateCell',
-            {index: row, field: field, value: el.value}
-        )
-        vueVm.registered_components['prompts-params'].checkFields(id);
+        if (id.length > 10) {
+            $(el.closest('table')).bootstrapTable(
+                'updateCell',
+                {index: row, field: field, value: el.value}
+            )
+            vueVm.registered_components['prompts-params'].checkFields(id);
+        } else {
+            vueVm.registered_components['prompts-params'].updateField(id);
+        }
+
     },
 }

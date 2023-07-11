@@ -29,6 +29,13 @@ const PromptsOpenaiIntegration = {
         }
     },
     watch: {
+        selectedPrompt: {
+            handler: function (newVal, oldVal) {
+                if (newVal.id === oldVal.id) return
+                this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
+            },
+            deep: true
+        },
         editableIntegrationSetting: {
             handler: function (newVal, oldVal) {
                 this.$emit('update-setting', newVal)

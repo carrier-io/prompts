@@ -17,10 +17,11 @@ const PromptsRange = {
         return {
             randomWizardId: 'rangeId_' + Date.now() + Math.floor(Math.random() * 1000),
             randomInputId: 'inputId_' + Date.now() + Math.floor(Math.random() * 1000),
+            noUiSliderData: null,
         }
     },
     mounted() {
-        const sliderInput = noUiSlider.create($(`#${this.randomWizardId}`)[0], {
+        this.noUiSliderData = noUiSlider.create($(`#${this.randomWizardId}`)[0], {
             start: this.modelValue,
             connect: 'lower',
             range: {
@@ -31,10 +32,10 @@ const PromptsRange = {
         });
         $(`#${this.randomInputId}`).on('change', (e) => {
             const inputtedNumber = +e.target.value;
-            sliderInput.set(inputtedNumber);
+            this.noUiSliderData.set(inputtedNumber);
         });
         const vm = this;
-        sliderInput.on('update', function (values, handle) {
+        this.noUiSliderData.on('update', function (values, handle) {
             const vuh = vm.step < 1 ? values[0] : parseInt(values[handle])
             $(`#${vm.randomInputId}`).val(vuh);
             vm.$emit('update:modelValue', +vuh)
