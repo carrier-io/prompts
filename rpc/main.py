@@ -6,6 +6,7 @@ from ..models.prompts import Prompt, Example
 from tools import rpc_tools, db
 from ..models.pd.prompts_pd import PromptModel, ExampleModel, PromptUpdateModel, \
     ExampleUpdateModel
+from ..utils.ai_providers import AIProvider
 
 
 class RPC:
@@ -28,6 +29,13 @@ class RPC:
                 Example.prompt_id == prompt_id,
             ).all()
             result = prompt.to_json()
+            if prompt.integration_id:
+                whole_settings = AIProvider.from_integration(
+                    project_id, prompt.integration_id, prompt.model_settings
+                ).settings
+                if not isinstance(whole_settings, dict):
+                    whole_settings = whole_settings.dict()
+                result['model_settings'] = whole_settings
             result['examples'] = [example.to_json() for example in examples]
             return result
 
