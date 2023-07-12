@@ -11,8 +11,6 @@ const PromptsParams = {
         integrations: [],
     },
     components: {
-        "vertex_ai": PromptsVertexIntegration,
-        "open_ai": PromptsOpenaiIntegration,
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
     },
@@ -43,7 +41,6 @@ const PromptsParams = {
     watch: {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
-                if (newVal.id === oldVal.id) return
                 this.editablePrompt = Object.assign({}, newVal);
 
                 if (newVal.model_settings) {
