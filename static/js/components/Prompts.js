@@ -23,28 +23,37 @@ const Prompts = {
             promptsList: [],
             showConfirm: false,
             loadingDelete: false,
-            isDataFetched: false,
+            isPromptListLoading: false,
+            isPromptLoading: false,
+            isModalLoading: false,
         }
     },
     mounted() {
         $(document).on('vue_init', () => {
+            this.isPromptListLoading = true;
             ApiFetchPrompts().then(data => {
                 $("#prompts-aside-table").bootstrapTable('append', data);
                 this.promptsList = data;
-                this.isDataFetched = true;
                 if (data.length > 0) {
                     this.selectedPrompt = data[0];
                     this.setBucketEvents();
                     this.selectFirstPrompt();
                 }
+                setTimeout(() => {
+                    this.isPromptListLoading = false;
+                }, 300)
             });
         })
     },
     methods: {
         FetchPromptById(promptId) {
+            this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
-                this.selectedPrompt = { ...data };
-                $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                setTimeout(() => {
+                    this.isPromptLoading = false;
+                    this.selectedPrompt = { ...data };
+                    $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                }, 300)
             })
         },
         setBucketEvents() {
@@ -63,9 +72,11 @@ const Prompts = {
             this.showCreateModal = true;
         },
         handleCreatePrompt(newRoleName) {
-            this.showCreateModal = false;
+            this.isModalLoading = true;
             ApiCreatePrompt(newRoleName, this.selectedMode).then(data => {
-                this.refreshPromptsListTable(data.id)
+                this.refreshPromptsListTable(data.id);
+                this.isModalLoading = false;
+                this.showCreateModal = false;
             });
         },
         deletePrompt() {
@@ -125,26 +136,36 @@ const Prompts = {
                     <prompts-list-aside
                         @open-create-modal="openCreateModal">
                     </prompts-list-aside>
-                    <template v-if="promptsList.length > 0">
-                        <prompts-params
-                            class="flex-grow-1"
-                            @register="$root.register"
-                            instance_name="prompts-params"
-                            :selected-prompt="selectedPrompt"
-                            :integrations="integrations"
-                        ></prompts-params>
-                    </template>
-                    <div v-else class="card w-100">
-                        <div class="d-flex justify-content-center align-items-center h-100">
-                            <div class="d-flex flex-column align-items-center">
-                                <p class="font-h5 text-gray-500">Still no prompts created.</p>
-                                <button type="button" class="btn btn-sm btn-secondary mt-1" 
-                                    @click="openCreateModal">
-                                    <i class="fas fa-plus mr-2"></i>Create prompt
-                                </button>
+                    <div class="position-relative flex-grow-1 card" v-if="isPromptListLoading">
+                        <div class="layout-spinner">
+                            <div class="spinner-centered">
+                                <i class="spinner-loader__32x32"></i>
                             </div>
                         </div>
                     </div>
+                    <template v-else>
+                        <template v-if="promptsList.length > 0">
+                            <prompts-params
+                                class="flex-grow-1"
+                                @register="$root.register"
+                                instance_name="prompts-params"
+                                :selected-prompt="selectedPrompt"
+                                :integrations="integrations"
+                                :is-prompt-loading="isPromptLoading"
+                            ></prompts-params>
+                        </template>
+                        <div v-else class="card w-100">
+                            <div class="d-flex justify-content-center align-items-center h-100">
+                                <div class="d-flex flex-column align-items-center">
+                                    <p class="font-h5 text-gray-500">Still no prompts created.</p>
+                                    <button type="button" class="btn btn-sm btn-secondary mt-1" 
+                                        @click="openCreateModal">
+                                        <i class="fas fa-plus mr-2"></i>Create prompt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
             
@@ -155,7 +176,8 @@ const Prompts = {
                     @save-prompt="handleCreatePrompt"
                     @update-prompt="handleCreatePrompt"
                     :modal-type="modalType"
-                    :editable-roles="editableRoles">
+                    :editable-roles="editableRoles"
+                    :is-modal-loading="isModalLoading">
                 </prompts-modal-create>
             </transition>
             <transition>
