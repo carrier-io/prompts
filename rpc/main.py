@@ -122,7 +122,10 @@ class RPC:
         if prompt_id:
             prompt = self.get_by_id(project_id, prompt_id)
             text_prompt += prompt['prompt']
-
+            if examples:
+                prompt['examples'].extend(examples)
+            if context:
+                text_prompt += context
             for example in prompt['examples']:
                 if not example['is_active']:
                     continue
