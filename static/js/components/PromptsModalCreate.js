@@ -1,5 +1,5 @@
 const PromptsModalCreate = {
-    props: ['editableRoles', 'modalType'],
+    props: ['editableRoles', 'modalType', 'isModalLoading'],
     data() {
         return {
             newPromptName: '',
@@ -45,7 +45,7 @@ const PromptsModalCreate = {
                 <button
                     class="btn btn-basic mr-2 d-flex align-items-center"
                     @click="handleSubmit"
-                >Save</button>
+                >Save <i v-if="isModalLoading" class="preview-loader__white ml-2"></i></button>
             </div>
         </div>
     </div>

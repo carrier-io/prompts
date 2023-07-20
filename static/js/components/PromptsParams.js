@@ -9,6 +9,7 @@ const PromptsParams = {
             }
         },
         integrations: [],
+        isPromptLoading: false,
     },
     components: {
         PromptsVertexIntegration,
@@ -28,6 +29,7 @@ const PromptsParams = {
             selectedIntegration: "",
             selectedComponentInt: "",
             isRunLoading: false,
+            isContextLoading: false,
         }
     },
     computed: {
@@ -76,7 +78,7 @@ const PromptsParams = {
         }
     },
     mounted() {
-        $('#promptsParamsTable').bootstrapTable()
+        $('#promptsParamsTable').bootstrapTable();
         $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
@@ -108,8 +110,13 @@ const PromptsParams = {
         checkFields(rowId) {
             const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
             if (row.input && row.output) {
-                ApiCreateExample(this.editablePrompt.id, row.input, row.output).then(data => {
-                    $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).attr("data-uniqueid",data.id);
+                $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                    $(this).attr('disabled', 'disabled');
+                })
+                ApiCreateExample(this.editablePrompt.id, row.input, row.output).then(newRow => {
+                    $('#promptsParamsTable')
+                        .bootstrapTable('removeByUniqueId', rowId)
+                        .bootstrapTable('append', newRow );
                     showNotify('SUCCESS', `Input/Output saved.`);
                 })
             }
@@ -117,6 +124,9 @@ const PromptsParams = {
         updateField(rowId) {
             const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
             ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output).then(data => {
+                $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                    $(this).removeAttr("disabled");
+                })
                 showNotify('INFO', `Input/Output updated.`);
             })
         },
@@ -136,7 +146,9 @@ const PromptsParams = {
         },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
+            this.isContextLoading= true;
             ApiUpdatePrompt(this.editablePrompt).then(data => {
+                this.isContextLoading = false;
                 showNotify('SUCCESS', `Context updated.`)
             });
         },
@@ -177,28 +189,49 @@ const PromptsParams = {
     <div class="d-flex">
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
-            
                 <div class="d-flex justify-content-between mb-2">
-                    <p class="font-h5 font-bold font-uppercase">{{ editablePrompt.name }}</p>
-                    <button type="button" class="btn btn-basic d-flex align-items-center" @click="runTest">Run
+                    <p class="font-h5 font-bold font-uppercase mb-2">CONTEXT</p>
+                    <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                        class="btn btn-basic d-flex align-items-center" @click="runTest">
+                        Run
                         <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
                     </button>
                 </div>
-                <p class="font-h5 font-bold font-uppercase mb-2">CONTEXT</p>
-                <div class="w-100">
-                    <div class="custom-input w-100" 
-                        :class="{ 'invalid-input': isInvalidContext }">
-                        <textarea
-                            :value="editablePrompt.prompt"
-                            @change="updatePrompt"
-                            class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
+                <div class="position-relative" style="height: 164px" v-if="isPromptLoading">
+                    <div class="layout-spinner">
+                        <div class="spinner-centered">
+                            <i class="spinner-loader__32x32"></i>
+                        </div>
+                    </div>
+                </div>
+                <div v-else>
+                    <p class="font-h5 font-bold font-uppercase mb-1">{{ editablePrompt.name }}</p>
+                    <div class="w-100">
+                        <div class="custom-input w-100 position-relative" 
+                            :class="{ 'invalid-input': isInvalidContext }">
+                            <textarea
+                                :disabled="isContextLoading"
+                                :value="editablePrompt.prompt"
+                                @change="updatePrompt"
+                                class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
+                                <div class="spinner__right-bottom" v-if="isContextLoading">
+                                    <i class="spinner-loader__16x16"></i>
+                                </div>
+                        </div>
                     </div>
                 </div>
             </div>    
             
             <div class="card mt-3 p-28">
                 <p class="font-h5 font-bold font-uppercase">EXAMPLES</p>
-                <div>
+                <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
+                    <div class="layout-spinner">
+                        <div class="spinner-centered">
+                            <i class="spinner-loader__32x32"></i>
+                        </div>
+                    </div>
+                </div>
+                <div v-show="!isPromptLoading">
                     <table 
                         id="promptsParamsTable"
                         class="w-100 table-transparent mb-2 params-table"
@@ -239,12 +272,20 @@ const PromptsParams = {
             <div class="card mt-3 p-28">
                 <div class="d-flex justify-content-between mb-2">
                     <p class="font-h5 font-bold font-uppercase">TESTS</p>
-                    <button type="button" class="btn btn-basic d-flex align-items-center" @click="runTest">
+                    <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                        class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
                         <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
                     </button>
                 </div>
-                <div>
+                <div class="position-relative" style="height: 188px" v-if="isPromptLoading">
+                    <div class="layout-spinner">
+                        <div class="spinner-centered">
+                            <i class="spinner-loader__32x32"></i>
+                        </div>
+                    </div>
+                </div>
+                <div v-else>
                     <table 
                         class="w-100 table-transparent mb-2 params-table" 
                         id="testResult">
@@ -304,29 +345,38 @@ const PromptsParams = {
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Integration</p>
             </div>
-            <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
-                <p class="font-h5 font-semibold mb-1">Select integration</p>
-                <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
-                    v-model="selectedIntegration"
-                    data-style="btn">
-                    <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
-                </select>
-                <span class="select_error-msg">Integration is require.</span>
+            <div class="position-relative h-100" v-if="isPromptLoading">
+                <div class="layout-spinner">
+                    <div class="spinner-centered">
+                        <i class="spinner-loader__32x32"></i>
+                    </div>
+                </div>
             </div>
-            <PromptsVertexIntegration 
-                :is-run-clicked="isRunClicked"
-                :selected-prompt="editablePrompt"
-                @update-setting="updateSetting"
-                :key="selectedPrompt"
-                v-if="selectedIntegration === 'vertex_ai'">
-            </PromptsVertexIntegration>
-            <PromptsOpenaiIntegration 
-                :is-run-clicked="isRunClicked"
-                :selected-prompt="editablePrompt"
-                @update-setting="updateSetting"
-                :key="selectedPrompt"
-                v-if="selectedIntegration === 'open_ai'">
-            </PromptsOpenaiIntegration>
+            <template v-else>
+                <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
+                    <p class="font-h5 font-semibold mb-1">Select integration</p>
+                    <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                        v-model="selectedIntegration"
+                        data-style="btn">
+                        <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
+                    </select>
+                    <span class="select_error-msg">Integration is require.</span>
+                </div>
+                <PromptsVertexIntegration 
+                    :is-run-clicked="isRunClicked"
+                    :selected-prompt="editablePrompt"
+                    @update-setting="updateSetting"
+                    :key="selectedPrompt"
+                    v-if="selectedIntegration === 'vertex_ai'">
+                </PromptsVertexIntegration>
+                <PromptsOpenaiIntegration 
+                    :is-run-clicked="isRunClicked"
+                    :selected-prompt="editablePrompt"
+                    @update-setting="updateSetting"
+                    :key="selectedPrompt"
+                    v-if="selectedIntegration === 'open_ai'">
+                </PromptsOpenaiIntegration>
+            </template>
         </div>
     </div>  
     `

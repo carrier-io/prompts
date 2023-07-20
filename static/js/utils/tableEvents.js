@@ -9,10 +9,11 @@ var ParamsTable = {
     },
     textareaFormatter(value, row, index, field) {
         return `
-            <div class="pb-1">
-                <textarea type="text" class="form-control form-control-alternative"
-                rows="3"
-                onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" value="${value}">${value}</textarea>
+            <div class="pb-1 position-relative">
+                <textarea class="form-control form-control-alternative"
+                    rows="3"
+                    onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
+                    value="${value}">${value}</textarea>
             </div>
         `
     },
@@ -25,13 +26,16 @@ var ParamsTable = {
         if (exampleId.length < 10) vueVm.registered_components['prompts-params'].deleteExample(exampleId);
     },
     updateCell: (el, row, field, id) => {
+        $(el.closest('table')).bootstrapTable(
+            'updateCell',
+            {index: row, field: field, value: el.value}
+        )
         if (id.length > 10) {
-            $(el.closest('table')).bootstrapTable(
-                'updateCell',
-                {index: row, field: field, value: el.value}
-            )
             vueVm.registered_components['prompts-params'].checkFields(id);
         } else {
+            $(`#promptsParamsTable tr[data-uniqueid=${id}]`).find('textarea').each(function () {
+                $(this).attr('disabled', 'disabled')
+            })
             vueVm.registered_components['prompts-params'].updateField(id);
         }
 
