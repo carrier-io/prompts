@@ -1,3 +1,5 @@
+import re
+import jinja2
 from typing import Optional
 from pylon.core.tools import log
 from pylon.core.tools import web
@@ -129,14 +131,16 @@ class RPC:
             for example in prompt['examples']:
                 if not example['is_active']:
                     continue
-                # text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
-                text_prompt += prompt_template.format(**example)
+                examples = prompt['examples']
         else:
             text_prompt += context
-            for example in examples:
-                text_prompt += prompt_template.format(**example)
-                # text_prompt += f"""\ninput: {example['input']}\noutput: {example['output']}"""
-
-        # text_prompt += f"""\ninput: {input_}\n output:"""
-        text_prompt += prompt_template.format(input=input_, output='')
+        if re.search(r'/\{\{(.*?)\}\}/g', text_prompt):
+            environment = jinja2.Environment()
+            template = environment.from_string(text_prompt)
+            text_prompt = template.render(prompt=input_)
+            input_ = ''
+        for example in examples:
+            text_prompt += prompt_template.format(**example)
+        if input_:
+            text_prompt += prompt_template.format(input=input_, output='')
         return text_prompt
