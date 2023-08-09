@@ -71,6 +71,22 @@ class Module(module.ModuleModel):
             }
         )
 
+        theme.register_subsection(
+            "models", "config",
+            "Config",
+            title="Config",
+            kind="slot",
+            prefix="models_config_",
+            # weight=5,
+            permissions={
+                "permissions": ["models.config"],
+                "recommended_roles": {
+                    "administration": {"admin": True, "editor": False, "viewer": False},
+                    "default": {"admin": True, "editor": False, "viewer": False},
+                }
+            }
+        )
+
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
         log.info('De-initializing')

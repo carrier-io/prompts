@@ -9,7 +9,6 @@ class Slot:  # pylint: disable=E1101,R0903
     @auth.decorators.check_slot(["models.prompts"],
                                 access_denied_reply=theme.access_denied_part)
     def content(self, context, slot, payload):
-        log.info('slot: [%s], payload: %s', slot, payload)
         ai_integrations = context.rpc_manager.call.integrations_get_all_integrations_by_section(
             context.rpc_manager.call.project_get_id(), "ai"
         )
@@ -26,7 +25,6 @@ class Slot:  # pylint: disable=E1101,R0903
     @web.slot('prompts_scripts')
     @auth.decorators.check_slot(["models.prompts"])
     def scripts(self, context, slot, payload):
-        log.info('slot scripts: [%s], payload: %s', slot, payload)
         with context.app.app_context():
             return self.descriptor.render_template(
                 'scripts.html',
@@ -35,7 +33,6 @@ class Slot:  # pylint: disable=E1101,R0903
     @web.slot('prompts_styles')
     @auth.decorators.check_slot(["models.prompts"])
     def styles(self, context, slot, payload):
-        log.info('slot styles: [%s], payload: %s', slot, payload)
         with context.app.app_context():
             return self.descriptor.render_template(
                 'styles.html',
