@@ -37,6 +37,7 @@ class Module(module.ModuleModel):
         self.descriptor.init_api()
         self.descriptor.init_slots()
         self.descriptor.init_rpcs()
+        self.descriptor.init_events()
 
         from .init_db import init_db
         init_db()

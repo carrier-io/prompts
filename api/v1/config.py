@@ -46,6 +46,11 @@ class ProjectAPI(api_tools.APIModeHandler):
         # used to regenerate token from ui
         token = self.module.regenerate_token(user_id=g.auth.id)
         return {'token': token}, 200
+    #
+    # def patch(self, **kwargs):
+    #     user = request.json.get('user_id', 1)
+    #     self.module.context.event_manager.fire_event('new_ai_user', user)
+    #     return {'user': user}, 200
 
 
 # class AdminAPI(api_tools.APIModeHandler):
