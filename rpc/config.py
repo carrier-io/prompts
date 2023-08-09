@@ -56,20 +56,3 @@ class RPC:
         )
 
         return auth.encode_token(token_id)
-
-    @web.rpc('prompts_get_ai_project', 'regenerate_token')
-    def regenerate_token(self, user_id: int) -> str:
-        all_tokens = auth.list_tokens(
-            user_id=user_id,
-            name=TOKEN_NAME
-        )
-        for i in all_tokens:
-            auth.delete_token(token_id=i['id'])
-
-        token_id = auth.add_token(
-            user_id=user_id,
-            name=TOKEN_NAME,
-            expires=datetime.now() + timedelta(seconds=30),
-        )
-
-        return auth.encode_token(token_id)
