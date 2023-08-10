@@ -11,6 +11,12 @@ class Event:
         secrets = VaultClient().get_all_secrets()
         allowed_domains = {i.strip().strip('@') for i in secrets.get('ai_project_allowed_domains', '').split(',')}
         user_email_domain = payload.get('user_email', '').split('@')[-1]
+        log.info(
+            'Checking if user eligible to join special project. %s with domain %s in allowed domains %s',
+            payload.get('user_email'),
+            user_email_domain,
+            allowed_domains
+        )
         if user_email_domain in allowed_domains:
             log.info('Adding epam user to project %s', payload)
             try:
