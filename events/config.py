@@ -7,8 +7,8 @@ class Event:
 
     @web.event("new_ai_user")
     def handle_new_ai_user(self, context, event, payload: dict):
-        # payload == {user_id: int, email: str}
-        if payload.get('email', '').endswith('@epam.com'):
+        # payload == {user_id: int, user_email: str}
+        if payload.get('user_email', '').endswith('@epam.com'):
             secrets = VaultClient().get_all_secrets()
             try:
                 ai_project_id = secrets['ai_project_id']
