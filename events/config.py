@@ -28,7 +28,7 @@ class Event:
             ai_project_roles = [i.strip() for i in ai_project_roles.split(',')]
 
             context.rpc_manager.call.admin_add_user_to_project(
-                ai_project_id, payload, ai_project_roles
+                ai_project_id, payload['user_id'], ai_project_roles
             )
         else:
             log.warning('User with non-epam email registered %s', payload)
