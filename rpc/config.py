@@ -17,7 +17,7 @@ class RPC:
         secrets = VaultClient(project_id).get_all_secrets()
         url = ''.join([
             secrets['galloper_url'],
-            secrets.get('ai_project_api_url', '/prompts')
+            secrets.get('ai_project_api_url', '/api/v1/prompts')
         ])
 
         all_tokens = auth.list_tokens(
