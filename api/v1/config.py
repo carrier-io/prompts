@@ -11,21 +11,6 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def get(self, project_id: int, **kwargs):
         data = self.module.get_config(project_id=project_id, user_id=g.auth.id)
-
-        data.integrations.append({
-            'id': 23,
-            'name': 'open_ai',
-            'is_default': False,
-            'config': {'name': 'openai1'}
-        })
-
-        data.integrations.append({
-            'id': 2,
-            'name': 'vertex_ai',
-            'is_default': False,
-            'config': {'name': 'vertex2'}
-        })
-
         formatted_integrations = {
             str(k): list(v)
             for k, v in
@@ -35,10 +20,13 @@ class ProjectAPI(api_tools.APIModeHandler):
         try:
             selected_integration = next(i for i in data.integrations if i['is_default'])
         except StopIteration:
-            selected_integration = data.integrations[0]
+            try:
+                selected_integration = data.integrations[0]
+            except IndexError:
+                selected_integration = {}
 
         table_data = [{'key': k, 'value': v} for k, v in data.dict(exclude={'integrations'}).items()]
-        integrations_data = {'key': 'integrations', 'value': selected_integration['id'], 'action': formatted_integrations}
+        integrations_data = {'key': 'integrations', 'value': selected_integration.get('id'), 'action': formatted_integrations}
         table_data.append(integrations_data)
         return table_data, 200
 

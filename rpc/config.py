@@ -4,7 +4,7 @@ from pylon.core.tools import web, log
 
 from ..models.pd.config_pd import ModelsConfig
 from ..models.prompts import Prompt, Example
-from tools import rpc_tools, db, VaultClient, auth
+from tools import rpc_tools, db, VaultClient, auth, api_tools
 
 
 TOKEN_NAME = 'ai_token'
@@ -14,8 +14,11 @@ class RPC:
 
     @web.rpc('prompts_get_config', 'get_config')
     def get_config(self, project_id: int, user_id: int, **kwargs) -> list[dict]:
-        url = VaultClient(project_id).get_all_secrets()['galloper_url']
-
+        secrets = VaultClient(project_id).get_all_secrets()
+        url = ''.join([
+            secrets['galloper_url'],
+            secrets.get('ai_project_api_url', '/prompts')
+        ])
 
         all_tokens = auth.list_tokens(
             user_id=user_id,
@@ -52,7 +55,7 @@ class RPC:
         token_id = auth.add_token(
             user_id=user_id,
             name=TOKEN_NAME,
-            expires=datetime.now() + timedelta(seconds=30),
+            expires=datetime.now() + timedelta(days=30),
         )
 
         return auth.encode_token(token_id)
