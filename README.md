@@ -7,3 +7,4 @@
 - ai_project_bucket_integration: int
 - ai_project_readme: html = None
 - ai_project_api_url: str = '/prompts'
+- ai_project_allowed_domains: str comma-separated (epam.com, gmail.com)

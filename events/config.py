@@ -8,9 +8,11 @@ class Event:
     @web.event("new_ai_user")
     def handle_new_ai_user(self, context, event, payload: dict):
         # payload == {user_id: int, user_email: str}
-        if payload.get('user_email', '').endswith('@epam.com'):
+        secrets = VaultClient().get_all_secrets()
+        allowed_domains = {i.strip().strip('@') for i in secrets.get('ai_project_allowed_domains', '').split(',')}
+        user_email_domain = payload.get('user_email', '').split('@')[-1]
+        if user_email_domain in allowed_domains:
             log.info('Adding epam user to project %s', payload)
-            secrets = VaultClient().get_all_secrets()
             try:
                 ai_project_id = secrets['ai_project_id']
             except KeyError:
