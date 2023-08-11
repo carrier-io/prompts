@@ -1,5 +1,4 @@
-from sqlalchemy import Integer, Column, String, DateTime, func, JSON, Boolean
-
+from sqlalchemy import Integer, Column, String, DateTime, func, JSON, Boolean, ForeignKey
 from tools import db_tools, db, rpc_tools
 
 
@@ -34,3 +33,14 @@ class Example(
     output = Column(String)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+
+class Variable(db_tools.AbstractBaseMixin, db.Base):
+    __tablename__ = "variables"
+    __table_args__ = (
+        {"schema": "tenant"},
+    )
+    id = Column(Integer, primary_key=True)
+    prompt_id = Column(Integer, ForeignKey('tenant.prompts.id'), nullable=False)
+    name = Column(String, nullable=False, unique=True)
+    value = Column(String, nullable=False)

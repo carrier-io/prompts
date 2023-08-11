@@ -41,3 +41,49 @@ var ParamsTable = {
 
     },
 }
+
+
+var VariableTable = {
+    deleteFormatter(value, row, index) {
+        return `
+            <button type="button" class="btn btn-default btn-xs btn-table btn-icon__xs" 
+                onclick="VariableTable.deleteParams(${index}, this, '${row.id}')">
+                <i class="icon__18x18 icon-delete"></i>
+            </button>
+        `
+    },
+    textareaFormatter(value, row, index, field) {
+        return `
+            <div class="pb-1 position-relative">
+                <textarea class="form-control form-control-alternative"
+                    rows="1"
+                    onchange="VariableTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
+                    value="${value}">${value}</textarea>
+            </div>
+        `
+    },
+    deleteParams: (index, source, varId) => {
+        const $table = $(source).closest('.params-table').bootstrapTable('remove', {
+            field: '$index',
+            values: [index]
+        })
+        $table.bootstrapTable('getData').length === 0 && $table.addClass('empty_data');
+        if (varId.length < 10) vueVm.registered_components['prompts-params'].deleteVariable(varId);
+    },
+
+    updateCell: (el, row, field, id) => {
+        $(el.closest('table')).bootstrapTable(
+            'updateCell',
+            {index: row, field: field, value: el.value}
+        )
+        if (id.length > 10) {
+            vueVm.registered_components['prompts-params'].checkVariableFields(id);
+        } else {
+            $(`#variablesTable tr[data-uniqueid=${id}]`).find('textarea').each(function () {
+                $(this).attr('disabled', 'disabled')
+            })
+            vueVm.registered_components['prompts-params'].updateVariableField(id);
+        }
+
+    },
+}

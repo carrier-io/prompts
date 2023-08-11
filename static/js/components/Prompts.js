@@ -53,6 +53,7 @@ const Prompts = {
                     this.isPromptLoading = false;
                     this.selectedPrompt = { ...data };
                     $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                    $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
                 }, 300)
             })
         },
