@@ -1,14 +1,17 @@
 import re
 import jinja2
-from typing import Optional
-from pylon.core.tools import log
-from pylon.core.tools import web
+from typing import Optional, List
+from pylon.core.tools import web, log
 
-from ..models.prompts import Prompt, Example, Variable
-from tools import rpc_tools, db
-from ..models.pd.prompts_pd import PromptModel, ExampleModel, PromptUpdateModel, \
-    ExampleUpdateModel
+from pydantic import parse_obj_as
+from ..models.example import Example
+from ..models.pd.example import ExampleModel, ExampleUpdateModel
+from ..models.prompts import Prompt
+from ..models.pd.prompts_pd import PromptModel, PromptUpdateModel
+from ..models.variable import Variable
 from ..utils.ai_providers import AIProvider
+
+from tools import rpc_tools, db
 
 
 class RPC:
@@ -16,7 +19,7 @@ class RPC:
     @web.rpc(f'prompts_get_all', "get_all")
     def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
-            prompts = session.query(Prompt).all()
+            prompts = session.query(Prompt).order_by(Prompt.id.asc()).all()
             return [prompt.to_json() for prompt in prompts]
 
     @web.rpc("prompts_get_by_id", "get_by_id")
@@ -101,6 +104,15 @@ class RPC:
             session.commit()
             return example.to_json()
 
+    @web.rpc(f'prompts_create_examples_bulk', "create_examples_bulk")
+    def prompts_create_examples_bulk(self, project_id: int, examples: List[dict], **kwargs) -> None:
+        examples = parse_obj_as(List[ExampleModel], examples)
+        with db.with_project_schema_session(project_id) as session:
+            for i in examples:
+                example = Example(**i.dict())
+                session.add(example)
+            session.commit()
+
     @web.rpc(f'prompts_update_example', "update_example")
     def prompts_update_example(self, project_id: int, example: dict, **kwargs) -> bool:
         example = ExampleUpdateModel.validate(example)
@@ -145,9 +157,9 @@ class RPC:
             text_prompt += prompt_template.format(**example)
         if input_:
             text_prompt += prompt_template.format(input=input_, output='')
-        log.info(f"FINAL: {text_prompt}")
+        # log.info(f"FINAL: {text_prompt}")
         return text_prompt
-    
+
 
 def resolve_variables(project_id, prompt_id, text_prompt):
     if not re.findall(r'\{\{.*?\}\}', text_prompt):

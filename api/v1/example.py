@@ -27,8 +27,8 @@ class ProjectAPI(api_tools.APIModeHandler):
         return '', 204
 
 
-class AdminAPI(api_tools.APIModeHandler):
-    ...
+# class AdminAPI(api_tools.APIModeHandler):
+#     ...
 
 
 class API(api_tools.APIBase):
@@ -41,5 +41,5 @@ class API(api_tools.APIBase):
 
     mode_handlers = {
         'default': ProjectAPI,
-        'administration': AdminAPI,
+        # 'administration': AdminAPI,
     }

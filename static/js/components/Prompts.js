@@ -35,6 +35,7 @@ const Prompts = {
                 $("#prompts-aside-table").bootstrapTable('append', data);
                 this.promptsList = data;
                 if (data.length > 0) {
+                    // debugger
                     this.selectedPrompt = data[0];
                     this.setBucketEvents();
                     this.selectFirstPrompt();

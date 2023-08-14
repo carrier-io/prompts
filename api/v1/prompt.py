@@ -1,13 +1,8 @@
-from math import floor
-
 from flask import request
-from flask_restful import Resource
 from pydantic import ValidationError
 from pylon.core.tools import log
 
 from tools import session_project, api_tools
-
-log.info('I initialized the prompts api')
 
 
 class ProjectAPI(api_tools.APIModeHandler):

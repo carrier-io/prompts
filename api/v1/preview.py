@@ -1,9 +1,4 @@
-from flask import request
-
-from flask import request
-
 from tools import api_tools
-from ...utils.ai_providers import AIProvider
 
 
 class ProjectAPI(api_tools.APIModeHandler):

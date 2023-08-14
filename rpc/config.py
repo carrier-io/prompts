@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
-from typing import Optional
 from pylon.core.tools import web, log
 
 from ..models.pd.config_pd import ModelsConfig
-from ..models.prompts import Prompt, Example
 from tools import rpc_tools, db, VaultClient, auth, api_tools
 
 
@@ -13,7 +11,7 @@ TOKEN_NAME = 'ai_token'
 class RPC:
 
     @web.rpc('prompts_get_config', 'get_config')
-    def get_config(self, project_id: int, user_id: int, **kwargs) -> list[dict]:
+    def get_config(self, project_id: int, user_id: int, **kwargs) -> ModelsConfig:
         secrets = VaultClient(project_id).get_all_secrets()
         url = ''.join([
             secrets['galloper_url'],
