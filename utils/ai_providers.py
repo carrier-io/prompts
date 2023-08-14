@@ -94,3 +94,57 @@ class AIProvider:
             return VertexAiIntegration(project_id, settings)
         else:
             raise NotImplementedError(f"Integration {integration.name} not implemented")
+
+
+# class AIProvider(rpc_tools.RpcMixin):
+#     ai_class_map = {
+#         'open_ai': OpenAiIntegration,
+#         'vertex_ai': VertexAiIntegration
+#     }
+#
+#     def __init__(self, project_id: int, integration_id: int, request_settings: dict | None = None):
+#         self.project_id = project_id
+#         self.integration_id = integration_id
+#         self.request_settings = request_settings or dict()
+#
+#         self.integration = self.rpc.call.integrations_get_by_id(
+#             project_id,
+#             integration_id
+#         )
+#
+#         assert self.integration.name in self.ai_class_map.keys(), NotImplementedError(
+#             f"Integration {self.integration.name} not implemented"
+#         )
+#
+#         self.merged_settings = self.integration.settings
+#         self.merged_settings.update(self.request_settings)
+#
+#         self._ai_class = None
+#
+#     @property
+#     def ai_class(self) -> AiIntegration:
+#         if not self._ai_class:
+#             self._ai_class = self.ai_class_map[self.integration.name](
+#                 project_id=self.project_id,
+#                 integration_settings=self.integration.settings
+#             )
+#         return self._ai_class
+#
+#     # @classmethod
+#     # def from_integration(
+#     #         cls, project_id: int, integration_id: int, request_settings: dict
+#     # ) -> AiIntegration:
+#
+#     def __getattr__(self, item):
+#         log.info('GETATTR %s', item)
+#         try:
+#             return self.__dict__[item]
+#         except KeyError:
+#             return getattr(self.ai_class, item)
+#
+#     # def format_settings(self, integration_settings: dict):
+#     #     return self.ai_class.format_settings(integration_settings)
+#     #
+#     # def predict(self, content: str) -> str:
+#     #     return self.ai_class.predict(content)
+

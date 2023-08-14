@@ -85,12 +85,7 @@ const ApiUpdateVariableField = async (promptId, varId, name, value) => {
 
     if (!res.ok) {
         const error = await res.json();
-        msg = "Error occurred while variable update"
-        if (Array.isArray(error)){
-            msg = error.reduce((acc, curr) => {
-                return acc + curr.msg + "\n"
-            }, ``)
-        }
+        const msg = "Error occurred while variable update\n" + error?.map(i => i?.msg || '').join('\n')
         throw Error(msg)
     }
 
@@ -126,6 +121,12 @@ const ApiCreateVariable = async (promptId, name, value) => {
             "value": value,
         })
     })
+    if (!res.ok) {
+        const error = await res.json();
+        const msg = "Error occurred\n" + error?.map(i => i?.msg || '').join('\n')
+        showNotify('ERROR', msg)
+        throw Error(msg)
+    }
     return res.json();
 }
 

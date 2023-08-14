@@ -1,7 +1,7 @@
 from io import BytesIO
 from typing import Optional
 
-from flask import request, g, send_file
+from flask import send_file
 from pylon.core.tools import log
 
 from tools import api_tools, VaultClient, MinioClient

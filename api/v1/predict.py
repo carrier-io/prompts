@@ -43,8 +43,8 @@ class ProjectAPI(api_tools.APIModeHandler):
         return ai_integration.predict(text_prompt)
 
 
-class AdminAPI(api_tools.APIModeHandler):
-    ...
+# class AdminAPI(api_tools.APIModeHandler):
+#     ...
 
 
 class API(api_tools.APIBase):
@@ -55,5 +55,5 @@ class API(api_tools.APIBase):
 
     mode_handlers = {
         'default': ProjectAPI,
-        'administration': AdminAPI,
+        # 'administration': AdminAPI,
     }
