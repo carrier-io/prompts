@@ -157,7 +157,7 @@ class RPC:
             text_prompt += prompt_template.format(**example)
         if input_:
             text_prompt += prompt_template.format(input=input_, output='')
-        # log.info(f"FINAL: {text_prompt}")
+        log.info(f"FINAL: {text_prompt}")
         return text_prompt
 
 
