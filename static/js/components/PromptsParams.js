@@ -79,6 +79,7 @@ const PromptsParams = {
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
+        $('#variablesTable').bootstrapTable();
         $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
@@ -107,6 +108,12 @@ const PromptsParams = {
                 {id: Date.now() + Math.floor(Math.random() * 1000),"input": "", "output": "", "action": ""}
             )
         },
+        addEmptyVariableRow(){
+            $('#variablesTable').bootstrapTable(
+                'append',
+                {id: Date.now() + Math.floor(Math.random() * 1000),"name": "", "value": "", "action": ""}
+            )
+        },
         checkFields(rowId) {
             const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
             if (row.input && row.output) {
@@ -121,6 +128,20 @@ const PromptsParams = {
                 })
             }
         },
+        checkVariableFields(rowId) {
+            const row = $('#variablesTable').bootstrapTable('getRowByUniqueId', rowId)
+            if (row.name && row.value) {
+                $(`#variablesTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                    $(this).attr('disabled', 'disabled');
+                })
+                ApiCreateVariable(this.editablePrompt.id, row.name, row.value).then(newRow => {
+                    $('#variablesTable')
+                        .bootstrapTable('removeByUniqueId', rowId)
+                        .bootstrapTable('append', newRow);
+                    showNotify('SUCCESS', `Variable saved.`);
+                })
+            }
+        },
         updateField(rowId) {
             const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
             ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output).then(data => {
@@ -128,6 +149,21 @@ const PromptsParams = {
                     $(this).removeAttr("disabled");
                 })
                 showNotify('INFO', `Input/Output updated.`);
+            })
+        },
+        updateVariableField(rowId) {
+            const row = $('#variablesTable').bootstrapTable('getRowByUniqueId', rowId)
+            ApiUpdateVariableField(this.editablePrompt.id, rowId, row.name, row.value).then(data => {
+                $(`#variablesTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                    $(this).removeAttr("disabled");
+                })
+                showNotify('INFO', `Variable updated.`);
+            })
+            .catch(err => {
+                $(`#variablesTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                    $(this).removeAttr("disabled");
+                })
+                showNotify("ERROR", err)
             })
         },
         runTest() {
@@ -169,7 +205,7 @@ const PromptsParams = {
         },
         addTestResult() {
             const rowId = Date.now() + Math.floor(Math.random() * 1000)
-            $('#promptsParamsTable').bootstrapTable(
+            $('#testResult').bootstrapTable(
                 'append',
                 {id: rowId,"input": this.testInput, "output": this.testOutput, "action": ""}
             )
@@ -184,6 +220,9 @@ const PromptsParams = {
         deleteExample(exampleId) {
             ApiDeleteExample(exampleId).then(data => {});
         },
+        deleteVariable(varId) {
+            ApiDeleteVariable(varId).then(data => {});
+        },
     },
     template: `     
     <div class="d-flex">
@@ -197,27 +236,65 @@ const PromptsParams = {
                         <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
                     </button>
                 </div>
-                <div class="position-relative" style="height: 164px" v-if="isPromptLoading">
+                <div class="position-relative" style="height: 164px" v-show="isPromptLoading">
                     <div class="layout-spinner">
                         <div class="spinner-centered">
                             <i class="spinner-loader__32x32"></i>
                         </div>
                     </div>
                 </div>
-                <div v-else>
-                    <p class="font-h5 font-bold font-uppercase mb-1">{{ editablePrompt.name }}</p>
-                    <div class="w-100">
-                        <div class="custom-input w-100 position-relative" 
-                            :class="{ 'invalid-input': isInvalidContext }">
-                            <textarea
-                                :disabled="isContextLoading"
-                                :value="editablePrompt.prompt"
-                                @change="updatePrompt"
-                                class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
-                                <div class="spinner__right-bottom" v-if="isContextLoading">
-                                    <i class="spinner-loader__16x16"></i>
-                                </div>
+                <div v-show="!isPromptLoading">
+                    <div>
+                        <p class="font-h5 font-bold font-uppercase mb-1">{{ editablePrompt.name }}</p>
+                        <div class="w-100">
+                            <div class="custom-input w-100 position-relative" 
+                                :class="{ 'invalid-input': isInvalidContext }">
+                                <textarea
+                                    :disabled="isContextLoading"
+                                    :value="editablePrompt.prompt"
+                                    @change="updatePrompt"
+                                    class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
+                                    <div class="spinner__right-bottom" v-if="isContextLoading">
+                                        <i class="spinner-loader__16x16"></i>
+                                    </div>
+                            </div>
                         </div>
+                    </div>
+                    <div class="mt-3">
+                        <table 
+                            id="variablesTable"
+                            class="w-100 table-transparent mb-2 params-table"
+                            data-toggle="table"
+                            data-unique-id="id"
+                        >
+                            <thead class="thead-light">
+                                <tr>
+                                    <th data-field="id" data-visible="false"></th>
+                                    <th data-field="name"
+                                        data-formatter="VariableTable.textareaFormatter"
+                                    >
+                                        <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Name</span>
+                                        <span class="font-h5 font-weight-400 text-capitalize">Variable name</span>
+                                    </th>
+                                    <th data-field="value"
+                                        data-formatter="VariableTable.textareaFormatter"
+                                    >
+                                        <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Value</span>
+                                        <span class="font-h5 font-weight-400 text-capitalize">Variable value</span>
+                                    </th>
+                                    <th data-width="56" data-width-unit="px" 
+                                        data-field="action"
+                                        data-formatter="VariableTable.deleteFormatter"
+                                    ></th>
+                                </tr>
+                            </thead>
+                            <tbody style="border-bottom: solid 1px #EAEDEF">
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                            @click="addEmptyVariableRow">
+                            <i class="fas fa-plus mr-2"></i>Add Variable
+                        </button>
                     </div>
                 </div>
             </div>    

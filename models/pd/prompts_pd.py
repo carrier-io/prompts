@@ -1,7 +1,8 @@
+import re
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, validator, EmailStr
 from pylon.core.tools import log
 
 
@@ -62,6 +63,26 @@ class ExampleModel(BaseModel):
 
 
 class ExampleUpdateModel(ExampleModel):
+    id: int
+
+
+class VariableModel(BaseModel):
+    prompt_id: int
+    name: str
+    value: str
+
+    @validator('name')
+    def validate_variable_name(cls, value):
+        # Define a regular expression pattern for a valid variable name
+        valid_variable_name_pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+
+        if not re.match(valid_variable_name_pattern, value):
+            raise ValueError("Invalid variable name")
+
+        return value
+
+
+class VariableUpdateModel(VariableModel):
     id: int
 
 

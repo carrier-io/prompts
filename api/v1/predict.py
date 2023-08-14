@@ -30,9 +30,12 @@ class ProjectAPI(api_tools.APIModeHandler):
             request_settings=data.integration_settings
         )
         # if data.input:
-        text_prompt = self.module.prepare_text_prompt(
-            project_id, data.prompt_id, data.input_, data.context, data.examples
-        )
+        try:
+            text_prompt = self.module.prepare_text_prompt(
+                project_id, data.prompt_id, data.input_, data.context, data.examples
+            )
+        except Exception as e:
+            return str(e), 400
 
         # else:
         #     raise ValueError("No input provided")

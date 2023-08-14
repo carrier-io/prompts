@@ -67,6 +67,36 @@ const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
     return res.json();
 }
 
+const ApiUpdateVariableField = async (promptId, varId, name, value) => {
+    const api_url = V.build_api_url('prompts', 'variable')
+
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "prompt_id": promptId,
+            "id": varId,
+            "name": name,
+            "value": value,
+        })
+    })
+
+    if (!res.ok) {
+        const error = await res.json();
+        msg = "Error occurred while variable update"
+        if (Array.isArray(error)){
+            msg = error.reduce((acc, curr) => {
+                return acc + curr.msg + "\n"
+            }, ``)
+        }
+        throw Error(msg)
+    }
+
+    return res.json();
+}
+
 const ApiCreateExample = async (promptId, input, output) => {
     const api_url = V.build_api_url('prompts', 'example')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
@@ -78,6 +108,22 @@ const ApiCreateExample = async (promptId, input, output) => {
             "prompt_id": promptId,
             "input": input,
             "output": output,
+        })
+    })
+    return res.json();
+}
+
+const ApiCreateVariable = async (promptId, name, value) => {
+    const api_url = V.build_api_url('prompts', 'variable')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "prompt_id": promptId,
+            "name": name,
+            "value": value,
         })
     })
     return res.json();
@@ -98,6 +144,12 @@ const ApiRunTest = async (prompt, input, integrationId, project_id) => {
             "input": input,
         })
     })
+
+    if (!res.ok) {
+        const errorMsg = await res.text();
+        throw Error(errorMsg)
+    }
+
     return res.json();
 }
 
@@ -111,6 +163,13 @@ const ApiDeletePrompt = async (promptId) => {
 const ApiDeleteExample = async (exampleId) => {
     const api_url = V.build_api_url('prompts', 'example')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}/${exampleId}`, {
+        method: 'DELETE',
+    })
+}
+
+const ApiDeleteVariable = async (variableId) => {
+    const api_url = V.build_api_url('prompts', 'variable')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${variableId}`, {
         method: 'DELETE',
     })
 }

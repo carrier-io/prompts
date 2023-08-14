@@ -4,7 +4,7 @@ from typing import Optional
 from pylon.core.tools import log
 from pylon.core.tools import web
 
-from ..models.prompts import Prompt, Example
+from ..models.prompts import Prompt, Example, Variable
 from tools import rpc_tools, db
 from ..models.pd.prompts_pd import PromptModel, ExampleModel, PromptUpdateModel, \
     ExampleUpdateModel
@@ -30,6 +30,11 @@ class RPC:
             examples = session.query(Example).filter(
                 Example.prompt_id == prompt_id,
             ).all()
+
+            variables = session.query(Variable).filter(
+                Variable.prompt_id == prompt_id,
+            ).all()
+
             result = prompt.to_json()
             if prompt.integration_id:
                 whole_settings = AIProvider.from_integration(
@@ -39,6 +44,7 @@ class RPC:
                     whole_settings = whole_settings.dict()
                 result['model_settings'] = whole_settings
             result['examples'] = [example.to_json() for example in examples]
+            result['variables'] = [var.to_json() for var in variables]
             return result
 
     @web.rpc(f'prompts_create', "create")
@@ -124,6 +130,7 @@ class RPC:
         if prompt_id:
             prompt = self.get_by_id(project_id, prompt_id)
             text_prompt += prompt['prompt']
+            text_prompt = resolve_variables(project_id, prompt_id, text_prompt)
             if examples:
                 prompt['examples'].extend(examples)
             if context:
@@ -134,13 +141,26 @@ class RPC:
                 examples = prompt['examples']
         else:
             text_prompt += context
-        if re.search(r'/\{\{(.*?)\}\}/g', text_prompt):
-            environment = jinja2.Environment()
-            template = environment.from_string(text_prompt)
-            text_prompt = template.render(prompt=input_)
-            input_ = ''
         for example in examples:
             text_prompt += prompt_template.format(**example)
         if input_:
             text_prompt += prompt_template.format(input=input_, output='')
+        log.info(f"FINAL: {text_prompt}")
         return text_prompt
+    
+
+def resolve_variables(project_id, prompt_id, text_prompt):
+    if not re.findall(r'\{\{.*?\}\}', text_prompt):
+        return text_prompt
+
+    with db.with_project_schema_session(project_id) as session:
+        variables = session.query(Variable).filter(Variable.prompt_id == prompt_id)
+        variables = {var.name: var.value for var in variables}
+
+    try:
+        environment = jinja2.Environment()
+        template = environment.from_string(text_prompt)
+        text_prompt = template.render(**variables)
+    except:
+        raise Exception("Invalid jinja template in context")
+    return text_prompt
