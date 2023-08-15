@@ -168,9 +168,10 @@ def resolve_variables(project_id, prompt_id, text_prompt):
     with db.with_project_schema_session(project_id) as session:
         variables = session.query(Variable).filter(Variable.prompt_id == prompt_id)
         variables = {var.name: var.value for var in variables}
+    variables['prompt'] = text_prompt
 
     try:
-        environment = jinja2.Environment()
+        environment = jinja2.Environment(undefined=jinja2.DebugUndefined)
         template = environment.from_string(text_prompt)
         text_prompt = template.render(**variables)
     except:
