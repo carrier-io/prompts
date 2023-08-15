@@ -32,7 +32,8 @@ class ProjectAPI(api_tools.APIModeHandler):
         # if data.input:
         try:
             text_prompt = self.module.prepare_text_prompt(
-                project_id, data.prompt_id, data.input_, data.context, data.examples
+                project_id, data.prompt_id, data.input_, 
+                data.context, data.examples, data.variables
             )
         except Exception as e:
             return str(e), 400

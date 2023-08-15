@@ -135,45 +135,53 @@ class RPC:
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
     def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
-                                    input_: str, context: str = '', examples: list = (),
+                                    input_: str, context: str = '', examples: list = [],
+                                    variables: dict = {},
                                     **kwargs) -> str:
-        text_prompt = ""
-        prompt_template = '\ninput: {input}\noutput: {output}'
+
+        example_template = '\ninput: {input}\noutput: {output}'
+
+        prompt_struct = {
+            "context": context,
+            "examples": examples,       # list of dicts {"input": "value", "output": "value"}
+            "variables": variables,     # list of dicts {"var_name": "value"}
+            "prompt": input_
+        }
         if prompt_id:
-            prompt = self.get_by_id(project_id, prompt_id)
-            text_prompt += prompt['prompt']
-            text_prompt = resolve_variables(project_id, prompt_id, text_prompt)
-            if examples:
-                prompt['examples'].extend(examples)
-            if context:
-                text_prompt += context
-            for example in prompt['examples']:
+            prompt_template = self.get_by_id(project_id, prompt_id)
+            prompt_struct['context'] = prompt_template['prompt'] + prompt_struct['context']
+            for example in prompt_template['examples']:
                 if not example['is_active']:
                     continue
-                examples = prompt['examples']
-        else:
-            text_prompt += context
-        for example in examples:
-            text_prompt += prompt_template.format(**example)
-        if input_:
-            text_prompt += prompt_template.format(input=input_, output='')
-        log.info(f"FINAL: {text_prompt}")
-        return text_prompt
+                prompt_struct['examples'].append({
+                    "input": example['input'],
+                    "output": example['output']
+                })
+            for variable in prompt_template['variables']:
+                if not prompt_struct['variables'].get(variable['name']):
+                    prompt_struct['variables'][variable['name']] = variable['value']
+                prompt_struct['variables']['prompt'] = prompt_struct['prompt']
+        
+        prompt_struct = resolve_variables(prompt_struct)
+
+        for example in prompt_struct['examples']:
+            prompt_struct['context'] += example_template.format(**example)
+
+        if prompt_struct['prompt']:
+            prompt_struct['context'] += example_template.format(input=prompt_struct['prompt'], output='')
+
+        log.info(f"FINAL: {prompt_struct['context']}")
+        return prompt_struct['context']
 
 
-def resolve_variables(project_id, prompt_id, text_prompt):
-    if not re.findall(r'\{\{.*?\}\}', text_prompt):
-        return text_prompt
-
-    with db.with_project_schema_session(project_id) as session:
-        variables = session.query(Variable).filter(Variable.prompt_id == prompt_id)
-        variables = {var.name: var.value for var in variables}
-    variables['prompt'] = text_prompt
-
+def resolve_variables(prompt_struct):
+    
     try:
         environment = jinja2.Environment(undefined=jinja2.DebugUndefined)
-        template = environment.from_string(text_prompt)
-        text_prompt = template.render(**variables)
+        template = environment.from_string(prompt_struct['context'])
+        if 'prompt' in set(jinja2.meta.find_undeclared_variables(template)):
+            prompt_struct['prompt'] = ''
+        prompt_struct['context'] = template.render(**prompt_struct['variables'])
     except:
         raise Exception("Invalid jinja template in context")
-    return text_prompt
+    return prompt_struct
