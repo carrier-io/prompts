@@ -175,12 +175,12 @@ class RPC:
 
 
 def resolve_variables(prompt_struct):
-    
     try:
         environment = jinja2.Environment(undefined=jinja2.DebugUndefined)
-        template = environment.from_string(prompt_struct['context'])
-        if 'prompt' in set(jinja2.meta.find_undeclared_variables(template)):
+        ast = environment.parse(prompt_struct['context'])
+        if 'prompt' in set(jinja2.meta.find_undeclared_variables(ast)):
             prompt_struct['prompt'] = ''
+        template = environment.from_string(prompt_struct['context'])
         prompt_struct['context'] = template.render(**prompt_struct['variables'])
     except:
         raise Exception("Invalid jinja template in context")
