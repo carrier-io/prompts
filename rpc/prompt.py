@@ -1,5 +1,5 @@
 import re
-import jinja2
+from jinja2 import Environment, meta, DebugUndefined
 from typing import Optional, List
 from pylon.core.tools import web, log
 
@@ -10,7 +10,7 @@ from ..models.prompts import Prompt
 from ..models.pd.prompts_pd import PromptModel, PromptUpdateModel
 from ..models.variable import Variable
 from ..utils.ai_providers import AIProvider
-
+from traceback import format_exc
 from tools import rpc_tools, db
 
 
@@ -160,7 +160,7 @@ class RPC:
             for variable in prompt_template['variables']:
                 if not prompt_struct['variables'].get(variable['name']):
                     prompt_struct['variables'][variable['name']] = variable['value']
-                prompt_struct['variables']['prompt'] = prompt_struct['prompt']
+            prompt_struct['variables']['prompt'] = prompt_struct['prompt']
         
         prompt_struct = resolve_variables(prompt_struct)
 
@@ -176,12 +176,14 @@ class RPC:
 
 def resolve_variables(prompt_struct):
     try:
-        environment = jinja2.Environment(undefined=jinja2.DebugUndefined)
+        environment = Environment(undefined=DebugUndefined)
         ast = environment.parse(prompt_struct['context'])
-        if 'prompt' in set(jinja2.meta.find_undeclared_variables(ast)):
+        if 'prompt' in set(meta.find_undeclared_variables(ast)):
             prompt_struct['prompt'] = ''
         template = environment.from_string(prompt_struct['context'])
         prompt_struct['context'] = template.render(**prompt_struct['variables'])
     except:
+        log.critical(format_exc())
         raise Exception("Invalid jinja template in context")
+
     return prompt_struct
