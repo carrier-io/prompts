@@ -37,6 +37,17 @@ class OpenAIIntegrationSettings(OpenAISettings):
     api_token: dict
 
 
+class AzureOpenAISettings(BaseModel):
+    model_name: str = 'gpt-35-turbo'
+    temperature: float = 0
+    api_version: str = '2023-03-15-preview'
+    api_base: str = "https://ai-proxy.lab.epam.com"
+
+
+class AzureOpenAIIntegrationSettings(AzureOpenAISettings):
+    api_token: dict
+
+
 class PromptModel(BaseModel):
     name: str
     description: str | None

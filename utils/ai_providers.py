@@ -1,7 +1,11 @@
 import json
 from abc import ABC, abstractmethod
 
-from ..models.pd.prompts_pd import VertexAIIntegrationSettings, OpenAIIntegrationSettings
+from ..models.pd.prompts_pd import (
+    VertexAIIntegrationSettings, 
+    OpenAIIntegrationSettings, 
+    AzureOpenAIIntegrationSettings,
+)
 from ...integrations.models.pd.integration import SecretField
 from tools import rpc_tools
 from pylon.core.tools import log
@@ -39,6 +43,32 @@ class OpenAiIntegration(AiIntegration):
         )
         log.info(f"{response=}")
         return response['choices'][0]['text']
+
+
+class AzureOpenAiIntegration(AiIntegration):
+    def format_settings(self, integration_settings: dict) -> AzureOpenAIIntegrationSettings:
+        return AzureOpenAIIntegrationSettings.parse_obj(integration_settings)
+
+    def predict(self, content: str) -> str:
+        import openai
+        api_key = SecretField.parse_obj(self.settings.api_token).unsecret(self.project_id)
+        openai.api_key = api_key
+        openai.api_type = "azure"
+        openai.api_base = self.settings.api_base
+        openai.api_version = self.settings.api_version
+
+        response = openai.ChatCompletion.create(
+            engine=self.settings.model_name,
+            temperature=self.settings.temperature,
+            messages=[
+                {
+                    "role": "assistant",
+                    "content": content,
+                }
+            ]
+        )
+        return response['choices'][0]['message']['content']
+
 
 
 class VertexAiIntegration(AiIntegration):
@@ -87,9 +117,14 @@ class AIProvider:
             project_id,
             integration_id
         )
+        if integration is None:
+            return type('EmptyObj', (), {'settings': {}})()
+        
         settings = {**integration.settings, **request_settings}
         if integration.name == 'open_ai':
             return OpenAiIntegration(project_id, settings)
+        elif integration.name == 'open_ai_azure':
+            return AzureOpenAiIntegration(project_id, settings)
         elif integration.name == 'vertex_ai':
             return VertexAiIntegration(project_id, settings)
         else:
