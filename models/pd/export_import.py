@@ -29,14 +29,14 @@ class PromptExport(PromptModel):
         allow_population_by_field_name = True
     prompt: Optional[str] = None
     context: str
-    input: str
+    input: Optional[str]
     variables: List[dict] = []
-    model_settings: ModelSettingsExport
+    model_settings: Optional[ModelSettingsExport]
     # integration_id: Optional[int] = None
 
     def dict_flat(self, **kwargs) -> dict:
         d = self.dict(**kwargs)
-        if 'model_settings' in d:
+        if d.get('model_settings'):
             d.update(d.pop('model_settings'))
         return d
 

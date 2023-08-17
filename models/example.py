@@ -10,7 +10,7 @@ class Example(
         {"schema": "tenant"},
     )
     id = Column(Integer, primary_key=True)
-    prompt_id = Column(Integer, ForeignKey('tenant.models_prompts.id'), nullable=False)
+    prompt_id = Column(Integer, ForeignKey('tenant.models_prompts.id', ondelete='CASCADE'), nullable=False)
     input = Column(String)
     output = Column(String)
     is_active = Column(Boolean, nullable=False, default=True)
