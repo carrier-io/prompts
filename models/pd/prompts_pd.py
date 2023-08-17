@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from pylon.core.tools import log
 
 
@@ -44,10 +44,22 @@ class PromptModel(BaseModel):
     test_input: Optional[str] = None
     integration_id: Optional[int] = None
     type: PromptType = PromptType.structured
-    model_settings: VertexAISettings | OpenAISettings | None = None
+    model_settings: dict | None = None
 
     class Config:
         use_enum_values = True
+
+    @validator('model_settings')
+    def choose_correct_model_for_settings(cls, value: dict):
+        log.info('validator %s %s', value, type(value))
+        if isinstance(value, dict):
+            if 'max_decode_steps' in value:
+                return VertexAISettings.parse_obj(value)
+            elif 'max_tokens' in value:
+                return OpenAISettings.parse_obj(value)
+            else:
+                raise ValueError('Cannot determine parser for model_settings')
+        return value
 
 
 class PromptUpdateModel(PromptModel):

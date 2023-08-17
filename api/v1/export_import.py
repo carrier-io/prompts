@@ -1,11 +1,9 @@
+import json
+from io import BytesIO
 from itertools import chain
-from typing import Optional, Literal, List
 
-from flask import request
-from pydantic import ValidationError, BaseModel, parse_obj_as
+from flask import request, send_file
 from pylon.core.tools import log
-
-from tools import api_tools, db
 
 from sqlalchemy.exc import IntegrityError
 from ...models.example import Example
@@ -15,7 +13,8 @@ from ...models.pd.prompts_pd import VertexAISettings, OpenAISettings
 from ...models.pd.variable import VariableModel
 from ...models.prompts import Prompt
 from ...models.variable import Variable
-from ...utils.ai_providers import AIProvider
+
+from tools import api_tools, db
 
 
 class ProjectAPI(api_tools.APIModeHandler):
@@ -50,13 +49,22 @@ class ProjectAPI(api_tools.APIModeHandler):
                 VariableModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
                 for i in variables
             ]
-            return result
+
+            if 'as_file' in request.args:
+                file = BytesIO()
+                data = json.dumps(result, ensure_ascii=False, indent=4)
+                file.write(data.encode('utf-8'))
+                file.seek(0)
+                return send_file(file, download_name=f'{prompt.name}.json', as_attachment=False)
+            return result, 200
 
     def post(self, project_id: int, **kwargs):
         try:
             integration_id = request.json['integration_id']
-        except KeyError:
-            return {'error': 'integration_id is required in body'}, 400
+            if not integration_id:
+                raise ValueError
+        except (KeyError, ValueError):
+            return {'error': '"integration_id" is required'}, 400
 
         examples = request.json.pop('examples', [])
         variables = request.json.pop('variables', [])
@@ -86,9 +94,6 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         prompt_dict = prompt_data.dict(exclude_unset=False, by_alias=True, exclude={'model_settings'})
         prompt_dict['model_settings'] = settings.dict()
-        # result = {
-        #     'examples': examples,
-        # }
 
         if request.json.get('skip'):
             return {

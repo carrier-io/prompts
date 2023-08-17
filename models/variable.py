@@ -9,6 +9,6 @@ class Variable(db_tools.AbstractBaseMixin, db.Base):
         {"schema": "tenant"},
     )
     id = Column(Integer, primary_key=True)
-    prompt_id = Column(Integer, ForeignKey('tenant.models_prompts.id'), nullable=False)
+    prompt_id = Column(Integer, ForeignKey('tenant.models_prompts.id', ondelete='CASCADE'), nullable=False)
     name = Column(String, nullable=False)
     value = Column(String, nullable=False)
