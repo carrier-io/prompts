@@ -61,6 +61,24 @@ const PromptsAzureOpenaiIntegration = {
                     :maxValue="1"
                     v-model:modelValue="editableIntegrationSetting.temperature"
                 ></prompts-range>
+                <prompts-range
+                    @register="$root.register"
+                    instance_name="prompts-range"
+                    title="Token limit"
+                    :step="1"
+                    :minValue="1"
+                    :maxValue="1024"
+                    v-model:modelValue="editableIntegrationSetting.max_tokens"
+                ></prompts-range>
+                <prompts-range
+                    @register="$root.register"
+                    instance_name="prompts-range"
+                    title="Top-P"
+                    :step="0.05"
+                    :minValue="0"
+                    :maxValue="1"
+                    v-model:modelValue="editableIntegrationSetting.top_p"
+                ></prompts-range>
             </div>
         </div>
     `

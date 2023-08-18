@@ -6,7 +6,7 @@ from ...models.prompts import Prompt
 from ...utils.ai_providers import AIProvider
 
 
-from tools import rpc_tools, db
+from tools import db
 
 
 class ProjectAPI(api_tools.APIModeHandler):
@@ -24,13 +24,13 @@ class ProjectAPI(api_tools.APIModeHandler):
             )
             session.commit()
 
-        ai_integration = AIProvider.from_integration(
-            project_id=request.json.get('project_id', project_id),
-            integration_id=data.integration_id,
-            request_settings=data.integration_settings
-        )
-        # if data.input:
+        project_id = request.json.get('project_id', project_id)
+
         try:
+            integration = AIProvider.get_integration(
+                project_id=project_id,
+                integration_id=data.integration_id,
+            )
             text_prompt = self.module.prepare_text_prompt(
                 project_id, data.prompt_id, data.input_, 
                 data.context, data.examples, data.variables
@@ -38,11 +38,10 @@ class ProjectAPI(api_tools.APIModeHandler):
         except Exception as e:
             return str(e), 400
 
-        # else:
-        #     raise ValueError("No input provided")
-
-        return ai_integration.predict(text_prompt)
-
+        result = AIProvider.predict(project_id, integration, data.integration_settings, text_prompt)
+        if not result['ok']:
+            return str(result['error']), 400
+        return result['response'], 200
 
 # class AdminAPI(api_tools.APIModeHandler):
 #     ...

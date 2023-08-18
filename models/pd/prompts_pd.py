@@ -20,12 +20,6 @@ class VertexAISettings(BaseModel):
     tuned_model_name: str = ''
 
 
-class VertexAIIntegrationSettings(VertexAISettings):
-    service_account_info: dict
-    project: str
-    zone: str
-
-
 class OpenAISettings(BaseModel):
     model_name: str = 'text-davinci-003'
     temperature: float = 1.0
@@ -33,19 +27,13 @@ class OpenAISettings(BaseModel):
     top_p: float = 0.8
 
 
-class OpenAIIntegrationSettings(OpenAISettings):
-    api_token: dict
-
-
 class AzureOpenAISettings(BaseModel):
     model_name: str = 'gpt-35-turbo'
-    temperature: float = 0
     api_version: str = '2023-03-15-preview'
     api_base: str = "https://ai-proxy.lab.epam.com"
-
-
-class AzureOpenAIIntegrationSettings(AzureOpenAISettings):
-    api_token: dict
+    temperature: float = 0
+    max_tokens: int = 7
+    top_p: float = 0.8
 
 
 class PromptModel(BaseModel):
