@@ -4,13 +4,12 @@
             instance_name="table_config"
             header='Config'
             :table_attributes="{
-            'data-url': this.$root.build_api_url('prompts', 'config') + '/{{ payload.project.id }}',
-            'data-unique-id': null,
-            'data-virtual-scroll': false,
-            'data-pagination': false,
-            'data-side-pagination': 'client'
-        }"
-            {#        container_classes="h-100"#}
+                'data-url': this.$root.build_api_url('prompts', 'config') + '/{{ payload.project.id }}',
+                'data-unique-id': null,
+                'data-virtual-scroll': false,
+                'data-pagination': false,
+                'data-side-pagination': 'client'
+            }"
             container_classes="my-3 pb-0"
     >
         <template #actions="{master}">

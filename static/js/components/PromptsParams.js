@@ -229,7 +229,20 @@ const PromptsParams = {
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
                 <div class="d-flex justify-content-between mb-2">
-                    <p class="font-h5 font-bold font-uppercase mb-2">CONTEXT</p>
+                    <p class="font-h5 font-bold font-uppercase mb-1 flex-grow-1">
+                        <span v-show="!isPromptLoading">{{ editablePrompt.name }}</span>
+                    </p>
+                    <a class="btn btn-secondary mr-2" 
+                        download
+                        :class="{'disabled': isPromptLoading}"
+                        :href="
+                            $root.build_api_url('prompts', 'export_import') + 
+                            '/' + $root.project_id + 
+                            '/' + editablePrompt.id + 
+                            '?as_file=true'"
+                    >
+                        Export
+                    </a>
                     <button type="button" :disabled="isRunLoading || isPromptLoading" 
                         class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
@@ -245,7 +258,7 @@ const PromptsParams = {
                 </div>
                 <div v-show="!isPromptLoading">
                     <div>
-                        <p class="font-h5 font-bold font-uppercase mb-1">{{ editablePrompt.name }}</p>
+                        <p class="font-h5 font-bold font-uppercase mb-2 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
                             <div class="custom-input w-100 position-relative" 
                                 :class="{ 'invalid-input': isInvalidContext }">

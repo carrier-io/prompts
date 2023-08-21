@@ -1,4 +1,7 @@
 const PromptsListAside = {
+    components: {
+        ImportPromptButton
+    },
     data() {
         return {
             loadingDelete: false,
@@ -21,10 +24,9 @@ const PromptsListAside = {
                 </div>
                 <div class="col-8">
                     <div class="d-flex justify-content-end">
+                        <ImportPromptButton></ImportPromptButton>
                         <button type="button"
                             @click="$emit('open-create-modal')"
-                            data-toggle="modal" 
-                            data-target="#CreateTaskModal"
                             class="btn btn-basic btn-sm btn-icon__sm">
                             <i class="fas fa-plus"></i>
                         </button>
