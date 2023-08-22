@@ -42,19 +42,22 @@ class Module(module.ModuleModel):
         from .init_db import init_db
         init_db()
 
-        theme.register_section(
-            "models",
-            "Models",
-            kind="holder",
-            location="left",
-            permissions={
-                "permissions": ["models"],
-                "recommended_roles": {
-                    "administration": {"admin": True, "editor": True, "viewer": True},
-                    "default": {"admin": True, "editor": True, "viewer": True},
+        try:
+            theme.register_section(
+                "models",
+                "Models",
+                kind="holder",
+                location="left",
+                permissions={
+                    "permissions": ["models"],
+                    "recommended_roles": {
+                        "administration": {"admin": True, "editor": True, "viewer": True},
+                        "default": {"admin": True, "editor": True, "viewer": True},
+                    }
                 }
-            }
-        )
+            )
+        except (ValueError, RuntimeError):
+            ...
 
         theme.register_subsection(
             "models", "prompts",
