@@ -33,8 +33,8 @@ class AIProvider:
         return integration
 
     @classmethod
-    def _get_rpc_function(cls, integration_name):
-        rpc_name = integration_name + "__predict"
+    def _get_rpc_function(cls, integration_name, suffix="__predict"):
+        rpc_name = integration_name + suffix
         rpc_func = getattr(cls.rpc, rpc_name)
         return rpc_func
 
@@ -45,3 +45,7 @@ class AIProvider:
         result = rpc_func(project_id, settings, text_prompt)
         return result
 
+    @classmethod
+    def parse_settings(cls, integration, settings):
+        rpc_func = cls._get_rpc_function(integration.name, "__parse_settings")
+        return rpc_func(settings)
