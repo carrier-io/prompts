@@ -6,31 +6,34 @@ from ...models.prompts import Prompt
 from ...utils.ai_providers import AIProvider
 
 
-from tools import rpc_tools, db
+from tools import db
 
 
 class ProjectAPI(api_tools.APIModeHandler):
 
     def post(self, project_id):
-        data = PredictPostModel.parse_obj(request.json)
-
+        payload = request.json
+        payload['project_id'] = project_id
+        try:
+            data = PredictPostModel.parse_obj(payload)
+        except Exception as e:
+            return {"error": str(e)}, 400
+        model_settings = data.integration_settings.dict(exclude={'project_id'})
         with db.with_project_schema_session(project_id) as session:
             session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
                 dict(
-                    model_settings=data.integration_settings,
+                    model_settings=model_settings,
                     test_input=data.input_,
                     integration_id=data.integration_id
                 )
             )
             session.commit()
 
-        ai_integration = AIProvider.from_integration(
-            project_id=request.json.get('project_id', project_id),
-            integration_id=data.integration_id,
-            request_settings=data.integration_settings
-        )
-        # if data.input:
         try:
+            integration = AIProvider.get_integration(
+                project_id=project_id,
+                integration_id=data.integration_id,
+            )
             text_prompt = self.module.prepare_text_prompt(
                 project_id, data.prompt_id, data.input_, 
                 data.context, data.examples, data.variables
@@ -38,11 +41,10 @@ class ProjectAPI(api_tools.APIModeHandler):
         except Exception as e:
             return str(e), 400
 
-        # else:
-        #     raise ValueError("No input provided")
-
-        return ai_integration.predict(text_prompt)
-
+        result = AIProvider.predict(project_id, integration, model_settings, text_prompt)
+        if not result['ok']:
+            return str(result['error']), 400
+        return result['response'], 200
 
 # class AdminAPI(api_tools.APIModeHandler):
 #     ...

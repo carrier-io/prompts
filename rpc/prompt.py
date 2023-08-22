@@ -40,11 +40,9 @@ class RPC:
 
             result = prompt.to_json()
             if prompt.integration_id:
-                whole_settings = AIProvider.from_integration(
+                whole_settings = AIProvider.get_integration_settings(
                     project_id, prompt.integration_id, prompt.model_settings
-                ).settings
-                if not isinstance(whole_settings, dict):
-                    whole_settings = whole_settings.dict()
+                )
                 result['model_settings'] = whole_settings
             result['examples'] = [example.to_json() for example in examples]
             result['variables'] = [var.to_json() for var in variables]
@@ -52,19 +50,21 @@ class RPC:
 
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
+        prompt['project_id'] = project_id
         prompt = PromptModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:
-            prompt = Prompt(**prompt.dict())
+            prompt = Prompt(**prompt.dict(exclude={'project_id'}))
             session.add(prompt)
             session.commit()
             return prompt.to_json()
 
     @web.rpc(f'prompts_update', "update")
     def prompts_update(self, project_id: int, prompt: dict, **kwargs) -> bool:
+        prompt['project_id'] = project_id
         prompt = PromptUpdateModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:
             session.query(Prompt).filter(Prompt.id == prompt.id).update(
-                prompt.dict(exclude={'id'}, exclude_none=True)
+                prompt.dict(exclude={'id', 'project_id'}, exclude_none=True)
             )
             session.commit()
             updated_prompt = session.query(Prompt).get(prompt.id)

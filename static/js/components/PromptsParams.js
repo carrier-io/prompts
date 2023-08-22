@@ -14,6 +14,7 @@ const PromptsParams = {
     components: {
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
+        PromptsAzureOpenaiIntegration,
     },
     data() {
         return {
@@ -466,6 +467,13 @@ const PromptsParams = {
                     :key="selectedPrompt"
                     v-if="selectedIntegration === 'open_ai'">
                 </PromptsOpenaiIntegration>
+                <PromptsAzureOpenaiIntegration 
+                    :is-run-clicked="isRunClicked"
+                    :selected-prompt="editablePrompt"
+                    @update-setting="updateSetting"
+                    :key="selectedPrompt"
+                    v-if="selectedIntegration === 'open_ai_azure'">
+                </PromptsAzureOpenaiIntegration>
             </template>
         </div>
     </div>  

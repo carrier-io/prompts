@@ -1,8 +1,9 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 from pylon.core.tools import log
+from ...utils.ai_providers import AIProvider
 
 
 class PromptType(str, enum.Enum):
@@ -11,36 +12,11 @@ class PromptType(str, enum.Enum):
     freeform = 'freeform'
 
 
-class VertexAISettings(BaseModel):
-    model_name: str = 'text-bison@001'
-    temperature: float = 1.0
-    max_decode_steps: int = 256
-    top_p: float = 0.8
-    top_k: int = 40
-    tuned_model_name: str = ''
-
-
-class VertexAIIntegrationSettings(VertexAISettings):
-    service_account_info: dict
-    project: str
-    zone: str
-
-
-class OpenAISettings(BaseModel):
-    model_name: str = 'text-davinci-003'
-    temperature: float = 1.0
-    max_tokens: int = 7
-    top_p: float = 0.8
-
-
-class OpenAIIntegrationSettings(OpenAISettings):
-    api_token: dict
-
-
 class PromptModel(BaseModel):
     name: str
     description: str | None
     prompt: str
+    project_id: Optional[int] = None
     test_input: Optional[str] = None
     integration_id: Optional[int] = None
     type: PromptType = PromptType.structured
@@ -49,17 +25,18 @@ class PromptModel(BaseModel):
     class Config:
         use_enum_values = True
 
-    @validator('model_settings')
-    def choose_correct_model_for_settings(cls, value: dict):
-        log.info('validator %s %s', value, type(value))
-        if isinstance(value, dict):
-            if 'max_decode_steps' in value:
-                return VertexAISettings.parse_obj(value)
-            elif 'max_tokens' in value:
-                return OpenAISettings.parse_obj(value)
-            else:
-                raise ValueError('Cannot determine parser for model_settings')
-        return value
+    @root_validator
+    def check_settings(cls, values: dict):
+        if not (values['project_id'] and values['integration_id']):
+            return values
+        project_id, integration_id = values['project_id'], values['integration_id']
+        integration = AIProvider.get_integration(project_id, integration_id)
+        model_settings = values['model_settings']
+        response = AIProvider.parse_settings(integration, model_settings)
+        if not response['ok']:
+            raise ValueError('Cannot determine parser for model_settings')
+        values['model_settings'] = response['item']
+        return values
 
 
 class PromptUpdateModel(PromptModel):
@@ -71,9 +48,25 @@ class PredictPostModel(BaseModel):
     integration_id: int
     integration_settings: Optional[dict] = {}
     prompt_id: Optional[int] = None
+    project_id: Optional[int] = None
     examples: Optional[list] = []
     context: Optional[str] = ''
     variables: Optional[dict] = {}
 
     class Config:
         fields = {'input_': 'input'}
+
+    @root_validator
+    def check_settings(cls, values: dict):
+        if not (values['project_id'] and values['integration_id']):
+            return values
+        project_id, integration_id = values['project_id'], values['integration_id']
+        
+        integration = AIProvider.get_integration(project_id, integration_id)
+        model_settings = values['integration_settings']
+        response = AIProvider.parse_settings(integration, model_settings)
+        
+        if not response['ok']:
+            raise ValueError('Cannot determine parser for model_settings')
+        values['integration_settings'] = response['item']
+        return values
