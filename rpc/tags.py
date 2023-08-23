@@ -22,7 +22,8 @@ from typing import List
 
 from pylon.core.tools import web, log  # pylint: disable=E0611,E0401
 from tools import rpc_tools, db
-from ..models.prompts import Prompt, Tag
+from ..models.prompts import Prompt
+from ..models.tags import Tag
 from ..models.pd.tag import PromptTagModel
 
 
