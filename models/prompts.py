@@ -21,4 +21,4 @@ class Prompt(
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     tags = relationship("Tag", secondary='tenant.models_prompts_tags_association', 
-        backref=backref("prompts"))
+        backref=backref("prompts"), lazy='joined')

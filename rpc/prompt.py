@@ -20,7 +20,8 @@ class RPC:
     def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
             prompts = session.query(Prompt).order_by(Prompt.id.asc()).all()
-            return [prompt.to_json() for prompt in prompts]
+            return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
+                    for prompt in prompts]
 
     @web.rpc("prompts_get_by_id", "get_by_id")
     def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
