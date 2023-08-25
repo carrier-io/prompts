@@ -10,6 +10,7 @@ from ...models.example import Example
 from ...models.pd.example import ExampleModel
 from ...models.pd.export_import import PromptExport, PromptImport
 from ...models.pd.variable import VariableModel
+from ...models.pd.tag import PromptTagModel
 from ...models.prompts import Prompt
 from ...models.variable import Variable
 from ...utils.ai_providers import AIProvider
@@ -43,6 +44,10 @@ class ProjectAPI(api_tools.APIModeHandler):
             result['variables'] = [
                 VariableModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
                 for i in variables
+            ]
+            result['tags'] = [
+                PromptTagModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
+                for i in prompt.tags
             ]
             if 'as_file' in request.args:
                 file = BytesIO()
