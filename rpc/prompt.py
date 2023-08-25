@@ -47,6 +47,7 @@ class RPC:
                 result['model_settings'] = whole_settings
             result['examples'] = [example.to_json() for example in examples]
             result['variables'] = [var.to_json() for var in variables]
+            result['tags'] = [tag.to_json() for tag in prompt.tags]
             return result
 
     @web.rpc(f'prompts_create', "create")
