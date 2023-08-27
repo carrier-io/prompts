@@ -5,16 +5,18 @@ const PromptsParams = {
             default: {
                 "name": "",
                 "prompt": "",
-                "examples": []
+                "examples": [],
             }
         },
         integrations: [],
+        tags: [],
         isPromptLoading: false,
     },
     components: {
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
+        PromptsTagsModal,
     },
     data() {
         return {
@@ -31,6 +33,8 @@ const PromptsParams = {
             selectedComponentInt: "",
             isRunLoading: false,
             isContextLoading: false,
+            promptTags: [],
+            showTagsModal: false,
         }
     },
     computed: {
@@ -67,6 +71,7 @@ const PromptsParams = {
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
+                this.fetchPromptTags(this.selectedPrompt.id);
             },
             deep: true
         },
@@ -84,6 +89,11 @@ const PromptsParams = {
         $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
+        fetchPromptTags(promptId) {
+            fetchPromptTagsAPI(promptId).then((tags) => {
+                this.promptTags = tags;
+            })
+        },
         changeIntegration(newVal) {
             if (this.selectedPrompt.integration_id) {
                 const existedInt = this.integrations
@@ -206,7 +216,7 @@ const PromptsParams = {
         },
         addTestResult() {
             const rowId = Date.now() + Math.floor(Math.random() * 1000)
-            $('#testResult').bootstrapTable(
+            $('#promptsParamsTable').bootstrapTable(
                 'append',
                 {id: rowId,"input": this.testInput, "output": this.testOutput, "action": ""}
             )
@@ -224,6 +234,9 @@ const PromptsParams = {
         deleteVariable(varId) {
             ApiDeleteVariable(varId).then(data => {});
         },
+        updateTags(tags) {
+            this.editablePrompt.tags = tags;
+        }
     },
     template: `     
     <div class="d-flex">
@@ -444,6 +457,21 @@ const PromptsParams = {
                 </div>
             </div>
             <template v-else>
+                <div class="d-flex mt-4 flex-column">
+                    <div>
+                        <span class="font-h6 font-bold mr-2">TAGS:</span>
+                        <button class="btn btn-xs btn-painted mr-1 rounded-pill mb-1" v-for="tag in editablePrompt.tags"
+                            :style="{'--text-color': tag.color, '--brd-color': tag.color}">{{tag.tag}}
+                        </button>
+                    </div>
+                    <div class="d-flex mt-1">
+                        <button type="button" class="btn btn-default btn-xs btn-icon__xs mr-2"
+                            @click="showTagsModal = true">
+                            <i class="icon__18x18 icon-edit" data-toggle="tooltip" data-placement="top" title="Edit tags"></i>
+                        </button>
+                        <p class="font-h5">Edit tags</p>
+                    </div>
+                </div>
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
                     <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
@@ -474,6 +502,15 @@ const PromptsParams = {
                     :key="selectedPrompt"
                     v-if="selectedIntegration === 'open_ai_azure'">
                 </PromptsAzureOpenaiIntegration>
+                <transition>
+                    <prompts-tags-modal
+                        v-if="showTagsModal"
+                        :prompt="editablePrompt"
+                        @update-tags="updateTags"
+                        @close-modal="showTagsModal = false"
+                    >  
+                    </prompts-tags-modal>
+                </transition>
             </template>
         </div>
     </div>  

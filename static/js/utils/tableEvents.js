@@ -1,4 +1,57 @@
 var ParamsTable = {
+    tagFormatter(value, row, index, field) {
+        if (!row.tags.length) return '';
+
+        if (row.tags.length < 3) {
+            const listTagsBtn = row.tags.map(tag =>
+                `<button class="btn btn-xs btn-painted mr-1 rounded-pill mb-1"
+                style="--text-color: ${tag.color}; --brd-color: ${tag.color}; max-width: 100px; text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;">${tag.tag}
+            </button>`
+            )
+            return listTagsBtn.join('');
+        }
+
+        const firstTag = row.tags[0];
+        const firstTagBtn = `<button class="btn btn-xs btn-painted mr-1 rounded-pill"
+            style="--text-color: ${firstTag.color}; --brd-color: ${firstTag.color};">${firstTag.tag}
+        </button>`
+
+        const listTagsInfo = row.tags.slice(1).map(tag =>
+            `<div class="my-1 mx-3">
+                <button class="btn btn-xs btn-painted rounded-pill pl-2.5 pr-2.5" style="--text-color: ${tag.color }; --brd-color: ${tag.color}">
+                    ${tag.tag}
+                </button>
+            </div>`).join("");
+        const sizeTags = row.tags.slice(1).length;
+        const randomId = `listtooltip_${new Date() + Math.floor(Math.random() * 1000)}`
+        const infoTags = `<button
+                                class="btn btn-xs btn-painted btn-painted__size rounded-pill px-2"
+                                style="--text-color: #757F99; --brd-color: #EAEDEF"
+                                data-toggle="${randomId}"
+                                data-html="true"
+                                data-offset="80% 20%"
+                                title="true">
+                                + ${sizeTags}
+                          </button>`
+
+        setTimeout(() => {
+            const attrTooltip = `[data-toggle="${randomId}"]`
+            $(attrTooltip).tooltip({
+                sanitize: false,
+                boundary: 'body',
+                template: `
+                    <div class="tooltip tooltip__custom" role="tooltip">
+                        <div class="tooltip-inner__custom d-flex flex-column">
+                            ${listTagsInfo}
+                        </div>
+                    </div>
+                `
+            })
+        },0);
+        return `${firstTagBtn}${infoTags}`
+    },
     parametersDeleteFormatter(value, row, index) {
         return `
             <button type="button" class="btn btn-default btn-xs btn-table btn-icon__xs" 
