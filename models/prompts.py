@@ -1,4 +1,6 @@
 from sqlalchemy import Integer, Column, String, DateTime, func, JSON
+from sqlalchemy.orm import relationship, backref
+
 from tools import db_tools, db, rpc_tools
 
 
@@ -16,7 +18,7 @@ class Prompt(
     test_input = Column(String, nullable=True)
     type = Column(String(128), nullable=False)
     model_settings = Column(JSON, nullable=True)
-    # ALTER TABLE "Project-1"."models_prompts" ADD COLUMN tags JSON DEFAULT '[]';
-    tags = Column(JSON, unique=False, default=[])
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
+    tags = relationship("Tag", secondary='tenant.models_prompts_tags_association', 
+        backref=backref("prompts"), lazy='joined')

@@ -42,7 +42,7 @@ const ApiUpdatePrompt = async (prompt) => {
             "name": prompt.name,
             "type": "freeform",
             "prompt": prompt.prompt,
-            // "model_settings": prompt.integration_settings,
+            "tags": prompt.tags,
         })
     })
     return res.json();
@@ -173,4 +173,32 @@ const ApiDeleteVariable = async (variableId) => {
     const res = await fetch(`${api_url}/${getSelectedProjectId()}/${variableId}`, {
         method: 'DELETE',
     })
+}
+
+const fetchTagsAPI = async () => {
+    const api_url = V.build_api_url('prompts', 'tags')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'GET',
+    })
+    return res.json();
+}
+const fetchPromptTagsAPI = async (promptId) => {
+    const api_url = V.build_api_url('prompts', 'tags')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptId}`, {
+        method: 'GET',
+    })
+    return res.json();
+}
+
+const updatePromptTagsAPI = async (tags, promptId) => {
+    const api_url = V.build_api_url('prompts', 'tags')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tags)
+
+    })
+    return res.json();
 }

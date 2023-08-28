@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="{{ url_for('design-system.static', filename='assets/js/color-picker/dist/coloris.min.css') }}" />
 <style>
     .bootstrap-table .fixed-table-container .fixed-table-body {
         height: auto !important;
@@ -16,5 +17,8 @@
     #testResult td:not(:last-child)
     {
         vertical-align: top !important;
+    }
+    #prompts-aside-table tbody tr td:first-child {
+        vertical-align: middle !important;
     }
 </style>
