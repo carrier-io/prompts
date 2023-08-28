@@ -447,7 +447,7 @@ const PromptsParams = {
         </div>
         <div class="card p-4" style="width: 340px">
             <div class="d-flex justify-content-between">
-                <p class="font-h4 font-bold">Integration</p>
+                <p class="font-h4 font-bold">Settings</p>
             </div>
             <div class="position-relative h-100" v-if="isPromptLoading">
                 <div class="layout-spinner">
