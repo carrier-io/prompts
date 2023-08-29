@@ -18,7 +18,7 @@ class PromptModel(BaseModel):
     prompt: str
     project_id: Optional[int] = None
     test_input: Optional[str] = None
-    integration_id: Optional[int] = None
+    integration_uid: Optional[str] = None
     type: PromptType = PromptType.structured
     model_settings: dict | None = None
 
@@ -27,10 +27,10 @@ class PromptModel(BaseModel):
 
     @root_validator
     def check_settings(cls, values: dict):
-        if not (values['project_id'] and values['integration_id']):
+        if not (values['project_id'] and values['integration_uid']):
             return values
-        project_id, integration_id = values['project_id'], values['integration_id']
-        integration = AIProvider.get_integration(project_id, integration_id)
+        project_id, integration_uid = values['project_id'], values['integration_uid']
+        integration = AIProvider.get_integration(project_id, integration_uid)
         model_settings = values['model_settings']
         response = AIProvider.parse_settings(integration, model_settings)
         if not response['ok']:
@@ -45,7 +45,7 @@ class PromptUpdateModel(PromptModel):
 
 class PredictPostModel(BaseModel):
     input_: str
-    integration_id: int
+    integration_uid: str
     integration_settings: Optional[dict] = {}
     prompt_id: Optional[int] = None
     project_id: Optional[int] = None
@@ -56,13 +56,18 @@ class PredictPostModel(BaseModel):
     class Config:
         fields = {'input_': 'input'}
 
+    @root_validator(pre=True)
+    def check_settings(cls, values: dict):
+        values['integration_uid'] = values.get('integration_uid') or values.get('integration_id')
+        return values
+
     @root_validator
     def check_settings(cls, values: dict):
-        if not (values['project_id'] and values['integration_id']):
+        if not (values['project_id'] and values['integration_uid']):
             return values
-        project_id, integration_id = values['project_id'], values['integration_id']
+        project_id, integration_uid = values['project_id'], values['integration_uid']
         
-        integration = AIProvider.get_integration(project_id, integration_id)
+        integration = AIProvider.get_integration(project_id, integration_uid)
         model_settings = values['integration_settings']
         response = AIProvider.parse_settings(integration, model_settings)
         

@@ -11,7 +11,8 @@ class Prompt(
     __table_args__ = {'schema': 'tenant'}
 
     id = Column(Integer, primary_key=True)
-    integration_id = Column(Integer, nullable=True)
+    integration_uid = Column(String(128), nullable=True)
+    # integration_id = Column(Integer, nullable=True)
     name = Column(String(128), unique=True, nullable=False)
     description = Column(String(256), nullable=True)
     prompt = Column(String, nullable=True)
