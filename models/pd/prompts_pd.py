@@ -56,8 +56,8 @@ class PredictPostModel(BaseModel):
     class Config:
         fields = {'input_': 'input'}
 
-    @root_validator(pre=True)
-    def check_settings(cls, values: dict):
+    @root_validator(pre=True, allow_reuse=True)
+    def get_integration_uid(cls, values: dict):
         values['integration_uid'] = values.get('integration_uid') or values.get('integration_id')
         return values
 
