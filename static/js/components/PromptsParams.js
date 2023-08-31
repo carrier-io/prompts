@@ -54,7 +54,6 @@ const PromptsParams = {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-
                 if (newVal.model_settings) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
@@ -76,6 +75,9 @@ const PromptsParams = {
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
+                // this.$nextTick(() => {
+                //     $('#selectIntegration').selectpicker('refresh');
+                // })
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
             },
@@ -92,7 +94,6 @@ const PromptsParams = {
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
-        $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
         fetchPromptTags(promptId) {
@@ -114,7 +115,7 @@ const PromptsParams = {
                 const existedInt = this.integrations
                     .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
                 this.selectedComponentInt = newVal;
-                if (existedInt.id === this.selectedPrompt.integration_uid) {
+                if (existedInt.uid === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
