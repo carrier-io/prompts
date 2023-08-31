@@ -11,6 +11,7 @@ const Prompts = {
         "prompts-modal-create": PromptsModalCreate,
         "prompts-params": PromptsParams,
         "prompts-confirm-modal": PromptsConfirmModal,
+        "prompts-version-modal-create": PromptsVersionModalCreate,
     },
     props: ['integrations'],
     data() {
@@ -19,14 +20,18 @@ const Prompts = {
                 id: null
             },
             showCreateModal: false,
+            showCreateVersionModal: false,
             modalType: 'create',
+            modalVersionType: 'create',
             promptsList: [],
             showConfirm: false,
             loadingDelete: false,
             isPromptListLoading: false,
             isPromptLoading: false,
             isModalLoading: false,
+            isVersionModalLoading: false,
             isTagsLoaded: false,
+            isPromptVersionsUpdated: false,
         }
     },
     mounted() {
@@ -73,12 +78,24 @@ const Prompts = {
         openCreateModal(modalType, prompt = '') {
             this.showCreateModal = true;
         },
+        openCreateVersionModal(modalVersionType, prompt = '') {
+            this.showCreateVersionModal = true;
+        },
         handleCreatePrompt(newRoleName) {
             this.isModalLoading = true;
             ApiCreatePrompt(newRoleName, this.selectedMode).then(data => {
                 this.refreshPromptsListTable(data.id);
                 this.isModalLoading = false;
                 this.showCreateModal = false;
+            });
+        },
+        handleCreatePromptVersion(newVersionName) {
+            this.isVersionModalLoading = true;
+            ApiCreatePromptVersion(this.selectedPrompt.id, newVersionName).then(data => {
+                this.isPromptVersionsUpdated = true;
+                $('#selectedPromptVersion').selectpicker('refresh');
+                this.isVersionModalLoading = false;
+                this.showCreateVersionModal = false;
             });
         },
         deletePrompt() {
@@ -149,11 +166,13 @@ const Prompts = {
                         <template v-if="promptsList.length > 0">
                             <prompts-params
                                 class="flex-grow-1"
+                                @open-create-version-modal="openCreateVersionModal"
                                 @register="$root.register"
                                 instance_name="prompts-params"
                                 :selected-prompt="selectedPrompt"
                                 :integrations="integrations"
                                 :is-prompt-loading="isPromptLoading"
+                                :is-prompt-versions-updated="isPromptVersionsUpdated">
                             ></prompts-params>
                         </template>
                         <div v-else class="card w-100">
@@ -181,6 +200,16 @@ const Prompts = {
                     :editable-roles="editableRoles"
                     :is-modal-loading="isModalLoading">
                 </prompts-modal-create>
+            </transition>
+            <transition>
+                <prompts-version-modal-create
+                    v-if="showCreateVersionModal"
+                    @close-create-version-modal="showCreateVersionModal = false"
+                    @save-version="handleCreatePromptVersion"
+                    @update-version="handleCreatePromptVersion"
+                    :modal-version-type="modalVersionType"
+                    :is-version-modal-loading="isVersionModalLoading">
+                </prompts-version-modal-create>
             </transition>
             <transition>
                 <prompts-confirm-modal

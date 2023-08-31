@@ -11,6 +11,7 @@ const PromptsParams = {
         integrations: [],
         tags: [],
         isPromptLoading: false,
+        isPromptVersionsUpdated: false
     },
     components: {
         PromptsVertexIntegration,
@@ -35,6 +36,8 @@ const PromptsParams = {
             isContextLoading: false,
             promptTags: [],
             showTagsModal: false,
+            promptVersions: [],
+            selectedPromptVersion: '',
         }
     },
     computed: {
@@ -52,7 +55,7 @@ const PromptsParams = {
 
                 if (newVal.model_settings) {
                     this.integrations.forEach(integration => {
-                        if (integration.id === newVal.integration_id) {
+                        if (integration.uid === newVal.integration_uid) {
                             this.selectedIntegration = integration.name;
                             this.selectedComponentInt = integration.name;
                             this.changeIntegration(integration.name)
@@ -65,13 +68,18 @@ const PromptsParams = {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
                     this.$nextTick(() => {
-                        $('#selectIntegration').val('').selectpicker('refresh');
+                        $('#selectIntegration').val(newVal.id).selectpicker('refresh');
                     })
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
+                this.fetchPromptVersions(newVal.name);
+                // this.selectedPromptVersion = newVal.id
+                this.$nextTick(() => {
+                    $('#selectedPromptVersion').val(newVal.id).selectpicker('refresh');
+                })
             },
             deep: true
         },
@@ -81,12 +89,31 @@ const PromptsParams = {
                 this.changeIntegration(newVal)
             },
             deep: true
-        }
+        },
+        selectedPromptVersion: {
+            handler: function (newVal, oldVal) {
+                // vueVm.registered_components['prompts'].FetchPromptById(newVal);
+                const selectedVersion = this.promptVersions.find(row => row.id === newVal);
+                this.selectedPrompt = { ...selectedVersion };
+                $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
+            },
+            deep: true
+        },
+        isPromptVersionsUpdated: {
+            handler: function (newVal, oldVal) {
+                if (newVal) {
+                    this.fetchPromptVersions(this.selectedPrompt.id);
+                }
+            },
+            deep: true
+        },
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
         $('#selectIntegration').selectpicker('refresh');
+        // $('#selectedPromptVersion').selectpicker('refresh');
     },
     methods: {
         fetchPromptTags(promptId) {
@@ -94,12 +121,20 @@ const PromptsParams = {
                 this.promptTags = tags;
             })
         },
+        fetchPromptVersions(promptId) {
+            fetchPromptVersionsAPI(promptId).then((prompts) => {
+                this.promptVersions = prompts;
+                this.selectedPromptVersion = this.selectedPrompt.id
+                this.isPromptVersionsUpdated = false;
+                $('#selectedPromptVersion').val(this.selectedPrompt.id).selectpicker('refresh');
+            })
+        },
         changeIntegration(newVal) {
-            if (this.selectedPrompt.integration_id) {
+            if (this.selectedPrompt.integration_uid) {
                 const existedInt = this.integrations
                     .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
                 this.selectedComponentInt = newVal;
-                if (existedInt.id === this.selectedPrompt.integration_id) {
+                if (existedInt.id === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
@@ -257,6 +292,10 @@ const PromptsParams = {
                     >
                         Export
                     </a>
+                    <button type="button" :disabled="isPromptLoading" 
+                        class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
+                        Save version
+                    </button>
                     <button type="button" :disabled="isRunLoading || isPromptLoading" 
                         class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
@@ -457,6 +496,14 @@ const PromptsParams = {
                 </div>
             </div>
             <template v-else>
+                <div class="select-validation mt-4">
+                    <p class="font-h5 font-semibold mb-1">Select version</p>
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                        v-model="selectedPromptVersion"
+                        data-style="btn">
+                        <option v-for="prompt in promptVersions" :value="prompt.id">{{ prompt.version }}</option>
+                    </select>
+                </div>
                 <div class="d-flex mt-4 flex-column">
                     <div>
                         <span class="font-h6 font-bold mr-2">TAGS:</span>
