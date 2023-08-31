@@ -67,7 +67,7 @@ const PromptsAzureOpenaiIntegration = {
                     title="Token limit"
                     :step="1"
                     :minValue="1"
-                    :maxValue="1024"
+                    :maxValue="32000"
                     v-model:modelValue="editableIntegrationSetting.max_tokens"
                 ></prompts-range>
                 <prompts-range

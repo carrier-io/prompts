@@ -70,7 +70,7 @@ const PromptsVertexIntegration = {
                     title="Token limit"
                     :step="1"
                     :minValue="1"
-                    :maxValue="1024"
+                    :maxValue="8000"
                     v-model:modelValue="editableIntegrationSetting.max_decode_steps"
                 ></prompts-range>
                 <prompts-range
