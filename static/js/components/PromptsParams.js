@@ -49,10 +49,9 @@ const PromptsParams = {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-
                 if (newVal.model_settings) {
                     this.integrations.forEach(integration => {
-                        if (integration.id === newVal.integration_id) {
+                        if (integration.uid === newVal.integration_uid) {
                             this.selectedIntegration = integration.name;
                             this.selectedComponentInt = integration.name;
                             this.changeIntegration(integration.name)
@@ -71,6 +70,9 @@ const PromptsParams = {
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
+                // this.$nextTick(() => {
+                //     $('#selectIntegration').selectpicker('refresh');
+                // })
                 this.fetchPromptTags(this.selectedPrompt.id);
             },
             deep: true
@@ -86,7 +88,6 @@ const PromptsParams = {
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
-        $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
         fetchPromptTags(promptId) {
@@ -95,11 +96,11 @@ const PromptsParams = {
             })
         },
         changeIntegration(newVal) {
-            if (this.selectedPrompt.integration_id) {
+            if (this.selectedPrompt.integration_uid) {
                 const existedInt = this.integrations
                     .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
                 this.selectedComponentInt = newVal;
-                if (existedInt.id === this.selectedPrompt.integration_id) {
+                if (existedInt.uid === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
