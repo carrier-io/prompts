@@ -11,7 +11,6 @@ const PromptsParams = {
         integrations: [],
         tags: [],
         isPromptLoading: false,
-        isPromptVersionsUpdated: false
     },
     components: {
         PromptsVertexIntegration,
@@ -37,7 +36,10 @@ const PromptsParams = {
             promptTags: [],
             showTagsModal: false,
             promptVersions: [],
-            selectedPromptVersion: '',
+            selectedPromptVersion: {
+                id: null,
+                version: 'latest',
+            },
         }
     },
     computed: {
@@ -76,10 +78,6 @@ const PromptsParams = {
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
-                // this.selectedPromptVersion = newVal.id
-                this.$nextTick(() => {
-                    $('#selectedPromptVersion').val(newVal.id).selectpicker('refresh');
-                })
             },
             deep: true
         },
@@ -90,30 +88,11 @@ const PromptsParams = {
             },
             deep: true
         },
-        selectedPromptVersion: {
-            handler: function (newVal, oldVal) {
-                // vueVm.registered_components['prompts'].FetchPromptById(newVal);
-                const selectedVersion = this.promptVersions.find(row => row.id === newVal);
-                this.selectedPrompt = { ...selectedVersion };
-                $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
-                $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
-            },
-            deep: true
-        },
-        isPromptVersionsUpdated: {
-            handler: function (newVal, oldVal) {
-                if (newVal) {
-                    this.fetchPromptVersions(this.selectedPrompt.id);
-                }
-            },
-            deep: true
-        },
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
         $('#selectIntegration').selectpicker('refresh');
-        // $('#selectedPromptVersion').selectpicker('refresh');
     },
     methods: {
         fetchPromptTags(promptId) {
@@ -121,12 +100,13 @@ const PromptsParams = {
                 this.promptTags = tags;
             })
         },
-        fetchPromptVersions(promptId) {
-            fetchPromptVersionsAPI(promptId).then((prompts) => {
-                this.promptVersions = prompts;
-                this.selectedPromptVersion = this.selectedPrompt.id
-                this.isPromptVersionsUpdated = false;
-                $('#selectedPromptVersion').val(this.selectedPrompt.id).selectpicker('refresh');
+        fetchPromptVersions(promptName) {
+            fetchPromptVersionsAPI(promptName).then((prompts) => {
+                this.promptVersions = prompts.map(({ id, version }) => ({ id, version }));
+                this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
+                this.$nextTick(() => {
+                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id).selectpicker('refresh');
+                })
             })
         },
         changeIntegration(newVal) {
@@ -271,6 +251,16 @@ const PromptsParams = {
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;
+        },
+        LoadVersion() {
+            vueVm.registered_components['prompts'].FetchPromptById(this.selectedPromptVersion.id);
+        },
+        deleteVersion() {
+            ApiDeletePrompt(this.selectedPromptVersion.id).then(data => {
+                showNotify('SUCCESS', 'Version delete.');
+                const latestVersionId = this.promptVersions.find(v => v.version === 'latest').id;
+                vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
+            });
         }
     },
     template: `     
@@ -487,6 +477,7 @@ const PromptsParams = {
         <div class="card p-4" style="width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Settings</p>
+                <p class="font-h5 font-semibold mb-1">v.{{selectedPromptVersion.version}}</p>
             </div>
             <div class="position-relative h-100" v-if="isPromptLoading">
                 <div class="layout-spinner">
@@ -499,12 +490,23 @@ const PromptsParams = {
                 <div class="select-validation mt-4">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
-                        v-model="selectedPromptVersion"
+                        v-model="selectedPromptVersion.id"
                         data-style="btn">
-                        <option v-for="prompt in promptVersions" :value="prompt.id">{{ prompt.version }}</option>
+                        <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
                     </select>
+                    <div class="d-flex justify-content-between">
+                        <button type="button"
+                            class="btn btn-basic d-flex align-items-center justify-content-center mt-1 flex-grow-1 mr-1" @click="LoadVersion">
+                            Load version
+                        </button>
+                        <button type="button"
+                            :disabled="selectedPromptVersion.version === 'latest'"
+                            class="btn btn-secondary d-flex align-items-center mt-1" @click="deleteVersion">
+                            Delete version
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex mt-4 flex-column">
+                <div class="d-flex mt-4 flex-column" v-if="selectedPromptVersion.version === 'latest'">
                     <div>
                         <span class="font-h6 font-bold mr-2">TAGS:</span>
                         <button class="btn btn-xs btn-painted mr-1 rounded-pill mb-1" v-for="tag in editablePrompt.tags"
