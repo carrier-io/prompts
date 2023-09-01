@@ -10,15 +10,17 @@ const PromptsVersionModalCreate = {
         hasError() {
             return this.newVersionName.length < 3 && this.saveClicked;
         },
+        nameAlreadyExists() {
+            const promptVersions = vueVm.registered_components['prompts-params'].promptVersions;
+            return promptVersions.map(v => v.version).includes(this.newVersionName);
+        }
     },
     methods: {
         handleSubmit() {
-            console.log('handleSubmit')
             this.saveClicked = true;
-            if (this.hasError) return;
+            if (this.hasError || this.nameAlreadyExists) return;
             switch (this.modalVersionType) {
                 case 'create':
-                    console.log(this.modalVersionType)
                     this.$emit('save-version', this.newVersionName);
                     break;
                 case 'edit':
@@ -39,6 +41,7 @@ const PromptsVersionModalCreate = {
                     v-model="newVersionName"
                     placeholder="Version name">
                 <span class="input_error-msg">Version's name less than 3 letters</span>
+                <span v-if="nameAlreadyExists" class="mt-1 d-block" style="color: var(--error); font-size: 12px">This name already exists.</span>
             </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary mr-2" 
@@ -46,6 +49,7 @@ const PromptsVersionModalCreate = {
                 <button
                     class="btn btn-basic mr-2 d-flex align-items-center"
                     @click="handleSubmit"
+                    :disabled="nameAlreadyExists || hasError"
                 >Save <i v-if="isVersionModalLoading" class="preview-loader__white ml-2"></i></button>
             </div>
         </div>

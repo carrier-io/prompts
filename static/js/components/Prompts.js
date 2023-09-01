@@ -31,7 +31,6 @@ const Prompts = {
             isModalLoading: false,
             isVersionModalLoading: false,
             isTagsLoaded: false,
-            isPromptVersionsUpdated: false,
         }
     },
     mounted() {
@@ -92,8 +91,7 @@ const Prompts = {
         handleCreatePromptVersion(newVersionName) {
             this.isVersionModalLoading = true;
             ApiCreatePromptVersion(this.selectedPrompt.id, newVersionName).then(data => {
-                this.isPromptVersionsUpdated = true;
-                $('#selectedPromptVersion').selectpicker('refresh');
+                this.FetchPromptById(data.id);
                 this.isVersionModalLoading = false;
                 this.showCreateVersionModal = false;
             });
@@ -171,8 +169,7 @@ const Prompts = {
                                 instance_name="prompts-params"
                                 :selected-prompt="selectedPrompt"
                                 :integrations="integrations"
-                                :is-prompt-loading="isPromptLoading"
-                                :is-prompt-versions-updated="isPromptVersionsUpdated">
+                                :is-prompt-loading="isPromptLoading">
                             ></prompts-params>
                         </template>
                         <div v-else class="card w-100">
