@@ -130,7 +130,7 @@ const ApiCreateVariable = async (promptId, name, value) => {
     return res.json();
 }
 
-const ApiRunTest = async (prompt, input, integrationId, project_id) => {
+const ApiRunTest = async (prompt, input, integrationUid) => {
     const api_url = V.build_api_url('prompts', 'predict')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'POST',
@@ -139,8 +139,7 @@ const ApiRunTest = async (prompt, input, integrationId, project_id) => {
         },
         body: JSON.stringify({
             "prompt_id": prompt.id,
-            "project_id": project_id,
-            "integration_id": integrationId,
+            "integration_uid": integrationUid,
             "integration_settings": prompt.integration_settings,
             "input": input,
         })

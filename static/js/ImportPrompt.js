@@ -15,7 +15,7 @@ const ImportPromptModal = {
     data() {
         return {
             name: '',
-            integration_id: null,
+            integration_uid: null,
             prompt_json: null,
             integrations: [],
             modal_style: {},
@@ -107,7 +107,7 @@ const ImportPromptModal = {
             const data = {
                 ...this.prompt_json,
                 name: this.name,
-                integration_id: this.integration_id
+                integration_uid: this.integration_uid
             }
             const resp = await fetch(api_url, {
                 method: 'POST',
@@ -171,7 +171,7 @@ const ImportPromptModal = {
                     <label class="font-semibold flex-grow-1 ml-1">
                         Integration
                         <select class="custom-select" 
-                            v-model="integration_id"
+                            v-model="integration_uid"
                         >
                             <option :value="null">
                                 Nothing selected

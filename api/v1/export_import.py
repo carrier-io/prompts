@@ -28,7 +28,7 @@ class ProjectAPI(api_tools.APIModeHandler):
 
             prompt.project_id = project_id
             result = PromptExport.from_orm(prompt).dict_flat(
-                exclude_unset=True, by_alias=False, exclude={'integration_id'}
+                exclude_unset=True, by_alias=False, exclude={'integration_uid'}
             )            
             examples = session.query(Example).filter(
                 Example.prompt_id == prompt_id,
@@ -60,11 +60,11 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def post(self, project_id: int, **kwargs):
         try:
-            integration_id = request.json['integration_id']
-            if not integration_id:
+            integration_uid = request.json['integration_uid']
+            if not integration_uid:
                 raise ValueError
         except (KeyError, ValueError):
-            return {'error': '"integration_id" is required'}, 400
+            return {'error': '"integration_uid" is required'}, 400
 
         examples = request.json.pop('examples', [])
         variables = request.json.pop('variables', [])

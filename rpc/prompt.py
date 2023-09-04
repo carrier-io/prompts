@@ -39,10 +39,10 @@ class RPC:
                 Variable.prompt_id == prompt_id,
             ).all()
 
-            result = prompt.to_json()
-            if prompt.integration_id:
+            result = prompt.to_json(exclude_fields=set(['integration_id', ]))
+            if prompt.integration_uid:
                 whole_settings = AIProvider.get_integration_settings(
-                    project_id, prompt.integration_id, prompt.model_settings
+                    project_id, prompt.integration_uid, prompt.model_settings
                 )
                 result['model_settings'] = whole_settings
             result['examples'] = [example.to_json() for example in examples]
@@ -52,6 +52,7 @@ class RPC:
 
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
+        log.info(f'{prompt=}')
         prompt['project_id'] = project_id
         prompt = PromptModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:

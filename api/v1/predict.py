@@ -1,5 +1,6 @@
 from flask import request
 from tools import api_tools
+from pylon.core.tools import log
 
 from ...models.pd.prompts_pd import PredictPostModel
 from ...models.prompts import Prompt
@@ -12,7 +13,7 @@ from pylon.core.tools import log
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-
+    # @api_tools.endpoint_metrics
     def post(self, project_id):
         payload = request.json
         payload['project_id'] = project_id
@@ -26,7 +27,7 @@ class ProjectAPI(api_tools.APIModeHandler):
                 dict(
                     model_settings=model_settings,
                     test_input=data.input_,
-                    integration_id=data.integration_id
+                    integration_uid=data.integration_uid
                 )
             )
             session.commit()
@@ -34,7 +35,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         try:
             integration = AIProvider.get_integration(
                 project_id=project_id,
-                integration_id=data.integration_id,
+                integration_uid=data.integration_uid,
             )
             text_prompt = self.module.prepare_text_prompt(
                 project_id, data.prompt_id, data.input_, 
