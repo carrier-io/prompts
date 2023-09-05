@@ -20,11 +20,11 @@ const valueFormatters = {}
 const actionFormatters = {
     integrations: (value, row, index, field) => {
         const processIntegrations = integrations => {
-            return integrations.map(({id, config}) => {
+            return integrations.map(({uid, config}) => {
                 return `
                     <option
-                        value="${id}"
-                        ${id === row.value && 'selected'}
+                        value="${uid}"
+                        ${uid === row.value && 'selected'}
                     >
                         ${config.name}
                     </option>

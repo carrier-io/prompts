@@ -37,7 +37,7 @@ class RPC:
             url=url,
             project_id=project_id,
             token=token,
-            integrations=[i.dict(include={'id', 'name', 'is_default', 'config'}) for i in ai_integrations]
+            integrations=[i.dict(include={'uid', 'name', 'is_default', 'config'}) for i in ai_integrations]
         )
         return data
 
