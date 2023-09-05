@@ -20,11 +20,11 @@ const valueFormatters = {}
 const actionFormatters = {
     integrations: (value, row, index, field) => {
         const processIntegrations = integrations => {
-            return integrations.map(({id, config}) => {
+            return integrations.map(({uid, config}) => {
                 return `
                     <option
-                        value="${id}"
-                        ${id === row.value && 'selected'}
+                        value="${uid}"
+                        ${uid === row.value && 'selected'}
                     >
                         ${config.name}
                     </option>
@@ -43,7 +43,7 @@ const actionFormatters = {
                 onchange="V.registered_components.table_config.table_action('updateRow', {
                     index: ${index},
                     row: {
-                        value: parseInt(this.value)
+                        value: this.value
                     }
                 })"
             >
