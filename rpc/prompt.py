@@ -34,36 +34,28 @@ class RPC:
     @web.rpc("prompts_get_by_id", "get_by_id")
     def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
         with db.with_project_schema_session(project_id) as session:
-            prompt = session.query(Prompt).options(
-                joinedload(Prompt.examples)
-            ).options(
-                joinedload(Prompt.variables)
-            ).filter(
+            prompt = session.query(Prompt).filter(
                 Prompt.id == prompt_id,
             ).one_or_none()
             if not prompt:
                 return None
-            
+            examples = session.query(Example).filter(
+                Example.prompt_id == prompt_id,
+            ).all()
+
+            variables = session.query(Variable).filter(
+                Variable.prompt_id == prompt_id,
+            ).all()
+
             result = prompt.to_json(exclude_fields=set(['integration_id', ]))
             if prompt.integration_uid:
                 whole_settings = AIProvider.get_integration_settings(
                     project_id, prompt.integration_uid, prompt.model_settings
                 )
                 result['model_settings'] = whole_settings
-            result['examples'] = [example.to_json() for example in prompt.examples]
-            result['variables'] = [var.to_json() for var in prompt.variables]
+            result['examples'] = [example.to_json() for example in examples]
+            result['variables'] = [var.to_json() for var in variables]
             result['tags'] = [tag.to_json() for tag in prompt.tags]
-
-            versions = session.query(Prompt).filter(
-                Prompt.name == prompt.name, 
-                Prompt.version != prompt.version
-            ).all()
-            result['versions'] = [{
-                'id': version.id,
-                'version': version.version,
-                'tags': [tag.to_json() for tag in version.tags]
-            } for version in versions]
-
             return result
 
     @web.rpc(f'prompts_create', "create")
