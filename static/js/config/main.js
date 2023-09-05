@@ -43,7 +43,7 @@ const actionFormatters = {
                 onchange="V.registered_components.table_config.table_action('updateRow', {
                     index: ${index},
                     row: {
-                        value: parseInt(this.value)
+                        value: this.value
                     }
                 })"
             >

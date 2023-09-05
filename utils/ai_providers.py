@@ -23,8 +23,9 @@ class AIProvider:
     @classmethod
     def get_integration(cls, project_id: int, integration_uid: str):
         integration = cls.rpc.integrations_get_by_uid(
-            integration_uid,
-            project_id
+            integration_uid=integration_uid,
+            project_id=project_id,
+            check_all_projects=False
         )
         if integration is None:
             raise IntegrationNotFound(

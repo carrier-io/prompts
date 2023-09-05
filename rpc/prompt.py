@@ -19,38 +19,48 @@ class RPC:
     @web.rpc(f'prompts_get_all', "get_all")
     def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
-            prompts = session.query(Prompt).filter(
-                Prompt.version == 'latest'
-            ).order_by(Prompt.id.asc()).all()
-            return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
-                    for prompt in prompts]
+            queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
+            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
+                for prompt in queryset if prompt.version == 'latest']
+            for prompt in prompts:
+                prompt['versions'] = [{
+                    'id': version.id,
+                    'version': version.version,
+                    'tags': [tag.to_json() for tag in version.tags]
+                } for version in queryset if version.name == prompt['name'] and version.version != 'latest']
+            return prompts
 
     @web.rpc("prompts_get_by_id", "get_by_id")
     def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
         with db.with_project_schema_session(project_id) as session:
-            prompt = session.query(Prompt).filter(
+            subquery = session.query(Prompt).with_entities(Prompt.name).filter(
                 Prompt.id == prompt_id,
-            ).one_or_none()
-            if not prompt:
+            ).subquery()
+            query_result = session.query(Prompt).filter(Prompt.name.in_(subquery)).all()
+            if not query_result:
                 return None
-            examples = session.query(Example).filter(
-                Example.prompt_id == prompt_id,
-            ).all()
+            
+            all_versions = [prompt.to_json(exclude_fields=set(['integration_id', ])) | 
+                {'examples': [example.to_json() for example in prompt.examples]} |
+                {'variables': [var.to_json() for var in prompt.variables]} |
+                {'tags': [tag.to_json() for tag in prompt.tags]} 
+                for prompt in query_result]
+            
+            prompt = next(prompt for prompt in all_versions if prompt['id'] == prompt_id)
 
-            variables = session.query(Variable).filter(
-                Variable.prompt_id == prompt_id,
-            ).all()
+            prompt['versions'] = [{
+                'id': version['id'],
+                'version': version['version'],
+                'tags': version['tags']
+            } for version in all_versions if version['version'] != prompt['version']]
 
-            result = prompt.to_json(exclude_fields=set(['integration_id', ]))
-            if prompt.integration_uid:
+            if prompt['integration_uid']:
                 whole_settings = AIProvider.get_integration_settings(
-                    project_id, prompt.integration_uid, prompt.model_settings
+                    project_id, prompt['integration_uid'], prompt['model_settings']
                 )
-                result['model_settings'] = whole_settings
-            result['examples'] = [example.to_json() for example in examples]
-            result['variables'] = [var.to_json() for var in variables]
-            result['tags'] = [tag.to_json() for tag in prompt.tags]
-            return result
+                prompt['model_settings'] = whole_settings
+
+            return prompt
 
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
@@ -144,7 +154,11 @@ class RPC:
     @web.rpc("prompts_get_versions_by_prompt_name", "get_versions_by_prompt_name")
     def prompts_get_versions_by_prompt_name(self, project_id: int, prompt_name: str) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
-            prompts = session.query(Prompt).filter(Prompt.name == prompt_name).all()
+            prompts = session.query(Prompt).filter(
+                    Prompt.name == prompt_name
+                ).order_by(
+                    Prompt.version
+                ).all()
             return [prompt.to_json() for prompt in prompts]
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
