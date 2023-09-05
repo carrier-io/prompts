@@ -25,7 +25,7 @@ class ProjectAPI(api_tools.APIModeHandler):
                 selected_integration = {}
 
         table_data = [{'key': k, 'value': v} for k, v in data.dict(exclude={'integrations'}).items()]
-        integrations_data = {'key': 'integrations', 'value': selected_integration.get('id'), 'action': formatted_integrations}
+        integrations_data = {'key': 'integrations', 'value': selected_integration.get('uid'), 'action': formatted_integrations}
         table_data.append(integrations_data)
         return table_data, 200
 
