@@ -169,7 +169,7 @@ const Prompts = {
                                 instance_name="prompts-params"
                                 :selected-prompt="selectedPrompt"
                                 :integrations="integrations"
-                                :is-prompt-loading="isPromptLoading">
+                                :is-prompt-loading="isPromptLoading"
                             ></prompts-params>
                         </template>
                         <div v-else class="card w-100">
