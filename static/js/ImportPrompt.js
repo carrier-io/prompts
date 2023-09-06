@@ -111,7 +111,7 @@ const ImportPromptModal = {
                 trailing_slash: true
             }) + this.$root.project_id
             const data = {
-                ...this.prompt_json,
+                ...JSON.parse(this.prompt_json),
                 name: this.name,
                 integration_uid: this.integration_uid
             }
