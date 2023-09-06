@@ -50,10 +50,16 @@ const ImportPromptModal = {
     },
     computed: {
         formatted_json() {
-            return this.prompt_json ?
-                JSON.stringify(this.prompt_json, null, 5)
-                :
-                ''
+            this.error = null
+            try {
+                return this.prompt_json ?
+                    JSON.stringify(JSON.parse(this.prompt_json), null, 5)
+                    :
+                    ''
+            } catch (e) {
+                this.error = 'Invalid json format'
+            }
+            return this.prompt_json
         },
         grouped_integrations() {
             return this.integrations.reduce((accum, item) => {
@@ -69,7 +75,7 @@ const ImportPromptModal = {
             let reader = new FileReader()
             reader.onload = (e) => {
                 try {
-                    const parsed = JSON.parse(e.target.result)
+                    const parsed = JSON.stringify(JSON.parse(e.target.result))
                     this.fileName = file.name
                     this.name = parsed.name
                     delete parsed.name
@@ -212,6 +218,7 @@ const ImportPromptModal = {
                     </div>
                     <textarea class="form-control" rows="20"
                         :value="formatted_json"
+                        @change="prompt_json = $event.target.value"
                         @drop.prevent="handleDrop"
                     ></textarea>
                     
@@ -234,7 +241,6 @@ const ImportPromptModal = {
 </div>
     `
 }
-
 
 
 register_component('ImportPromptButton', ImportPromptButton)
