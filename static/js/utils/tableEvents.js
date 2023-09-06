@@ -52,18 +52,37 @@ var ParamsTable = {
         },0);
         return `${firstTagBtn}${infoTags}`
     },
-    parametersDeleteFormatter(value, row, index) {
+    parametersDeleteFormatter(value, row, index, field) {
+        const isLatestVersion = vueVm.registered_components['prompts-params'].isLatestVersion;
+        const disabled = isLatestVersion ? '' : 'disabled';
         return `
-            <button type="button" class="btn btn-default btn-xs btn-table btn-icon__xs" 
+            <button type="button" class="btn btn-default btn-xs btn-table btn-icon__xs ml-1" 
+                ${disabled}
                 onclick="ParamsTable.deleteParams(${index}, this, '${row.id}')">
                 <i class="icon__18x18 icon-delete"></i>
             </button>
         `
     },
+    cbxFormatter(value, row, index, field) {
+        const checked = row.is_active ? 'checked' : ''
+        return `
+            <div class="d-flex justify-content-center">
+                <label class="mb-0 d-flex align-items-center custom-checkbox">
+                    <input 
+                        ${checked}
+                        type="checkbox" 
+                        onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}', 'checkbox')">
+                </label>
+            </div>
+        `
+    },
     textareaFormatter(value, row, index, field) {
+        const isLatestVersion = vueVm.registered_components['prompts-params'].isLatestVersion;
+        const disabled = isLatestVersion ? '' : 'disabled';
         return `
             <div class="pb-1 position-relative">
                 <textarea class="form-control form-control-alternative"
+                    ${disabled}
                     rows="3"
                     onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
                     value="${value}">${value}</textarea>
@@ -78,38 +97,45 @@ var ParamsTable = {
         $table.bootstrapTable('getData').length === 0 && $table.addClass('empty_data');
         if (exampleId.length < 10) vueVm.registered_components['prompts-params'].deleteExample(exampleId);
     },
-    updateCell: (el, row, field, id) => {
+    updateCell: (el, row, field, id, type = 'textarea') => {
+        const isCbxCell = type === 'checkbox';
+        const isChecked = isCbxCell ? el.checked : null;
         $(el.closest('table')).bootstrapTable(
             'updateCell',
-            {index: row, field: field, value: el.value}
+            {index: row, field: field, value: isCbxCell ? el.checked : el.value }
         )
         if (id.length > 10) {
             vueVm.registered_components['prompts-params'].checkFields(id);
         } else {
             $(`#promptsParamsTable tr[data-uniqueid=${id}]`).find('textarea').each(function () {
-                $(this).attr('disabled', 'disabled')
+                $(this).attr('disabled', 'disabled');
             })
-            vueVm.registered_components['prompts-params'].updateField(id);
+            vueVm.registered_components['prompts-params'].updateField(id, isChecked);
         }
-
     },
 }
 
 
 var VariableTable = {
     deleteFormatter(value, row, index) {
+        const isLatestVersion = vueVm.registered_components['prompts-params'].isLatestVersion;
+        const disabled = isLatestVersion ? '' : 'disabled';
         return `
             <button type="button" class="btn btn-default btn-xs btn-table btn-icon__xs" 
+                ${disabled}
                 onclick="VariableTable.deleteParams(${index}, this, '${row.id}')">
                 <i class="icon__18x18 icon-delete"></i>
             </button>
         `
     },
     textareaFormatter(value, row, index, field) {
+        const isLatestVersion = vueVm.registered_components['prompts-params'].isLatestVersion;
+        const disabled = isLatestVersion ? '' : 'disabled';
         return `
             <div class="pb-1 position-relative">
                 <textarea class="form-control form-control-alternative"
                     rows="1"
+                    ${disabled}
                     onchange="VariableTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
                     value="${value}">${value}</textarea>
             </div>

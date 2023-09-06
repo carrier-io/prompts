@@ -44,9 +44,7 @@ const Prompts = {
                     this.setBucketEvents();
                     this.selectFirstPrompt();
                 }
-                setTimeout(() => {
-                    this.isPromptListLoading = false;
-                }, 300)
+                this.isPromptListLoading = false;
             })
         })
     },
@@ -54,12 +52,8 @@ const Prompts = {
         FetchPromptById(promptId) {
             this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
-                setTimeout(() => {
-                    this.isPromptLoading = false;
-                    this.selectedPrompt = { ...data };
-                    $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
-                    $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
-                }, 300)
+                this.isPromptLoading = false;
+                this.selectedPrompt = { ...data };
             })
         },
         setBucketEvents() {
