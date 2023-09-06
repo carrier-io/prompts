@@ -34,7 +34,6 @@ class ProjectAPI(api_tools.APIModeHandler):
                 return {'error': f'Prompt with id: {prompt_id} not found'}, 400
 
             prompt.project_id = project_id
-            log.info(prompt.__dict__)
             result = PromptExport.from_orm(prompt).dict_flat(
                 exclude_unset=True, by_alias=False, exclude={'integration_uid'}
             )            
