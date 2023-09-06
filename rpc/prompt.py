@@ -4,6 +4,7 @@ from typing import Optional, List
 from pylon.core.tools import web, log
 
 from pydantic import parse_obj_as
+from sqlalchemy.orm import joinedload
 from ..models.example import Example
 from ..models.pd.example import ExampleModel, ExampleUpdateModel
 from ..models.prompts import Prompt
@@ -19,9 +20,16 @@ class RPC:
     @web.rpc(f'prompts_get_all', "get_all")
     def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
-            prompts = session.query(Prompt).order_by(Prompt.id.asc()).all()
-            return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
-                    for prompt in prompts]
+            queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
+            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
+                for prompt in queryset if prompt.version == 'latest']
+            for prompt in prompts:
+                prompt['versions'] = [{
+                    'id': version.id,
+                    'version': version.version,
+                    'tags': [tag.to_json() for tag in version.tags]
+                } for version in queryset if version.name == prompt['name'] and version.version != 'latest']
+            return prompts
 
     @web.rpc("prompts_get_by_id", "get_by_id")
     def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
@@ -52,7 +60,6 @@ class RPC:
 
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
-        log.info(f'{prompt=}')
         prompt['project_id'] = project_id
         prompt = PromptModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:
@@ -78,6 +85,10 @@ class RPC:
         with db.with_project_schema_session(project_id) as session:
             prompt = session.query(Prompt).get(prompt_id)
             examples = session.query(Example).filter(Example.prompt_id == prompt_id).all()
+            if prompt and prompt.version == 'latest':
+                versions = session.query(Prompt).filter(Prompt.name == prompt.name).all()
+                for version in versions:
+                    session.delete(version)
             if prompt:
                 session.delete(prompt)
             for example in examples:
@@ -135,6 +146,16 @@ class RPC:
                 session.delete(example)
                 session.commit()
             return True
+        
+    @web.rpc("prompts_get_versions_by_prompt_name", "get_versions_by_prompt_name")
+    def prompts_get_versions_by_prompt_name(self, project_id: int, prompt_name: str) -> list[dict]:
+        with db.with_project_schema_session(project_id) as session:
+            prompts = session.query(Prompt).filter(
+                    Prompt.name == prompt_name
+                ).order_by(
+                    Prompt.version
+                ).all()
+            return [prompt.to_json() for prompt in prompts]
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
     def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
