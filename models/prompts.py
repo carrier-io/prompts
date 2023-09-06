@@ -25,7 +25,7 @@ class Prompt(
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     version = Column(String(128), nullable=False, default='latest')
-    examples = relationship("Example", backref=backref("prompts"), lazy='joined')
-    variables = relationship("Variable", backref=backref("prompts"), lazy='joined')
+    examples = relationship("Example", backref=backref("prompts"), lazy=True, cascade="all, delete")
+    variables = relationship("Variable", backref=backref("prompts"), lazy=True, cascade="all, delete")
     tags = relationship("Tag", secondary='tenant.models_prompts_tags_association', 
         backref=backref("prompts"), lazy='joined')
