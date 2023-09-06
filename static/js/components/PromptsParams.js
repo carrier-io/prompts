@@ -263,10 +263,14 @@ const PromptsParams = {
             return value.length > 0;
         },
         deleteExample(exampleId) {
-            ApiDeleteExample(exampleId).then(console.log("Example deleted"));
+            ApiDeleteExample(exampleId).then(() => {
+                showNotify('SUCCESS', 'Example delete.');
+            });
         },
         deleteVariable(varId) {
-            ApiDeleteVariable(varId).then(console.log("Variable deleted"));
+            ApiDeleteVariable(varId).then(() => {
+                showNotify('SUCCESS', 'Variable delete.');
+            });
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;
