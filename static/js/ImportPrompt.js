@@ -75,11 +75,11 @@ const ImportPromptModal = {
             let reader = new FileReader()
             reader.onload = (e) => {
                 try {
-                    const parsed = JSON.stringify(JSON.parse(e.target.result))
+                    const parsed = JSON.parse(e.target.result)
                     this.fileName = file.name
                     this.name = parsed.name
                     delete parsed.name
-                    this.prompt_json = parsed
+                    this.prompt_json = JSON.stringify(parsed)
                 } catch (e) {
                     console.error(e)
                     this.error = e
