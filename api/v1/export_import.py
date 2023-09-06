@@ -6,6 +6,7 @@ from flask import request, send_file
 from pylon.core.tools import log
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from ...models.example import Example
 from ...models.pd.example import ExampleModel
 from ...models.pd.export_import import PromptExport, PromptImport
@@ -21,7 +22,13 @@ from tools import api_tools, db
 class ProjectAPI(api_tools.APIModeHandler):
     def get(self, project_id: int, prompt_id: int, **kwargs):
         with db.with_project_schema_session(project_id) as session:
-            prompt = session.query(Prompt).filter(Prompt.id == prompt_id).one_or_none()
+            prompt = session.query(Prompt).options(
+                joinedload(Prompt.examples)
+            ).options(
+                joinedload(Prompt.variables)
+            ).filter(
+                Prompt.id == prompt_id,
+            ).one_or_none()
             
             if not prompt:
                 return {'error': f'Prompt with id: {prompt_id} not found'}, 400
@@ -30,20 +37,14 @@ class ProjectAPI(api_tools.APIModeHandler):
             result = PromptExport.from_orm(prompt).dict_flat(
                 exclude_unset=True, by_alias=False, exclude={'integration_uid'}
             )            
-            examples = session.query(Example).filter(
-                Example.prompt_id == prompt_id,
-            ).all()
             
             result['examples'] = [
                 ExampleModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
-                for i in examples
+                for i in prompt.examples
             ]
-            variables = session.query(Variable).filter(
-                Variable.prompt_id == prompt_id,
-            ).all()
             result['variables'] = [
                 VariableModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
-                for i in variables
+                for i in prompt.variables
             ]
             result['tags'] = [
                 PromptTagModel.from_orm(i).dict(exclude={'id', 'prompt_id'})

@@ -57,7 +57,6 @@ const PromptsParams = {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-
                 if (newVal.model_settings) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
@@ -79,6 +78,9 @@ const PromptsParams = {
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
+                // this.$nextTick(() => {
+                //     $('#selectIntegration').selectpicker('refresh');
+                // })
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
@@ -99,7 +101,6 @@ const PromptsParams = {
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
-        $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
         selectPromptVersion({ target: { value }}) {
@@ -124,7 +125,7 @@ const PromptsParams = {
                 const existedInt = this.integrations
                     .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
                 this.selectedComponentInt = newVal;
-                if (existedInt.id === this.selectedPrompt.integration_uid) {
+                if (existedInt.uid === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
@@ -262,10 +263,10 @@ const PromptsParams = {
             return value.length > 0;
         },
         deleteExample(exampleId) {
-            ApiDeleteExample(exampleId).then(data => {});
+            ApiDeleteExample(exampleId).then(console.log("Example deleted"));
         },
         deleteVariable(varId) {
-            ApiDeleteVariable(varId).then(data => {});
+            ApiDeleteVariable(varId).then(console.log("Variable deleted"));
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;

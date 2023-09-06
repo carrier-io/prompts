@@ -14,13 +14,13 @@ class ProjectAPI(api_tools.APIModeHandler):
     def post(self, project_id):
         prompt_data = self.module.get_by_id(project_id, request.json['prompt_id'])
         prompt_data.pop('test_input')
-        prompt_data.pop('tags')
         prompt_data.update({'version': request.json['version']})
         prompt = self.module.create(project_id, prompt_data)
         for i in chain(prompt_data['variables'], prompt_data['examples']):
             i['prompt_id'] = prompt['id']
         self.module.create_variables_bulk(project_id, prompt_data['variables'])
-        self.module.create_examples_bulk(project_id, prompt_data['examples'])    
+        self.module.create_examples_bulk(project_id, prompt_data['examples'])
+        self.module.update_tags(project_id, prompt['id'], prompt_data['tags'])
         return prompt, 201
 
 class API(api_tools.APIBase):
