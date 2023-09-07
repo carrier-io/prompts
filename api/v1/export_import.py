@@ -29,15 +29,15 @@ class ProjectAPI(api_tools.APIModeHandler):
             ).filter(
                 Prompt.id == prompt_id,
             ).one_or_none()
-            
+
             if not prompt:
                 return {'error': f'Prompt with id: {prompt_id} not found'}, 400
 
             prompt.project_id = project_id
             result = PromptExport.from_orm(prompt).dict_flat(
                 exclude_unset=True, by_alias=False, exclude={'integration_uid'}
-            )            
-            
+            )
+
             result['examples'] = [
                 ExampleModel.from_orm(i).dict(exclude={'id', 'prompt_id'})
                 for i in prompt.examples
@@ -69,6 +69,7 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         examples = request.json.pop('examples', [])
         variables = request.json.pop('variables', [])
+        tags = request.json.pop('tags', [])
         try:
             prompt_data = PromptImport.parse_obj(request.json)
         except Exception as e:
@@ -77,11 +78,12 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         prompt_dict = prompt_data.dict(exclude_unset=False, by_alias=True)
         log.info('settings parse result: %s', prompt_dict['model_settings'])
-        
+
         if request.json.get('skip'):
             return {
                 'examples': examples,
                 'variables': variables,
+                'tags': tags,
                 **prompt_dict
             }, 200
 
@@ -94,6 +96,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             i['prompt_id'] = p['id']
         self.module.create_examples_bulk(project_id=project_id, examples=examples)
         self.module.create_variables_bulk(project_id=project_id, variables=variables)
+        self.module.update_tags(project_id=project_id, prompt_id=p['id'], tags=tags)
         return self.module.get_by_id(project_id, p['id']), 201
 
 
