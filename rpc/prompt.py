@@ -16,6 +16,14 @@ from tools import rpc_tools, db
 
 class RPC:
 
+    @web.rpc(f'prompts_predict', "predict")
+    def prompts_predict(self, project_id, integration, model_settings, text_prompt, **kwargs) -> list[dict]:
+        rpc = rpc_tools.RpcMixin().rpc.call
+        rpc_name = integration.name + "__predict"
+        rpc_func = getattr(rpc, rpc_name)
+        result = rpc_func(project_id, model_settings, text_prompt)
+        return result
+
     @web.rpc(f'prompts_get_all', "get_all")
     def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
