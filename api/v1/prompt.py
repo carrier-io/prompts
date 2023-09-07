@@ -20,6 +20,14 @@ class ProjectAPI(api_tools.APIModeHandler):
         except ValidationError as e:
             return e.errors(), 400
 
+    def patch(self, project_id, prompt_id):
+        try:
+            prompt_data = {'prompt_id': prompt_id, 'name': request.json.get('name')}
+            updated = self.module.update_name(project_id, prompt_data)
+            return {'updated': updated}, 201
+        except ValidationError as e:
+            return e.errors(), 400
+
     def delete(self, project_id, prompt_id):
         self.module.delete(project_id, prompt_id)
         return '', 204

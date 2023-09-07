@@ -44,6 +44,9 @@ class PromptUpdateModel(PromptModel):
     id: int
     version: Optional[str]
 
+class PromptUpdateNameModel(BaseModel):
+    prompt_id: int
+    name: str
 
 class PredictPostModel(BaseModel):
     input_: str
@@ -68,11 +71,11 @@ class PredictPostModel(BaseModel):
         if not (values['project_id'] and values['integration_uid']):
             return values
         project_id, integration_uid = values['project_id'], values['integration_uid']
-        
+
         integration = AIProvider.get_integration(project_id, integration_uid)
         model_settings = values['integration_settings']
         response = AIProvider.parse_settings(integration, model_settings)
-        
+
         if not response['ok']:
             raise ValueError('Cannot determine parser for model_settings')
         values['integration_settings'] = response['item']
