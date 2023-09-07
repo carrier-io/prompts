@@ -324,7 +324,16 @@ const PromptsParams = {
                 </div>
                 <div v-show="!isPromptLoading">
                     <div>
-                        <p class="font-h5 font-bold font-uppercase mb-2 flex-grow-1">CONTEXT</p>
+                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700">Description</p>
+                        <div class="mb-3 position-relative">
+                            <textarea class="form-control form-control-alternative"
+                                rows="3"
+                                :value="editablePrompt.description"
+                                @change="updateDescription">{{ editablePrompt.description }}</textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
                             <div class="custom-input w-100 position-relative" 
                                 :class="{ 'invalid-input': isInvalidContext }">
@@ -515,13 +524,6 @@ const PromptsParams = {
             </div>
             <template v-else>
                 <div class="select-validation mt-4">
-                    <p class="font-h5 font-semibold mb-1">Description</p>
-                    <div class="mb-3 position-relative">
-                        <textarea class="form-control form-control-alternative"
-                            rows="4"
-                            :value="editablePrompt.description"
-                            @change="updateDescription">{{ editablePrompt.description }}</textarea>
-                    </div>
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
                         @change="selectPromptVersion"
