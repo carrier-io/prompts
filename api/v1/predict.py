@@ -13,7 +13,7 @@ from pylon.core.tools import log
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-    # @api_tools.endpoint_metrics
+    @api_tools.endpoint_metrics
     def post(self, project_id):
         payload = request.json
         payload['project_id'] = project_id

@@ -49,6 +49,9 @@ const PromptsParams = {
         isInvalidTestInput() {
             return this.isRunClicked && !this.testInput
         },
+        isLatestVersion() {
+            return this.selectedPrompt.version === 'latest';
+        }
     },
     watch: {
         selectedPrompt: {
@@ -80,6 +83,10 @@ const PromptsParams = {
                 // })
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
+                this.$nextTick(() => {
+                    $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                    $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
+                })
             },
             deep: true
         },
@@ -96,6 +103,9 @@ const PromptsParams = {
         $('#variablesTable').bootstrapTable();
     },
     methods: {
+        selectPromptVersion({ target: { value }}) {
+            this.selectedPromptVersion = this.promptVersions.find(v => v.id === +value);
+        },
         fetchPromptTags(promptId) {
             fetchPromptTagsAPI(promptId).then((tags) => {
                 this.promptTags = tags;
@@ -169,12 +179,14 @@ const PromptsParams = {
                 })
             }
         },
-        updateField(rowId) {
-            const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
-            ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output).then(data => {
-                $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
-                    $(this).removeAttr("disabled");
-                })
+        updateField(rowId, isChecked = null) {
+            const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId);
+            ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output, isChecked ?? row.is_active).then(data => {
+                if (this.isLatestVersion) {
+                    $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                        $(this).removeAttr("disabled");
+                    })
+                }
                 showNotify('INFO', `Input/Output updated.`);
             })
         },
@@ -215,6 +227,12 @@ const PromptsParams = {
                 showNotify('SUCCESS', `Context updated.`)
             });
         },
+        updateDescription(e) {
+            this.editablePrompt.description = e.target.value;
+            ApiUpdatePrompt(this.editablePrompt).then(data => {
+                showNotify('SUCCESS', `Description updated.`)
+            });
+        },
         saveSettings() {
             ApiUpdatePrompt(this.editablePrompt).then(data => {
                 showNotify('SUCCESS', `Settings updated.`)
@@ -245,10 +263,14 @@ const PromptsParams = {
             return value.length > 0;
         },
         deleteExample(exampleId) {
-            ApiDeleteExample(exampleId).then(console.log("Example deleted"));
+            ApiDeleteExample(exampleId).then(() => {
+                showNotify('SUCCESS', 'Example delete.');
+            });
         },
         deleteVariable(varId) {
-            ApiDeleteVariable(varId).then(console.log("Variable deleted"));
+            ApiDeleteVariable(varId).then(() => {
+                showNotify('SUCCESS', 'Variable delete.');
+            });
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;
@@ -302,12 +324,21 @@ const PromptsParams = {
                 </div>
                 <div v-show="!isPromptLoading">
                     <div>
-                        <p class="font-h5 font-bold font-uppercase mb-2 flex-grow-1">CONTEXT</p>
+                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700">Description</p>
+                        <div class="mb-3 position-relative">
+                            <textarea class="form-control form-control-alternative"
+                                rows="3"
+                                :value="editablePrompt.description"
+                                @change="updateDescription">{{ editablePrompt.description }}</textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
                             <div class="custom-input w-100 position-relative" 
                                 :class="{ 'invalid-input': isInvalidContext }">
                                 <textarea
-                                    :disabled="isContextLoading"
+                                    :disabled="isContextLoading || !isLatestVersion"
                                     :value="editablePrompt.prompt"
                                     @change="updatePrompt"
                                     class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
@@ -349,6 +380,7 @@ const PromptsParams = {
                             </tbody>
                         </table>
                         <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                            :disabled="!isLatestVersion"
                             @click="addEmptyVariableRow">
                             <i class="fas fa-plus mr-2"></i>Add Variable
                         </button>
@@ -375,6 +407,9 @@ const PromptsParams = {
                         <thead class="thead-light">
                             <tr>
                                 <th data-field="id" data-visible="false"></th>
+                                <th data-field="is_active"
+                                    data-formatter="ParamsTable.cbxFormatter"
+                                ></th>
                                 <th data-field="input"
                                     data-formatter="ParamsTable.textareaFormatter"
                                 >
@@ -387,7 +422,7 @@ const PromptsParams = {
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
                                 </th>
-                                <th data-width="56" data-width-unit="px" 
+                                <th data-width="56" data-width-unit="px"
                                     data-field="action"
                                     data-formatter="ParamsTable.parametersDeleteFormatter"
                                 ></th>
@@ -397,6 +432,7 @@ const PromptsParams = {
                         </tbody>
                     </table>
                     <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                        :disabled="!isLatestVersion"
                         @click="addEmptyParamsRow">
                         <i class="fas fa-plus mr-2"></i>Add Parameter
                     </button>
@@ -478,7 +514,6 @@ const PromptsParams = {
         <div class="card p-4" style="width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Settings</p>
-                <p class="font-h5 font-semibold mb-1">v.{{selectedPromptVersion.version}}</p>
             </div>
             <div class="position-relative h-100" v-if="isPromptLoading">
                 <div class="layout-spinner">
@@ -491,7 +526,7 @@ const PromptsParams = {
                 <div class="select-validation mt-4">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
-                        v-model="selectedPromptVersion.id"
+                        @change="selectPromptVersion"
                         data-style="btn">
                         <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
                     </select>
@@ -507,7 +542,7 @@ const PromptsParams = {
                         </button>
                     </div>
                 </div>
-                <div class="d-flex mt-4 flex-column" v-if="selectedPromptVersion.version === 'latest'">
+                <div class="d-flex mt-4 flex-column">
                     <div>
                         <span class="font-h6 font-bold mr-2">TAGS:</span>
                         <button class="btn btn-xs btn-painted mr-1 rounded-pill mb-1" v-for="tag in editablePrompt.tags"

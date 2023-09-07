@@ -42,13 +42,14 @@ const ApiUpdatePrompt = async (prompt) => {
             "name": prompt.name,
             "type": "freeform",
             "prompt": prompt.prompt,
+            "description": prompt.description,
             "tags": prompt.tags,
         })
     })
     return res.json();
 }
 
-const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
+const ApiUpdateExampleField = async (promptId, exampleId, input, output, isActive) => {
     const api_url = V.build_api_url('prompts', 'example')
 
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
@@ -61,7 +62,7 @@ const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
             "id": exampleId,
             "input": input,
             "output": output,
-            "is_active": true,
+            "is_active": isActive,
         })
     })
     return res.json();

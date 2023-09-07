@@ -43,7 +43,7 @@ const PromptsListAside = {
                             <th data-visible="false" data-field="id">index</th>
                             <th data-sortable="true" data-field="name" data-width="40" data-width-unit="%" >NAME</th>
                             <th scope="col" data-sortable="false" data-field="tags" data-formatter="ParamsTable.tagFormatter">Tags</th>
-                            <th data-width="32" data-formatter='<div class="d-none justify-content-end">
+                            <th data-width="56" data-formatter='<div class="d-none justify-content-end">
                                     <button class="btn btn-default btn-xs btn-table btn-icon__xs prompt_delete"><i class="icon__18x18 icon-delete"></i></button>
                                 </div>'
                                 data-events="promptAsideEvents">
