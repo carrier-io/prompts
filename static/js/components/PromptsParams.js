@@ -35,6 +35,11 @@ const PromptsParams = {
             isContextLoading: false,
             promptTags: [],
             showTagsModal: false,
+            promptVersions: [],
+            selectedPromptVersion: {
+                id: null,
+                version: 'latest',
+            },
         }
     },
     computed: {
@@ -64,7 +69,7 @@ const PromptsParams = {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
                     this.$nextTick(() => {
-                        $('#selectIntegration').val('').selectpicker('refresh');
+                        $('#selectIntegration').val(newVal.id).selectpicker('refresh');
                     })
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
@@ -74,6 +79,7 @@ const PromptsParams = {
                 //     $('#selectIntegration').selectpicker('refresh');
                 // })
                 this.fetchPromptTags(this.selectedPrompt.id);
+                this.fetchPromptVersions(newVal.name);
             },
             deep: true
         },
@@ -83,7 +89,7 @@ const PromptsParams = {
                 this.changeIntegration(newVal)
             },
             deep: true
-        }
+        },
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
@@ -93,6 +99,15 @@ const PromptsParams = {
         fetchPromptTags(promptId) {
             fetchPromptTagsAPI(promptId).then((tags) => {
                 this.promptTags = tags;
+            })
+        },
+        fetchPromptVersions(promptName) {
+            fetchPromptVersionsAPI(promptName).then((prompts) => {
+                this.promptVersions = prompts.map(({ id, version }) => ({ id, version }));
+                this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
+                this.$nextTick(() => {
+                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id).selectpicker('refresh');
+                })
             })
         },
         changeIntegration(newVal) {
@@ -237,6 +252,16 @@ const PromptsParams = {
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;
+        },
+        LoadVersion() {
+            vueVm.registered_components['prompts'].FetchPromptById(this.selectedPromptVersion.id);
+        },
+        deleteVersion() {
+            ApiDeletePrompt(this.selectedPromptVersion.id).then(data => {
+                showNotify('SUCCESS', 'Version delete.');
+                const latestVersionId = this.promptVersions.find(v => v.version === 'latest').id;
+                vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
+            });
         }
     },
     template: `     
@@ -258,6 +283,10 @@ const PromptsParams = {
                     >
                         Export
                     </a>
+                    <button type="button" :disabled="isPromptLoading" 
+                        class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
+                        Save version
+                    </button>
                     <button type="button" :disabled="isRunLoading || isPromptLoading" 
                         class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
@@ -449,6 +478,7 @@ const PromptsParams = {
         <div class="card p-4" style="width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Settings</p>
+                <p class="font-h5 font-semibold mb-1">v.{{selectedPromptVersion.version}}</p>
             </div>
             <div class="position-relative h-100" v-if="isPromptLoading">
                 <div class="layout-spinner">
@@ -458,7 +488,26 @@ const PromptsParams = {
                 </div>
             </div>
             <template v-else>
-                <div class="d-flex mt-4 flex-column">
+                <div class="select-validation mt-4">
+                    <p class="font-h5 font-semibold mb-1">Select version</p>
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                        v-model="selectedPromptVersion.id"
+                        data-style="btn">
+                        <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
+                    </select>
+                    <div class="d-flex justify-content-between">
+                        <button type="button"
+                            class="btn btn-basic d-flex align-items-center justify-content-center mt-1 flex-grow-1 mr-1" @click="LoadVersion">
+                            Load version
+                        </button>
+                        <button type="button"
+                            :disabled="selectedPromptVersion.version === 'latest'"
+                            class="btn btn-secondary d-flex align-items-center mt-1" @click="deleteVersion">
+                            Delete version
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex mt-4 flex-column" v-if="selectedPromptVersion.version === 'latest'">
                     <div>
                         <span class="font-h6 font-bold mr-2">TAGS:</span>
                         <button class="btn btn-xs btn-painted mr-1 rounded-pill mb-1" v-for="tag in editablePrompt.tags"

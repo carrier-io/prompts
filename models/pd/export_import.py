@@ -20,6 +20,7 @@ class PromptExport(PromptModel):
             'input': 'test_input',
             'prompt': {'exclude': True},
             'test_input': {'exclude': True},
+            'project_id': {'exclude': True},
             # 'integration_id': {'exclude': True},
         }
         orm_mode = True
@@ -27,7 +28,6 @@ class PromptExport(PromptModel):
     prompt: Optional[str] = None
     context: str
     input: Optional[str]
-    variables: List[dict] = []
     model_settings: Optional[ModelSettingsExport]
     # integration_id: Optional[int] = None
 
@@ -47,6 +47,7 @@ class PromptExport(PromptModel):
 
 class PromptImport(PromptExport):
     model_settings: Optional[dict] = {}
+    variables: List[dict] = []
 
     @root_validator(pre=True)
     def set_model_settings(cls, values: dict) -> dict:
