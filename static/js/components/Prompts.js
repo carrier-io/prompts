@@ -145,6 +145,9 @@ const Prompts = {
             <div v-else>
                 <div class="d-flex gap-4">
                     <prompts-list-aside
+                        @register="$root.register"
+                        instance_name="prompts-list-aside"
+                        :selectedPrompt="selectedPrompt"
                         @open-create-modal="openCreateModal">
                     </prompts-list-aside>
                     <div class="position-relative flex-grow-1 card" v-if="isPromptListLoading">

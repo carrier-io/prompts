@@ -95,6 +95,7 @@ const PromptsTagsModal = {
                 showNotify('ERROR', `error: ${e}`);
             }).finally(() => {
                 this.$emit('update-tags', newTags);
+                vueVm.registered_components['prompts-list-aside'].fetchTags();
                 this.isLoading = false;
                 this.closeModal()
             })
