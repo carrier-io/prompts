@@ -1,10 +1,13 @@
 const PromptsListAside = {
     components: {
-        ImportPromptButton
+        ImportPromptButton,
+        PromptsTagsFilter,
     },
+    props: ['selectedPrompt'],
     data() {
         return {
-            loadingDelete: false,
+            isTagsLoaded: false,
+            allTags: [],
         }
     },
     computed: {
@@ -12,17 +15,31 @@ const PromptsListAside = {
             return `${(window.innerHeight - 270)}px`;
         }
     },
-    watch: {
+    mounted() {
+        this.fetchTags();
     },
     methods: {
+        fetchTags() {
+            this.$nextTick(() => {
+                this.isTagsLoaded = false;
+                fetchTagsAPI().then(res => {
+                    this.allTags = res.map(tag => ({
+                        title: tag.tag,
+                        hex: tag.color,
+                        selected: false,
+                    }));
+                    this.isTagsLoaded = true;
+                })
+            })
+        },
     },
     template: `
         <aside class="card card-table-sm" style="min-width: 340px; width: 340px">
-            <div class="row p-4">
-                <div class="col-4">
+            <div class="p-4 d-flex justify-content-between">
+                <div>
                     <p class="font-h4 font-bold">Prompts</p>
                 </div>
-                <div class="col-8">
+                <div>
                     <div class="d-flex justify-content-end">
                         <ImportPromptButton></ImportPromptButton>
                         <button type="button"
@@ -33,6 +50,13 @@ const PromptsListAside = {
                     </div>
                 </div>
             </div>
+            <PromptsTagsFilter
+                :key="allTags"
+                v-if="isTagsLoaded"
+                :selectedPrompt="selectedPrompt"
+                :allTags="allTags">
+            
+            </PromptsTagsFilter>
             <div class="card-body" style="padding-top: 0">
                 <table class="table table-borderless table-fix-thead"
                     id="prompts-aside-table"
@@ -65,3 +89,5 @@ var promptAsideEvents = {
         vm.openConfirm();
     },
 }
+
+register_component('prompts-list-aside', PromptsListAside);

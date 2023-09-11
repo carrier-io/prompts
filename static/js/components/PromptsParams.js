@@ -78,9 +78,6 @@ const PromptsParams = {
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
-                // this.$nextTick(() => {
-                //     $('#selectIntegration').selectpicker('refresh');
-                // })
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
