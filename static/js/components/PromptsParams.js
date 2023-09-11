@@ -287,6 +287,7 @@ const PromptsParams = {
                 <div class="d-flex justify-content-between mb-2">
                     <promptsEditorName
                         v-show="!isPromptLoading"
+                        :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
                         v-model="editablePrompt.name">
                     </promptsEditorName>
@@ -323,6 +324,7 @@ const PromptsParams = {
                 <div v-show="!isPromptLoading">
                     <promptsEditorField
                         title="Description"
+                        :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
                         v-model="editablePrompt.description">
                     </promptsEditorField>

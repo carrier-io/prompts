@@ -1,14 +1,19 @@
 const PromptsEditorName = {
-    props: [
-        'modelValue',
-        'editablePrompt',
-    ],
+    props: {
+        'modelValue': '',
+        'editablePrompt': '',
+    },
     emits: ['update:modelValue'],
     data() {
         return {
             showEditor: false,
             MIN_VALUES: 3,
             loading: false,
+        }
+    },
+    computed: {
+        fieldLength() {
+            return this.modelValue?.length ?? 0
         }
     },
     methods: {
@@ -68,10 +73,11 @@ const PromptsEditorName = {
                     :data-valid="hasError(modelValue)">
                     <input rows="2" class="form-control" 
                     :value="modelValue" @input="updateField">
-                    <span class="input_error-msg font-h6 font-weight-400 text-right">{{ modelValue.length }}/3</span>
+                    <span class="input_error-msg font-h6 font-weight-400 text-right">{{ fieldLength }}/3</span>
                 </div>
                 <div class="d-flex" style="padding-top: 6px">
-                    <button class="btn btn-success__custom btn-xs btn-icon__xs ml-2" @click="saveDesc">
+                    <button class="btn btn-success__custom btn-xs btn-icon__xs ml-2" @click="saveDesc"
+                        :disabled="hasError(modelValue)">
                         <i class="preview-loader__white" v-if="loading"></i>
                         <i v-else class="icon__16x16 icon-check__white"></i>
                     </button>
