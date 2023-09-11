@@ -203,6 +203,20 @@ const updatePromptTagsAPI = async (tags, promptId) => {
     return res.json();
 }
 
+const updatePromptNameAPI = async (promptId, promptName) => {
+    const api_url = V.build_api_url('prompts', 'prompt')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "name": promptName
+        })
+    })
+    return res.json();
+}
+
 const fetchPromptVersionsAPI = async (promptName) => {
     const api_url = V.build_api_url('prompts', 'versions')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptName}`, {
