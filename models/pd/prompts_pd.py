@@ -22,6 +22,7 @@ class PromptModel(BaseModel):
     type: PromptType = PromptType.structured
     model_settings: dict | None = None
     version: Optional[str] = 'latest'
+    is_active_input: bool = True
 
     class Config:
         use_enum_values = True
@@ -45,11 +46,10 @@ class PromptUpdateModel(PromptModel):
     version: Optional[str]
 
 class PromptUpdateNameModel(BaseModel):
-    prompt_id: int
     name: str
 
 class PredictPostModel(BaseModel):
-    input_: str
+    input_: str = ''
     integration_uid: str
     integration_settings: Optional[dict] = {}
     prompt_id: Optional[int] = None

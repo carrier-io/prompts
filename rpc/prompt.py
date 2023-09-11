@@ -26,9 +26,12 @@ class RPC:
         return result
 
     @web.rpc(f'prompts_get_all', "get_all")
-    def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
+    def prompts_get_all(self, project_id: int, with_versions: bool = False, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
             queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
+            if with_versions:
+                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
+                    for prompt in queryset]
             prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
                 for prompt in queryset if prompt.version == 'latest']
             for prompt in prompts:
@@ -40,7 +43,13 @@ class RPC:
             return prompts
 
     @web.rpc("prompts_get_by_id", "get_by_id")
-    def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
+    def prompts_get_by_id(self, project_id: int, prompt_id: int, version: str = '', **kwargs) -> dict | None:
+        if version:
+            version_id = self.get_version_id(project_id, prompt_id, version)
+            if not version_id:
+                return None
+            prompt_id = version_id
+
         with db.with_project_schema_session(project_id) as session:
             prompt = session.query(Prompt).options(
                 joinedload(Prompt.examples)
@@ -73,6 +82,18 @@ class RPC:
 
             return result
 
+    @web.rpc("prompts_get_version_id", "get_version_id")
+    def prompts_get_version_id(self, project_id: int, prompt_id: int, version: str) -> dict | None:
+        with db.with_project_schema_session(project_id) as session:
+            if subquery := session.query(Prompt.name).filter(
+                Prompt.id == prompt_id
+            ).one_or_none():
+                if ids:= session.query(Prompt.id).filter(
+                    Prompt.name.in_(subquery),
+                    Prompt.version == version,
+                ).one_or_none():
+                    return ids[0]
+
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
         prompt['project_id'] = project_id
@@ -96,14 +117,14 @@ class RPC:
             return updated_prompt.to_json()
 
     @web.rpc(f'prompts_update_name', "update_name")
-    def prompts_update_name(self, project_id: int, prompt_date: dict) -> bool:
+    def prompts_update_name(self, project_id: int, prompt_id: int, prompt_date: dict) -> bool:
         prompt_data = PromptUpdateNameModel.validate(prompt_date)
         with db.with_project_schema_session(project_id) as session:
             if subquery := session.query(Prompt.name).filter(
-                Prompt.id == prompt_data.prompt_id
+                Prompt.id == prompt_id
             ).one_or_none():
                 session.query(Prompt).filter(Prompt.name.in_(subquery)
-                    ).update({Prompt.name: prompt_data.name})
+                    ).update(prompt_data.dict())
                 session.commit()
             return True
 
@@ -186,7 +207,7 @@ class RPC:
 
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
     def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
-                                    input_: str, context: str = '', examples: list = [],
+                                    input_: str = '', context: str = '', examples: list = [],
                                     variables: dict = {},
                                     **kwargs) -> str:
 

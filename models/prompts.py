@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Column, String, DateTime, func, JSON, UniqueConstraint
+from sqlalchemy import Integer, Column, String, DateTime, func, JSON, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship, backref
 
 from tools import db_tools, db, rpc_tools
@@ -20,6 +20,7 @@ class Prompt(
     description = Column(String(256), nullable=True)
     prompt = Column(String, nullable=True)
     test_input = Column(String, nullable=True)
+    is_active_input = Column(Boolean, nullable=False, default=True)
     type = Column(String(128), nullable=False)
     model_settings = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
@@ -27,5 +28,5 @@ class Prompt(
     version = Column(String(128), nullable=False, default='latest')
     examples = relationship("Example", backref=backref("prompts"), lazy=True, cascade="all, delete")
     variables = relationship("Variable", backref=backref("prompts"), lazy=True, cascade="all, delete")
-    tags = relationship("Tag", secondary='tenant.models_prompts_tags_association', 
+    tags = relationship("Tag", secondary='tenant.models_prompts_tags_association',
         backref=backref("prompts"), lazy='joined')
