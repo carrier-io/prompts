@@ -17,6 +17,8 @@ const PromptsParams = {
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
         PromptsTagsModal,
+        PromptsEditorName,
+        PromptsEditorField,
     },
     data() {
         return {
@@ -40,6 +42,7 @@ const PromptsParams = {
                 id: null,
                 version: 'latest',
             },
+            newDescription: '',
         }
     },
     computed: {
@@ -224,12 +227,6 @@ const PromptsParams = {
                 showNotify('SUCCESS', `Context updated.`)
             });
         },
-        updateDescription(e) {
-            this.editablePrompt.description = e.target.value;
-            ApiUpdatePrompt(this.editablePrompt).then(data => {
-                showNotify('SUCCESS', `Description updated.`)
-            });
-        },
         saveSettings() {
             ApiUpdatePrompt(this.editablePrompt).then(data => {
                 showNotify('SUCCESS', `Settings updated.`)
@@ -288,29 +285,34 @@ const PromptsParams = {
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
                 <div class="d-flex justify-content-between mb-2">
-                    <p class="font-h5 font-bold font-uppercase mb-1 flex-grow-1">
-                        <span v-show="!isPromptLoading">{{ editablePrompt.name }}</span>
-                    </p>
-                    <a class="btn btn-secondary mr-2" 
-                        download
-                        :class="{'disabled': isPromptLoading}"
-                        :href="
-                            $root.build_api_url('prompts', 'export_import') + 
-                            '/' + $root.project_id + 
-                            '/' + editablePrompt.id + 
-                            '?as_file=true'"
-                    >
-                        Export
-                    </a>
-                    <button type="button" :disabled="isPromptLoading" 
-                        class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
-                        Save version
-                    </button>
-                    <button type="button" :disabled="isRunLoading || isPromptLoading" 
-                        class="btn btn-basic d-flex align-items-center" @click="runTest">
-                        Run
-                        <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                    </button>
+                    <promptsEditorName
+                        v-show="!isPromptLoading"
+                        :key="selectedPrompt.id"
+                        :editable-prompt="editablePrompt"
+                        v-model="editablePrompt.name">
+                    </promptsEditorName>
+                    <div class="d-flex">
+                        <a class="btn btn-secondary mr-2" 
+                            download
+                            :class="{'disabled': isPromptLoading}"
+                            :href="
+                                $root.build_api_url('prompts', 'export_import') + 
+                                '/' + $root.project_id + 
+                                '/' + editablePrompt.id + 
+                                '?as_file=true'"
+                        >
+                            Export
+                        </a>
+                        <button type="button" :disabled="isPromptLoading" 
+                            class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
+                            Save version
+                        </button>
+                        <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                            class="btn btn-basic d-flex align-items-center" @click="runTest">
+                            Run
+                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="position-relative" style="height: 164px" v-show="isPromptLoading">
                     <div class="layout-spinner">
@@ -320,15 +322,12 @@ const PromptsParams = {
                     </div>
                 </div>
                 <div v-show="!isPromptLoading">
-                    <div>
-                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700">Description</p>
-                        <div class="mb-3 position-relative">
-                            <textarea class="form-control form-control-alternative"
-                                rows="3"
-                                :value="editablePrompt.description"
-                                @change="updateDescription">{{ editablePrompt.description }}</textarea>
-                        </div>
-                    </div>
+                    <promptsEditorField
+                        title="Description"
+                        :key="selectedPrompt.id"
+                        :editable-prompt="editablePrompt"
+                        v-model="editablePrompt.description">
+                    </promptsEditorField>
                     <div>
                         <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
@@ -508,7 +507,7 @@ const PromptsParams = {
                 </div>
             </div>
         </div>
-        <div class="card p-4" style="width: 340px">
+        <div class="card p-4" style="min-width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Settings</p>
             </div>
@@ -561,7 +560,7 @@ const PromptsParams = {
                         data-style="btn">
                         <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
                     </select>
-                    <span class="select_error-msg">Integration is require.</span>
+                    <span class="input_error-msg">Integration is require.</span>
                 </div>
                 <PromptsVertexIntegration 
                     :is-run-clicked="isRunClicked"
