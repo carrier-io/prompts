@@ -1,7 +1,7 @@
 const ImportPromptButton = {
     template: `
 <button
-    data-toggle="modal" 
+    data-toggle="modal"
     data-target="#ImportPromptModal"
     class="btn btn-secondary btn-sm btn-icon__sm mr-2"
 >
@@ -15,7 +15,7 @@ const ImportPromptModal = {
     data() {
         return {
             name: '',
-            integration_id: null,
+            integration_uid: null,
             prompt_json: null,
             integrations: [],
             modal_style: {},
@@ -50,10 +50,16 @@ const ImportPromptModal = {
     },
     computed: {
         formatted_json() {
-            return this.prompt_json ?
-                JSON.stringify(this.prompt_json, null, 5)
-                :
-                ''
+            this.error = null
+            try {
+                return this.prompt_json ?
+                    JSON.stringify(JSON.parse(this.prompt_json), null, 5)
+                    :
+                    ''
+            } catch (e) {
+                this.error = 'Invalid json format'
+            }
+            return this.prompt_json
         },
         grouped_integrations() {
             return this.integrations.reduce((accum, item) => {
@@ -73,7 +79,7 @@ const ImportPromptModal = {
                     this.fileName = file.name
                     this.name = parsed.name
                     delete parsed.name
-                    this.prompt_json = parsed
+                    this.prompt_json = JSON.stringify(parsed)
                 } catch (e) {
                     console.error(e)
                     this.error = e
@@ -105,9 +111,9 @@ const ImportPromptModal = {
                 trailing_slash: true
             }) + this.$root.project_id
             const data = {
-                ...this.prompt_json,
+                ...JSON.parse(this.prompt_json),
                 name: this.name,
-                integration_id: this.integration_id
+                integration_uid: this.integration_uid
             }
             const resp = await fetch(api_url, {
                 method: 'POST',
@@ -146,7 +152,7 @@ const ImportPromptModal = {
             :style="modal_style"
         >
             <div class="w-100 d-flex flex-column px-4 pt-4">
-                
+
                 <div class="notification notification-error" style="flex-direction: row"
                     v-if="error"
                 >
@@ -156,7 +162,7 @@ const ImportPromptModal = {
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="d-flex form-group">
                     <label class="font-semibold flex-grow-1 mr-1">
                         Name
@@ -170,19 +176,19 @@ const ImportPromptModal = {
                     </label>
                     <label class="font-semibold flex-grow-1 ml-1">
                         Integration
-                        <select class="custom-select" 
-                            v-model="integration_id"
+                        <select class="custom-select"
+                            v-model="integration_uid"
                         >
                             <option :value="null">
                                 Nothing selected
                             </option>
-                            <optgroup 
+                            <optgroup
                                 v-for="[g, gis] in Object.entries(grouped_integrations)"
                                 :label="g"
                             >
-                                <option 
+                                <option
                                     v-for="i in gis"
-                                    :value="i.id"
+                                    :value="i.uid"
                                 >
                                     {{ i.config?.name }}
                                 </option>
@@ -194,7 +200,7 @@ const ImportPromptModal = {
                 <div class="form-group">
                     <div class="drop-area">
                         <label class="mb-0 d-flex align-items-center justify-content-center">
-                            <input type="file" accept="application/JSON" 
+                            <input type="file" accept="application/JSON"
                                 class="form-control form-control-alternative"
                                style="display: none"
                                @change="handleInputFile"
@@ -203,7 +209,7 @@ const ImportPromptModal = {
                             Drag & drop file or <span>&nbsp;browse</span>
                         </label>
                     </div>
-                    <div class="preview-area" 
+                    <div class="preview-area"
                         v-if="fileName"
                     >
                         <div class="preview-area_item">
@@ -212,11 +218,12 @@ const ImportPromptModal = {
                     </div>
                     <textarea class="form-control" rows="20"
                         :value="formatted_json"
+                        @change="prompt_json = $event.target.value"
                         @drop.prevent="handleDrop"
                     ></textarea>
-                    
+
                 </div>
-                
+
             </div>
             <div class="modal-footer d-flex">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
@@ -234,7 +241,6 @@ const ImportPromptModal = {
 </div>
     `
 }
-
 
 
 register_component('ImportPromptButton', ImportPromptButton)

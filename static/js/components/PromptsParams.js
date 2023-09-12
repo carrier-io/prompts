@@ -17,6 +17,8 @@ const PromptsParams = {
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
         PromptsTagsModal,
+        PromptsEditorName,
+        PromptsEditorField,
     },
     data() {
         return {
@@ -35,6 +37,12 @@ const PromptsParams = {
             isContextLoading: false,
             promptTags: [],
             showTagsModal: false,
+            promptVersions: [],
+            selectedPromptVersion: {
+                id: null,
+                version: 'latest',
+            },
+            newDescription: '',
         }
     },
     computed: {
@@ -44,15 +52,17 @@ const PromptsParams = {
         isInvalidTestInput() {
             return this.isRunClicked && !this.testInput
         },
+        isLatestVersion() {
+            return this.selectedPrompt.version === 'latest';
+        }
     },
     watch: {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-
                 if (newVal.model_settings) {
                     this.integrations.forEach(integration => {
-                        if (integration.id === newVal.integration_id) {
+                        if (integration.uid === newVal.integration_uid) {
                             this.selectedIntegration = integration.name;
                             this.selectedComponentInt = integration.name;
                             this.changeIntegration(integration.name)
@@ -65,13 +75,18 @@ const PromptsParams = {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
                     this.$nextTick(() => {
-                        $('#selectIntegration').val('').selectpicker('refresh');
+                        $('#selectIntegration').val(newVal.id).selectpicker('refresh');
                     })
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
+                this.fetchPromptVersions(newVal.name);
+                this.$nextTick(() => {
+                    $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
+                    $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
+                })
             },
             deep: true
         },
@@ -81,25 +96,36 @@ const PromptsParams = {
                 this.changeIntegration(newVal)
             },
             deep: true
-        }
+        },
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
-        $('#selectIntegration').selectpicker('refresh');
     },
     methods: {
+        selectPromptVersion({ target: { value }}) {
+            this.selectedPromptVersion = this.promptVersions.find(v => v.id === +value);
+        },
         fetchPromptTags(promptId) {
             fetchPromptTagsAPI(promptId).then((tags) => {
                 this.promptTags = tags;
             })
         },
+        fetchPromptVersions(promptName) {
+            fetchPromptVersionsAPI(promptName).then((prompts) => {
+                this.promptVersions = prompts.map(({ id, version }) => ({ id, version }));
+                this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
+                this.$nextTick(() => {
+                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id).selectpicker('refresh');
+                })
+            })
+        },
         changeIntegration(newVal) {
-            if (this.selectedPrompt.integration_id) {
+            if (this.selectedPrompt.integration_uid) {
                 const existedInt = this.integrations
                     .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
                 this.selectedComponentInt = newVal;
-                if (existedInt.id === this.selectedPrompt.integration_id) {
+                if (existedInt.uid === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
@@ -153,12 +179,14 @@ const PromptsParams = {
                 })
             }
         },
-        updateField(rowId) {
-            const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId)
-            ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output).then(data => {
-                $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
-                    $(this).removeAttr("disabled");
-                })
+        updateField(rowId, isChecked = null) {
+            const row = $('#promptsParamsTable').bootstrapTable('getRowByUniqueId', rowId);
+            ApiUpdateExampleField(this.editablePrompt.id, rowId, row.input, row.output, isChecked ?? row.is_active).then(data => {
+                if (this.isLatestVersion) {
+                    $(`#promptsParamsTable tr[data-uniqueid=${rowId}]`).find('textarea').each(function () {
+                        $(this).removeAttr("disabled");
+                    })
+                }
                 showNotify('INFO', `Input/Output updated.`);
             })
         },
@@ -182,7 +210,7 @@ const PromptsParams = {
             const integrationId = this.integrations.find(integration => integration.name === this.selectedIntegration)
             if (this.editablePrompt.prompt && this.testInput && this.selectedIntegration) {
                 this.isRunLoading = true;
-                ApiRunTest(this.editablePrompt, this.testInput, integrationId.id, integrationId.project_id).then(data => {
+                ApiRunTest(this.editablePrompt, this.testInput, integrationId.uid).then(data => {
                     this.testOutput = data;
                 }).catch(err => {
                     showNotify('ERROR', err)
@@ -229,13 +257,27 @@ const PromptsParams = {
             return value.length > 0;
         },
         deleteExample(exampleId) {
-            ApiDeleteExample(exampleId).then(data => {});
+            ApiDeleteExample(exampleId).then(() => {
+                showNotify('SUCCESS', 'Example delete.');
+            });
         },
         deleteVariable(varId) {
-            ApiDeleteVariable(varId).then(data => {});
+            ApiDeleteVariable(varId).then(() => {
+                showNotify('SUCCESS', 'Variable delete.');
+            });
         },
         updateTags(tags) {
             this.editablePrompt.tags = tags;
+        },
+        LoadVersion() {
+            vueVm.registered_components['prompts'].FetchPromptById(this.selectedPromptVersion.id);
+        },
+        deleteVersion() {
+            ApiDeletePrompt(this.selectedPromptVersion.id).then(data => {
+                showNotify('SUCCESS', 'Version delete.');
+                const latestVersionId = this.promptVersions.find(v => v.version === 'latest').id;
+                vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
+            });
         }
     },
     template: `     
@@ -243,25 +285,34 @@ const PromptsParams = {
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
                 <div class="d-flex justify-content-between mb-2">
-                    <p class="font-h5 font-bold font-uppercase mb-1 flex-grow-1">
-                        <span v-show="!isPromptLoading">{{ editablePrompt.name }}</span>
-                    </p>
-                    <a class="btn btn-secondary mr-2" 
-                        download
-                        :class="{'disabled': isPromptLoading}"
-                        :href="
-                            $root.build_api_url('prompts', 'export_import') + 
-                            '/' + $root.project_id + 
-                            '/' + editablePrompt.id + 
-                            '?as_file=true'"
-                    >
-                        Export
-                    </a>
-                    <button type="button" :disabled="isRunLoading || isPromptLoading" 
-                        class="btn btn-basic d-flex align-items-center" @click="runTest">
-                        Run
-                        <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                    </button>
+                    <promptsEditorName
+                        v-show="!isPromptLoading"
+                        :key="selectedPrompt.id"
+                        :editable-prompt="editablePrompt"
+                        v-model="editablePrompt.name">
+                    </promptsEditorName>
+                    <div class="d-flex">
+                        <a class="btn btn-secondary mr-2" 
+                            download
+                            :class="{'disabled': isPromptLoading}"
+                            :href="
+                                $root.build_api_url('prompts', 'export_import') + 
+                                '/' + $root.project_id + 
+                                '/' + editablePrompt.id + 
+                                '?as_file=true'"
+                        >
+                            Export
+                        </a>
+                        <button type="button" :disabled="isPromptLoading" 
+                            class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
+                            Save version
+                        </button>
+                        <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                            class="btn btn-basic d-flex align-items-center" @click="runTest">
+                            Run
+                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="position-relative" style="height: 164px" v-show="isPromptLoading">
                     <div class="layout-spinner">
@@ -271,13 +322,19 @@ const PromptsParams = {
                     </div>
                 </div>
                 <div v-show="!isPromptLoading">
+                    <promptsEditorField
+                        title="Description"
+                        :key="selectedPrompt.id"
+                        :editable-prompt="editablePrompt"
+                        v-model="editablePrompt.description">
+                    </promptsEditorField>
                     <div>
-                        <p class="font-h5 font-bold font-uppercase mb-2 flex-grow-1">CONTEXT</p>
+                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
                             <div class="custom-input w-100 position-relative" 
                                 :class="{ 'invalid-input': isInvalidContext }">
                                 <textarea
-                                    :disabled="isContextLoading"
+                                    :disabled="isContextLoading || !isLatestVersion"
                                     :value="editablePrompt.prompt"
                                     @change="updatePrompt"
                                     class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
@@ -319,6 +376,7 @@ const PromptsParams = {
                             </tbody>
                         </table>
                         <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                            :disabled="!isLatestVersion"
                             @click="addEmptyVariableRow">
                             <i class="fas fa-plus mr-2"></i>Add Variable
                         </button>
@@ -345,6 +403,9 @@ const PromptsParams = {
                         <thead class="thead-light">
                             <tr>
                                 <th data-field="id" data-visible="false"></th>
+                                <th data-field="is_active"
+                                    data-formatter="ParamsTable.cbxFormatter"
+                                ></th>
                                 <th data-field="input"
                                     data-formatter="ParamsTable.textareaFormatter"
                                 >
@@ -357,7 +418,7 @@ const PromptsParams = {
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
                                 </th>
-                                <th data-width="56" data-width-unit="px" 
+                                <th data-width="56" data-width-unit="px"
                                     data-field="action"
                                     data-formatter="ParamsTable.parametersDeleteFormatter"
                                 ></th>
@@ -367,6 +428,7 @@ const PromptsParams = {
                         </tbody>
                     </table>
                     <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                        :disabled="!isLatestVersion"
                         @click="addEmptyParamsRow">
                         <i class="fas fa-plus mr-2"></i>Add Parameter
                     </button>
@@ -445,7 +507,7 @@ const PromptsParams = {
                 </div>
             </div>
         </div>
-        <div class="card p-4" style="width: 340px">
+        <div class="card p-4" style="min-width: 340px">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold">Settings</p>
             </div>
@@ -457,6 +519,25 @@ const PromptsParams = {
                 </div>
             </div>
             <template v-else>
+                <div class="select-validation mt-4">
+                    <p class="font-h5 font-semibold mb-1">Select version</p>
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                        @change="selectPromptVersion"
+                        data-style="btn">
+                        <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
+                    </select>
+                    <div class="d-flex justify-content-between">
+                        <button type="button"
+                            class="btn btn-basic d-flex align-items-center justify-content-center mt-1 flex-grow-1 mr-1" @click="LoadVersion">
+                            Load version
+                        </button>
+                        <button type="button"
+                            :disabled="selectedPromptVersion.version === 'latest'"
+                            class="btn btn-secondary d-flex align-items-center mt-1" @click="deleteVersion">
+                            Delete version
+                        </button>
+                    </div>
+                </div>
                 <div class="d-flex mt-4 flex-column">
                     <div>
                         <span class="font-h6 font-bold mr-2">TAGS:</span>
@@ -479,7 +560,7 @@ const PromptsParams = {
                         data-style="btn">
                         <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
                     </select>
-                    <span class="select_error-msg">Integration is require.</span>
+                    <span class="input_error-msg">Integration is require.</span>
                 </div>
                 <PromptsVertexIntegration 
                     :is-run-clicked="isRunClicked"

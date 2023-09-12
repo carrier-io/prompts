@@ -11,24 +11,25 @@ class AIProvider:
 
     @classmethod
     def get_integration_settings(
-        cls, project_id: int, integration_id: int, prompt_settings: dict
+        cls, project_id: int, integration_uid: str, prompt_settings: dict
     ) -> dict:
         try:
-            integration = cls.get_integration(project_id, integration_id)
+            integration = cls.get_integration(project_id, integration_uid)
         except IntegrationNotFound as e:
             log.error(str(e))
             return {}
         return {**integration.settings, **prompt_settings}
 
     @classmethod
-    def get_integration(cls, project_id: int, integration_id: int):
-        integration = cls.rpc.integrations_get_by_id(
-            project_id,
-            integration_id
+    def get_integration(cls, project_id: int, integration_uid: str):
+        integration = cls.rpc.integrations_get_by_uid(
+            integration_uid=integration_uid,
+            project_id=project_id,
+            check_all_projects=False
         )
         if integration is None:
             raise IntegrationNotFound(
-                f"Integration is not found when project_id={project_id}, integration_id={integration_id}"
+                f"Integration is not found when project_id={project_id}, integration_uid={integration_uid}"
             )
         return integration
 

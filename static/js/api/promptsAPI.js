@@ -42,13 +42,14 @@ const ApiUpdatePrompt = async (prompt) => {
             "name": prompt.name,
             "type": "freeform",
             "prompt": prompt.prompt,
+            "description": prompt.description,
             "tags": prompt.tags,
         })
     })
     return res.json();
 }
 
-const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
+const ApiUpdateExampleField = async (promptId, exampleId, input, output, isActive) => {
     const api_url = V.build_api_url('prompts', 'example')
 
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
@@ -61,7 +62,7 @@ const ApiUpdateExampleField = async (promptId, exampleId, input, output) => {
             "id": exampleId,
             "input": input,
             "output": output,
-            "is_active": true,
+            "is_active": isActive,
         })
     })
     return res.json();
@@ -130,7 +131,7 @@ const ApiCreateVariable = async (promptId, name, value) => {
     return res.json();
 }
 
-const ApiRunTest = async (prompt, input, integrationId, project_id) => {
+const ApiRunTest = async (prompt, input, integrationUid) => {
     const api_url = V.build_api_url('prompts', 'predict')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'POST',
@@ -139,8 +140,7 @@ const ApiRunTest = async (prompt, input, integrationId, project_id) => {
         },
         body: JSON.stringify({
             "prompt_id": prompt.id,
-            "project_id": project_id,
-            "integration_id": integrationId,
+            "integration_uid": integrationUid,
             "integration_settings": prompt.integration_settings,
             "input": input,
         })
@@ -199,6 +199,43 @@ const updatePromptTagsAPI = async (tags, promptId) => {
         },
         body: JSON.stringify(tags)
 
+    })
+    return res.json();
+}
+
+const updatePromptNameAPI = async (promptId, promptName) => {
+    const api_url = V.build_api_url('prompts', 'prompt')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "name": promptName
+        })
+    })
+    return res.json();
+}
+
+const fetchPromptVersionsAPI = async (promptName) => {
+    const api_url = V.build_api_url('prompts', 'versions')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptName}`, {
+        method: 'GET',
+    })
+    return res.json();
+}
+
+const ApiCreatePromptVersion = async (promptId, versionName) => {
+    const api_url = V.build_api_url('prompts', 'versions')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "prompt_id": promptId,
+            "version": versionName,
+        })
     })
     return res.json();
 }

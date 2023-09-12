@@ -4,10 +4,11 @@ from typing import Optional, List
 from pylon.core.tools import web, log
 
 from pydantic import parse_obj_as
+from sqlalchemy.orm import joinedload, load_only, defer
 from ..models.example import Example
 from ..models.pd.example import ExampleModel, ExampleUpdateModel
 from ..models.prompts import Prompt
-from ..models.pd.prompts_pd import PromptModel, PromptUpdateModel
+from ..models.pd.prompts_pd import PromptModel, PromptUpdateModel, PromptUpdateNameModel
 from ..models.variable import Variable
 from ..utils.ai_providers import AIProvider
 from traceback import format_exc
@@ -16,39 +17,82 @@ from tools import rpc_tools, db
 
 class RPC:
 
+    @web.rpc(f'prompts_predict', "predict")
+    def prompts_predict(self, project_id, integration, model_settings, text_prompt, **kwargs) -> list[dict]:
+        rpc = rpc_tools.RpcMixin().rpc.call
+        rpc_name = integration.name + "__predict"
+        rpc_func = getattr(rpc, rpc_name)
+        result = rpc_func(project_id, model_settings, text_prompt)
+        return result
+
     @web.rpc(f'prompts_get_all', "get_all")
-    def prompts_get_all(self, project_id: int, **kwargs) -> list[dict]:
+    def prompts_get_all(self, project_id: int, with_versions: bool = False, **kwargs) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
-            prompts = session.query(Prompt).order_by(Prompt.id.asc()).all()
-            return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} 
-                    for prompt in prompts]
+            queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
+            if with_versions:
+                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
+                    for prompt in queryset]
+            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
+                for prompt in queryset if prompt.version == 'latest']
+            for prompt in prompts:
+                prompt['versions'] = [{
+                    'id': version.id,
+                    'version': version.version,
+                    'tags': [tag.tag for tag in version.tags]
+                } for version in queryset if version.name == prompt['name']]
+            return prompts
 
     @web.rpc("prompts_get_by_id", "get_by_id")
-    def prompts_get_by_id(self, project_id: int, prompt_id: int, **kwargs) -> dict | None:
+    def prompts_get_by_id(self, project_id: int, prompt_id: int, version: str = '', **kwargs) -> dict | None:
+        if version:
+            version_id = self.get_version_id(project_id, prompt_id, version)
+            if not version_id:
+                return None
+            prompt_id = version_id
+
         with db.with_project_schema_session(project_id) as session:
-            prompt = session.query(Prompt).filter(
+            prompt = session.query(Prompt).options(
+                joinedload(Prompt.examples)
+            ).options(
+                joinedload(Prompt.variables)
+            ).filter(
                 Prompt.id == prompt_id,
             ).one_or_none()
             if not prompt:
                 return None
-            examples = session.query(Example).filter(
-                Example.prompt_id == prompt_id,
-            ).all()
 
-            variables = session.query(Variable).filter(
-                Variable.prompt_id == prompt_id,
-            ).all()
-
-            result = prompt.to_json()
-            if prompt.integration_id:
+            result = prompt.to_json(exclude_fields=set(['integration_id', ]))
+            if prompt.integration_uid:
                 whole_settings = AIProvider.get_integration_settings(
-                    project_id, prompt.integration_id, prompt.model_settings
+                    project_id, prompt.integration_uid, prompt.model_settings
                 )
                 result['model_settings'] = whole_settings
-            result['examples'] = [example.to_json() for example in examples]
-            result['variables'] = [var.to_json() for var in variables]
+            result['examples'] = [example.to_json() for example in prompt.examples]
+            result['variables'] = [var.to_json() for var in prompt.variables]
             result['tags'] = [tag.to_json() for tag in prompt.tags]
+
+            versions = session.query(Prompt).options(
+                defer(Prompt.prompt), defer(Prompt.test_input), defer(Prompt.model_settings)
+            ).filter(Prompt.name == prompt.name).all()
+            result['versions'] = [{
+                'id': version.id,
+                'version': version.version,
+                'tags': [tag.tag for tag in version.tags]
+            } for version in versions]
+
             return result
+
+    @web.rpc("prompts_get_version_id", "get_version_id")
+    def prompts_get_version_id(self, project_id: int, prompt_id: int, version: str) -> dict | None:
+        with db.with_project_schema_session(project_id) as session:
+            if subquery := session.query(Prompt.name).filter(
+                Prompt.id == prompt_id
+            ).one_or_none():
+                if ids:= session.query(Prompt.id).filter(
+                    Prompt.name.in_(subquery),
+                    Prompt.version == version,
+                ).one_or_none():
+                    return ids[0]
 
     @web.rpc(f'prompts_create', "create")
     def prompts_create(self, project_id: int, prompt: dict, **kwargs) -> dict:
@@ -72,11 +116,27 @@ class RPC:
             updated_prompt = session.query(Prompt).get(prompt.id)
             return updated_prompt.to_json()
 
+    @web.rpc(f'prompts_update_name', "update_name")
+    def prompts_update_name(self, project_id: int, prompt_id: int, prompt_date: dict) -> bool:
+        prompt_data = PromptUpdateNameModel.validate(prompt_date)
+        with db.with_project_schema_session(project_id) as session:
+            if subquery := session.query(Prompt.name).filter(
+                Prompt.id == prompt_id
+            ).one_or_none():
+                session.query(Prompt).filter(Prompt.name.in_(subquery)
+                    ).update(prompt_data.dict())
+                session.commit()
+            return True
+
     @web.rpc(f'prompts_delete', "delete")
     def prompts_delete(self, project_id: int, prompt_id: int, **kwargs) -> bool:
         with db.with_project_schema_session(project_id) as session:
             prompt = session.query(Prompt).get(prompt_id)
             examples = session.query(Example).filter(Example.prompt_id == prompt_id).all()
+            if prompt and prompt.version == 'latest':
+                versions = session.query(Prompt).filter(Prompt.name == prompt.name).all()
+                for version in versions:
+                    session.delete(version)
             if prompt:
                 session.delete(prompt)
             for example in examples:
@@ -135,9 +195,19 @@ class RPC:
                 session.commit()
             return True
 
+    @web.rpc("prompts_get_versions_by_prompt_name", "get_versions_by_prompt_name")
+    def prompts_get_versions_by_prompt_name(self, project_id: int, prompt_name: str) -> list[dict]:
+        with db.with_project_schema_session(project_id) as session:
+            prompts = session.query(Prompt).filter(
+                    Prompt.name == prompt_name
+                ).order_by(
+                    Prompt.version
+                ).all()
+            return [prompt.to_json() for prompt in prompts]
+
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
     def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
-                                    input_: str, context: str = '', examples: list = [],
+                                    input_: str = '', context: str = '', examples: list = [],
                                     variables: dict = {},
                                     **kwargs) -> str:
 
@@ -165,7 +235,7 @@ class RPC:
                 if not prompt_struct['variables'].get(variable['name']):
                     prompt_struct['variables'][variable['name']] = variable['value']
             prompt_struct['variables']['prompt'] = prompt_struct['prompt']
-        
+
         prompt_struct = resolve_variables(prompt_struct)
 
         for example in prompt_struct['examples']:

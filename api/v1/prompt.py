@@ -8,7 +8,8 @@ from tools import session_project, api_tools
 class ProjectAPI(api_tools.APIModeHandler):
 
     def get(self, project_id, prompt_id):
-        prompt = self.module.get_by_id(project_id, prompt_id)
+        version = request.args.get('version', '').lower()
+        prompt = self.module.get_by_id(project_id, prompt_id, version)
         if not prompt:
             return 'Prompt not found', 404
         return prompt
@@ -17,6 +18,13 @@ class ProjectAPI(api_tools.APIModeHandler):
         try:
             prompt = self.module.update(project_id, request.json)
             return prompt, 201
+        except ValidationError as e:
+            return e.errors(), 400
+
+    def patch(self, project_id, prompt_id):
+        try:
+            updated = self.module.update_name(project_id, prompt_id, request.json)
+            return {'updated': updated}, 201
         except ValidationError as e:
             return e.errors(), 400
 
