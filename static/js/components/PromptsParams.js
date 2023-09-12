@@ -208,9 +208,13 @@ const PromptsParams = {
         runTest() {
             this.isRunClicked = true;
             const integrationId = this.integrations.find(integration => integration.name === this.selectedIntegration)
-            if (this.editablePrompt.prompt && this.testInput && this.selectedIntegration) {
+            const computedCondition = this.editablePrompt.is_active_input
+                ? this.editablePrompt.prompt && this.testInput && this.selectedIntegration
+                : this.editablePrompt.prompt && this.selectedIntegration;
+            if (computedCondition) {
                 this.isRunLoading = true;
-                ApiRunTest(this.editablePrompt, this.testInput, integrationId.uid).then(data => {
+                const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
+                ApiRunTest(this.editablePrompt, computedInput, integrationId.uid).then(data => {
                     this.testOutput = data;
                 }).catch(err => {
                     showNotify('ERROR', err)
@@ -277,6 +281,13 @@ const PromptsParams = {
                 showNotify('SUCCESS', 'Version delete.');
                 const latestVersionId = this.promptVersions.find(v => v.version === 'latest').id;
                 vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
+            });
+        },
+        updateInput({ target: { checked }}) {
+            this.editablePrompt.is_active_input = checked;
+            const isActive = checked ? 'enabled' : 'disabled';
+            ApiUpdatePrompt(this.editablePrompt).then(data => {
+                showNotify('INFO', `Input ${isActive}.`)
             });
         }
     },
@@ -437,7 +448,16 @@ const PromptsParams = {
             
             <div class="card mt-3 p-28">
                 <div class="d-flex justify-content-between mb-2">
-                    <p class="font-h5 font-bold font-uppercase">TESTS</p>
+                    <div class="d-flex align-items-center">
+                        <p class="font-h5 font-bold font-uppercase mr-4">INPUT</p>
+                        <label class="custom-toggle mr-2" style="margin-top: 0">
+                            <input type="checkbox"
+                                   :checked="editablePrompt.is_active_input" 
+                                   @click="updateInput">
+                            <span class="custom-toggle_slider round"></span>
+                        </label>
+                        <p class="font-h6 font-weight-400">Disable input</p>
+                    </div>
                     <button type="button" :disabled="isRunLoading || isPromptLoading" 
                         class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
@@ -458,6 +478,7 @@ const PromptsParams = {
                         <thead class="thead-light">
                             <tr>
                                 <th data-field="inputTest"
+                                    v-if="editablePrompt.is_active_input"
                                     >
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Input</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
@@ -475,7 +496,7 @@ const PromptsParams = {
                         </thead>
                         <tbody style="border-bottom: solid 1px #EAEDEF">
                             <tr>
-                                <td class="p-2">
+                                <td class="p-2" v-if="editablePrompt.is_active_input">
                                     <div class="custom-input" :class="{ 'invalid-input': isInvalidTestInput }">
                                         <textarea type="text" class="form-control form-control-alternative"
                                             rows="5"
