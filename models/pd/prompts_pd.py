@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel, validator, root_validator, ValidationError
 from pylon.core.tools import log
 from ...utils.ai_providers import AIProvider
 
@@ -34,7 +34,7 @@ class PromptModel(BaseModel):
         model_settings = values['model_settings']
         response = AIProvider.parse_settings(integration, model_settings)
         if not response['ok']:
-            raise ValueError('Cannot determine parser for model_settings')
+            raise response['error']
         values['model_settings'] = response['item']
         return values
 
@@ -61,12 +61,21 @@ class PredictPostModel(BaseModel):
         if not (values['project_id'] and values['integration_id']):
             return values
         project_id, integration_id = values['project_id'], values['integration_id']
-        
         integration = AIProvider.get_integration(project_id, integration_id)
         model_settings = values['integration_settings']
         response = AIProvider.parse_settings(integration, model_settings)
         
         if not response['ok']:
-            raise ValueError('Cannot determine parser for model_settings')
+            error = response['error']
+            # error_items = []
+            # for error_item in error.errors():
+            #     modified_loc = ('integration_settings',) + error_item['loc']
+            #     error_item['loc'] = modified_loc
+            #     error_items.append(error_items)
+
+            # log.info(ValidationError(model=error.model, errors=error_items))
+            # log.info(type(error))
+            raise error
+        
         values['integration_settings'] = response['item']
         return values
