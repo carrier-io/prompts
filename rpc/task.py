@@ -55,14 +55,14 @@ def handle_exceptions(fn):
 
 class RPC:
 
-    @web.rpc('prompts_predict__validate', 'predict__validate')
+    @web.rpc('prompts_flows_predict__validate', 'predict__validate')
     @handle_exceptions
     def validate_predict_payload(self, **kwargs):
         return PredictPostModel.validate(kwargs)
 
 
-    @web.rpc('prompts_predict', 'predict')
-    @tasklib.task("prompts_predict", {
+    @web.rpc('prompts_flows_predict')
+    @tasklib.task("prompts_flows_predict", {
         "uid": "prompt",
         "tooltip": "prompt.svg",
         "icon_url":"/flows/static/icons/prompt.svg",
@@ -78,7 +78,7 @@ class RPC:
         try:
             integration = AIProvider.get_integration(
                 project_id=project_id,
-                integration_id=data.integration_id,
+                integration_uid=data.integration_uid,
             )
             text_prompt = self.prepare_text_prompt(
                 project_id, data.prompt_id, data.input_, 
