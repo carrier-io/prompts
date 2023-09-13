@@ -60,7 +60,7 @@ const PromptsParams = {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = Object.assign({}, newVal);
-                if (newVal.model_settings) {
+                if (newVal.integration_uid) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
                             this.selectedIntegration = integration.name;
@@ -84,6 +84,7 @@ const PromptsParams = {
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
+                    $("#selectIntegration").selectpicker('refresh');
                     $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
                     $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
                 })
@@ -574,6 +575,7 @@ const PromptsParams = {
                         <p class="font-h5">Edit tags</p>
                     </div>
                 </div>
+                {{ selectedIntegration }}
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
                     <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
