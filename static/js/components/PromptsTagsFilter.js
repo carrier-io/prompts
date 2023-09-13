@@ -53,11 +53,13 @@ const PromptsTagsFilter = {
                 tags: tags
             }, {
                 'filterAlgorithm': (row, filters) => {
-                    const isRowHasTags = filters.tags.every(filteredTag => {
-                        return row.tags.map(({ tag }) => tag).includes(filteredTag.title);
-                    })
-                    const isRowHasName = row.name.includes(this.searchedName);
-                    return isRowHasTags && isRowHasName;
+                    if (filters) {
+                        const isRowHasTags = filters.tags.every(filteredTag => {
+                            return row.tags.map(({ tag }) => tag).includes(filteredTag.title);
+                        })
+                        const isRowHasName = row.name.includes(this.searchedName);
+                        return isRowHasTags && isRowHasName;
+                    }
                 }
             })
             if (this.selectedPrompt.id) {

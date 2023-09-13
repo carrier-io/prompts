@@ -67,6 +67,7 @@ class RPC:
                     project_id, prompt.integration_uid, prompt.model_settings
                 )
                 result['model_settings'] = whole_settings
+                result['integration_uid'] = prompt.integration_uid if whole_settings else None
             result['examples'] = [example.to_json() for example in prompt.examples]
             result['variables'] = [var.to_json() for var in prompt.variables]
             result['tags'] = [tag.to_json() for tag in prompt.tags]
