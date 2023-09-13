@@ -17,7 +17,7 @@ class AIProvider:
             integration = cls.get_integration(project_id, integration_uid)
         except IntegrationNotFound as e:
             log.error(str(e))
-            return {}
+            return None
         return {**integration.settings, **prompt_settings}
 
     @classmethod
