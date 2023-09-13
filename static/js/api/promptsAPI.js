@@ -44,6 +44,7 @@ const ApiUpdatePrompt = async (prompt) => {
             "prompt": prompt.prompt,
             "description": prompt.description,
             "tags": prompt.tags,
+            "is_active_input": prompt.is_active_input,
         })
     })
     return res.json();
@@ -131,19 +132,20 @@ const ApiCreateVariable = async (promptId, name, value) => {
     return res.json();
 }
 
-const ApiRunTest = async (prompt, input, integrationUid) => {
+const ApiRunTest = async (prompt, input = null, integrationUid) => {
     const api_url = V.build_api_url('prompts', 'predict')
+    const params = {
+        "prompt_id": prompt.id,
+        "integration_uid": integrationUid,
+        "integration_settings": prompt.integration_settings,
+    }
+    if (input) params["input"] = input;
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            "prompt_id": prompt.id,
-            "integration_uid": integrationUid,
-            "integration_settings": prompt.integration_settings,
-            "input": input,
-        })
+        body: JSON.stringify(params)
     })
 
     if (!res.ok) {
