@@ -27,7 +27,9 @@ const PromptsAiDialIntegration = {
             this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
             this.isComponentMounted = true;
         }
-        // this.fetchModels();
+        this.$nextTick(() => {
+            $('#selectModel').val(this.editableIntegrationSetting.model_name).selectpicker('refresh');
+        })
     },
     watch: {
         selectedPrompt: {
