@@ -16,6 +16,7 @@ const PromptsParams = {
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
+        PromptsAiDialIntegration,
         PromptsTagsModal,
         PromptsEditorName,
         PromptsEditorField,
@@ -292,7 +293,7 @@ const PromptsParams = {
             });
         }
     },
-    template: `     
+    template: `
     <div class="d-flex">
         <div class="flex-grow-1 mr-3">
             <div class="card p-28">
@@ -304,22 +305,22 @@ const PromptsParams = {
                         v-model="editablePrompt.name">
                     </promptsEditorName>
                     <div class="d-flex">
-                        <a class="btn btn-secondary mr-2" 
+                        <a class="btn btn-secondary mr-2"
                             download
                             :class="{'disabled': isPromptLoading}"
                             :href="
-                                $root.build_api_url('prompts', 'export_import') + 
-                                '/' + $root.project_id + 
-                                '/' + editablePrompt.id + 
+                                $root.build_api_url('prompts', 'export_import') +
+                                '/' + $root.project_id +
+                                '/' + editablePrompt.id +
                                 '?as_file=true'"
                         >
                             Export
                         </a>
-                        <button type="button" :disabled="isPromptLoading" 
+                        <button type="button" :disabled="isPromptLoading"
                             class="btn btn-secondary mr-2" @click="$emit('open-create-version-modal')">
                             Save version
                         </button>
-                        <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                        <button type="button" :disabled="isRunLoading || isPromptLoading"
                             class="btn btn-basic d-flex align-items-center" @click="runTest">
                             Run
                             <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
@@ -343,7 +344,7 @@ const PromptsParams = {
                     <div>
                         <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
                         <div class="w-100">
-                            <div class="custom-input w-100 position-relative" 
+                            <div class="custom-input w-100 position-relative"
                                 :class="{ 'invalid-input': isInvalidContext }">
                                 <textarea
                                     :disabled="isContextLoading || !isLatestVersion"
@@ -357,7 +358,7 @@ const PromptsParams = {
                         </div>
                     </div>
                     <div class="mt-3">
-                        <table 
+                        <table
                             id="variablesTable"
                             class="w-100 table-transparent mb-2 params-table"
                             data-toggle="table"
@@ -378,7 +379,7 @@ const PromptsParams = {
                                         <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Value</span>
                                         <span class="font-h5 font-weight-400 text-capitalize">Variable value</span>
                                     </th>
-                                    <th data-width="56" data-width-unit="px" 
+                                    <th data-width="56" data-width-unit="px"
                                         data-field="action"
                                         data-formatter="VariableTable.deleteFormatter"
                                     ></th>
@@ -387,15 +388,15 @@ const PromptsParams = {
                             <tbody style="border-bottom: solid 1px #EAEDEF">
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                        <button type="button" class="btn btn-sm btn-secondary mt-2"
                             :disabled="!isLatestVersion"
                             @click="addEmptyVariableRow">
                             <i class="fas fa-plus mr-2"></i>Add Variable
                         </button>
                     </div>
                 </div>
-            </div>    
-            
+            </div>
+
             <div class="card mt-3 p-28">
                 <p class="font-h5 font-bold font-uppercase">EXAMPLES</p>
                 <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
@@ -406,7 +407,7 @@ const PromptsParams = {
                     </div>
                 </div>
                 <div v-show="!isPromptLoading">
-                    <table 
+                    <table
                         id="promptsParamsTable"
                         class="w-100 table-transparent mb-2 params-table"
                         data-toggle="table"
@@ -439,27 +440,27 @@ const PromptsParams = {
                         <tbody style="border-bottom: solid 1px #EAEDEF">
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-sm btn-secondary mt-2" 
+                    <button type="button" class="btn btn-sm btn-secondary mt-2"
                         :disabled="!isLatestVersion"
                         @click="addEmptyParamsRow">
                         <i class="fas fa-plus mr-2"></i>Add Parameter
                     </button>
                 </div>
             </div>
-            
+
             <div class="card mt-3 p-28">
                 <div class="d-flex justify-content-between mb-2">
                     <div class="d-flex align-items-center">
                         <p class="font-h5 font-bold font-uppercase mr-4">INPUT</p>
                         <label class="custom-toggle mr-2" style="margin-top: 0">
                             <input type="checkbox"
-                                   :checked="editablePrompt.is_active_input" 
+                                   :checked="editablePrompt.is_active_input"
                                    @click="updateInput">
                             <span class="custom-toggle_slider round"></span>
                         </label>
                         <p class="font-h6 font-weight-400">Disable input</p>
                     </div>
-                    <button type="button" :disabled="isRunLoading || isPromptLoading" 
+                    <button type="button" :disabled="isRunLoading || isPromptLoading"
                         class="btn btn-basic d-flex align-items-center" @click="runTest">
                         Run
                         <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
@@ -473,8 +474,8 @@ const PromptsParams = {
                     </div>
                 </div>
                 <div v-else>
-                    <table 
-                        class="w-100 table-transparent mb-2 params-table" 
+                    <table
+                        class="w-100 table-transparent mb-2 params-table"
                         id="testResult">
                         <thead class="thead-light">
                             <tr>
@@ -489,7 +490,7 @@ const PromptsParams = {
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
                                 </th>
-                                <th data-width="56" data-width-unit="px" 
+                                <th data-width="56" data-width-unit="px"
                                     data-field="action"
                                     data-formatter="ParamsTable.parametersDeleteFormatter"
                                 ></th>
@@ -518,7 +519,7 @@ const PromptsParams = {
                                     </div>
                                 </td>
                                 <td style="width: 56px;" class="p-2">
-                                    <button :disabled="!testOutput || !testInput" 
+                                    <button :disabled="!testOutput || !testInput"
                                         class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
                                         <i class="icon__14x14 icon-add-column"></i>
                                     </button>
@@ -543,7 +544,7 @@ const PromptsParams = {
             <template v-else>
                 <div class="select-validation mt-4">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
-                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         @change="selectPromptVersion"
                         data-style="btn">
                         <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
@@ -578,46 +579,53 @@ const PromptsParams = {
                 {{ selectedIntegration }}
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
-                    <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm" 
+                    <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         v-model="selectedIntegration"
                         data-style="btn">
                         <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
                     </select>
                     <span class="input_error-msg">Integration is require.</span>
                 </div>
-                <PromptsVertexIntegration 
+                <PromptsVertexIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
                     :key="selectedPrompt"
                     v-if="selectedIntegration === 'vertex_ai'">
                 </PromptsVertexIntegration>
-                <PromptsOpenaiIntegration 
+                <PromptsOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
                     :key="selectedPrompt"
                     v-if="selectedIntegration === 'open_ai'">
                 </PromptsOpenaiIntegration>
-                <PromptsAzureOpenaiIntegration 
+                <PromptsAzureOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
                     :key="selectedPrompt"
                     v-if="selectedIntegration === 'open_ai_azure'">
                 </PromptsAzureOpenaiIntegration>
+                <PromptsAiDialIntegration
+                    :is-run-clicked="isRunClicked"
+                    :selected-prompt="editablePrompt"
+                    @update-setting="updateSetting"
+                    :key="selectedPrompt"
+                    v-if="selectedIntegration === 'ai_dial'">
+                </PromptsAiDialIntegration>
                 <transition>
                     <prompts-tags-modal
                         v-if="showTagsModal"
                         :prompt="editablePrompt"
                         @update-tags="updateTags"
                         @close-modal="showTagsModal = false"
-                    >  
+                    >
                     </prompts-tags-modal>
                 </transition>
             </template>
         </div>
-    </div>  
+    </div>
     `
 }
 
