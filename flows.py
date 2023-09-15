@@ -13,20 +13,21 @@ from .utils.ai_providers import AIProvider
     icon_url='/flows/static/icons/prompt.svg',
     # validation_rpc='embeddings_deduplicate_flow_validate'
 )
-def prompt(project_id: int, **kwargs):
+def prompt(flow_context: dict, **kwargs):
+    project_id = flow_context.get('project_id')
     try:
         data = PredictPostModel.validate(kwargs)
     except ValidationError as e:
         log.error(e.errors())
         return {"ok": False, "error": e.errors()}
 
-    model_settings = data.integration_settings
+    model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
     try:
         integration = AIProvider.get_integration(
             project_id=project_id,
             integration_uid=data.integration_uid,
         )
-        text_prompt = rpc_tools.RpcMixin().rpc.prompts_prepare_text_prompt(
+        text_prompt = rpc_tools.RpcMixin().rpc.call.prompts_prepare_text_prompt(
             project_id, data.prompt_id, data.input_,
             data.context, data.examples, data.variables
         )
@@ -35,7 +36,9 @@ def prompt(project_id: int, **kwargs):
         return {"ok": False, "error": str(e)}
 
     output = AIProvider.predict(project_id, integration, model_settings, text_prompt)
-    return {"ok": True, "result": output}
+    if not output['ok']:
+        return output
+    return {"ok": True, "result": output['response']}
 
 
 @flow_tools.validator(flow_uid='prompt')
