@@ -84,8 +84,7 @@ var ParamsTable = {
                 <textarea class="form-control form-control-alternative"
                     ${disabled}
                     rows="3"
-                    onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
-                    value="${value}">${value}</textarea>
+                    onchange="ParamsTable.updateCell(this, ${index}, '${field}', '${row.id}')">${value}</textarea>
             </div>
         `
     },
@@ -136,8 +135,7 @@ var VariableTable = {
                 <textarea class="form-control form-control-alternative"
                     rows="1"
                     ${disabled}
-                    onchange="VariableTable.updateCell(this, ${index}, '${field}', '${row.id}')" 
-                    value="${value}">${value}</textarea>
+                    onchange="VariableTable.updateCell(this, ${index}, '${field}', '${row.id}')">${value}</textarea>
             </div>
         `
     },

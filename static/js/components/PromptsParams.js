@@ -8,7 +8,10 @@ const PromptsParams = {
                 "examples": [],
             }
         },
-        integrations: [],
+        integrations: {
+            type: Array,
+            default: [],
+        },
         tags: [],
         isPromptLoading: false,
     },
@@ -64,20 +67,15 @@ const PromptsParams = {
                 if (newVal.integration_uid) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
-                            this.selectedIntegration = integration.name;
+                            this.selectedIntegration = integration;
                             this.selectedComponentInt = integration.name;
-                            this.changeIntegration(integration.name)
-                            this.$nextTick(() => {
-                                $("#selectIntegration").val(integration.name).selectpicker('refresh')
-                            })
+                            this.changeIntegration(integration);
+                            $("#selectIntegration").val(integration.config.name);
                         }
                     })
                 } else {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
-                    this.$nextTick(() => {
-                        $('#selectIntegration').val(newVal.id).selectpicker('refresh');
-                    })
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = '';
@@ -125,21 +123,16 @@ const PromptsParams = {
         changeIntegration(newVal) {
             if (this.selectedPrompt.integration_uid) {
                 const existedInt = this.integrations
-                    .find(integration => integration.name.toLowerCase() === newVal.toLowerCase())
-                this.selectedComponentInt = newVal;
+                    .find(integration => integration.uid === newVal.uid)
+                this.selectedComponentInt = newVal.name;
                 if (existedInt.uid === this.selectedPrompt.integration_uid) {
                     this.editablePrompt.model_settings = { ...this.selectedPrompt.model_settings }
                     return;
                 }
             }
-            const integrationNames = this.integrations.map(integration => integration.name.toLowerCase());
-            if (integrationNames.includes(newVal.toLowerCase())) {
-                this.selectedComponentInt = newVal.toLowerCase();
-            }
             this.editablePrompt.model_settings = this.integrations
-                .find(integration => integration.name.toLowerCase() === newVal.toLowerCase()).settings
-
-            this.selectedComponentInt = newVal;
+                .find(integration => integration.uid === newVal.uid).settings;
+            this.selectedComponentInt = newVal.name;
         },
         addEmptyParamsRow()  {
             $('#promptsParamsTable').bootstrapTable(
@@ -209,7 +202,7 @@ const PromptsParams = {
         },
         runTest() {
             this.isRunClicked = true;
-            const integrationId = this.integrations.find(integration => integration.name === this.selectedIntegration)
+            const integrationId = this.integrations.find(integration => integration.uid === this.selectedIntegration.uid)
             const computedCondition = this.editablePrompt.is_active_input
                 ? this.editablePrompt.prompt && this.testInput && this.selectedIntegration
                 : this.editablePrompt.prompt && this.selectedIntegration;
@@ -257,7 +250,7 @@ const PromptsParams = {
             this.checkFields(rowId)
         },
         showError(value) {
-            return this.isRunClicked ? value.length > 0 : true;
+            return this.isRunClicked ? value : true;
         },
         hasError(value) {
             return value.length > 0;
@@ -576,13 +569,12 @@ const PromptsParams = {
                         <p class="font-h5">Edit tags</p>
                     </div>
                 </div>
-                {{ selectedIntegration }}
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
                     <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         v-model="selectedIntegration"
                         data-style="btn">
-                        <option v-for="integration in integrations" :value="integration.name">{{ integration.config.name }}</option>
+                        <option v-for="integration in integrations" :value="integration">{{ integration.config.name }}</option>
                     </select>
                     <span class="input_error-msg">Integration is require.</span>
                 </div>
@@ -590,22 +582,22 @@ const PromptsParams = {
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
-                    :key="selectedPrompt"
-                    v-if="selectedIntegration === 'vertex_ai'">
+                    :key="selectedIntegration.uid"
+                    v-if="selectedIntegration.name === 'vertex_ai'">
                 </PromptsVertexIntegration>
                 <PromptsOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
-                    :key="selectedPrompt"
-                    v-if="selectedIntegration === 'open_ai'">
+                    :key="selectedIntegration.uid"
+                    v-if="selectedIntegration.name === 'open_ai'">
                 </PromptsOpenaiIntegration>
                 <PromptsAzureOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
-                    :key="selectedPrompt"
-                    v-if="selectedIntegration === 'open_ai_azure'">
+                    :key="selectedIntegration.uid"
+                    v-if="selectedIntegration.name === 'open_ai_azure'">
                 </PromptsAzureOpenaiIntegration>
                 <PromptsAiDialIntegration
                     :is-run-clicked="isRunClicked"
