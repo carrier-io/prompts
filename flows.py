@@ -13,23 +13,26 @@ from .utils.ai_providers import AIProvider
     icon_url='/flows/static/icons/prompt.svg',
     # validation_rpc='embeddings_deduplicate_flow_validate'
 )
-def prompt(flow_context: dict, **kwargs):
+def prompt(flow_context: dict, clean_data: dict, **kwargs):
     project_id = flow_context.get('project_id')
-    try:
-        data = PredictPostModel.validate(kwargs)
-    except ValidationError as e:
-        log.error(e.errors())
-        return {"ok": False, "error": e.errors()}
-
-    model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
+    # model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
+    model_settings = clean_data['integration_settings']
+    model_settings.pop('project_id', None)
+    integration_uid = clean_data['integration_uid']
+    input_ = clean_data['input_']
+    prompt_id = clean_data['prompt_id']
+    context = clean_data['context']
+    examples = clean_data['examples']
+    variables = clean_data['variables']
+    
     try:
         integration = AIProvider.get_integration(
             project_id=project_id,
-            integration_uid=data.integration_uid,
+            integration_uid=integration_uid,
         )
         text_prompt = rpc_tools.RpcMixin().rpc.call.prompts_prepare_text_prompt(
-            project_id, data.prompt_id, data.input_,
-            data.context, data.examples, data.variables
+            project_id, prompt_id, input_,
+            context, examples, variables
         )
     except Exception as e:
         log.error(str(e))
