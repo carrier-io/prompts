@@ -24,7 +24,25 @@ def prompt(flow_context: dict, clean_data: dict, **kwargs):
     context = clean_data['context']
     examples = clean_data['examples']
     variables = clean_data['variables']
-    
+
+    # data = dict(kwargs)
+    # data['input'] = data['prompt_input']
+    # project_id = flow_context.get('project_id')
+    # data['project_id'] = project_id
+    # try:
+    #     data = PredictPostModel.validate(data)
+    # except ValidationError as e:
+    #     log.error(e.errors())
+    #     return {"ok": False, "error": e.errors()}
+    # log.info('Prompt kwargs %s', kwargs)
+    # log.info('Prompt node %s', data)
+    #
+    # if isinstance(data.integration_settings, dict):
+    #     model_settings = data.integration_settings
+    # else:
+    #     model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
+
+
     try:
         integration = AIProvider.get_integration(
             project_id=project_id,
