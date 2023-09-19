@@ -250,7 +250,7 @@ const PromptsParams = {
             this.checkFields(rowId)
         },
         showError(value) {
-            return this.isRunClicked ? value.uid.length > 0 : true;
+            return this.isRunClicked ? value : true;
         },
         hasError(value) {
             return value.length > 0;
