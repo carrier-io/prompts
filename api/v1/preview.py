@@ -4,10 +4,10 @@ from tools import api_tools
 class ProjectAPI(api_tools.APIModeHandler):
 
     def get(self, project_id, prompt_id):
-        text_prompt = self.module.prepare_text_prompt(
+        prompt_struct = self.module.prepare_prompt_struct(
             project_id, prompt_id, ""
         )
-        return text_prompt
+        return prompt_struct
 
 
 class AdminAPI(api_tools.APIModeHandler):

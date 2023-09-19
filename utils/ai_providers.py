@@ -40,10 +40,10 @@ class AIProvider:
         return rpc_func
 
     @classmethod
-    def predict(cls, project_id: int, integration, request_settings: dict, text_prompt: str):
+    def predict(cls, project_id: int, integration, request_settings: dict, prompt_struct: dict):
         rpc_func = cls._get_rpc_function(integration.name)
         settings = {**integration.settings, **request_settings}
-        result = rpc_func(project_id, settings, text_prompt)
+        result = rpc_func(project_id, settings, prompt_struct)
         return result
 
     @classmethod

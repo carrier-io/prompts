@@ -37,14 +37,14 @@ class ProjectAPI(api_tools.APIModeHandler):
                 project_id=project_id,
                 integration_uid=data.integration_uid,
             )
-            text_prompt = self.module.prepare_text_prompt(
-                project_id, data.prompt_id, data.input_, 
+            prompt_struct = self.module.prepare_prompt_struct(
+                project_id, data.prompt_id, data.input_,
                 data.context, data.examples, data.variables
             )
         except Exception as e:
             return str(e), 400
 
-        result = AIProvider.predict(project_id, integration, model_settings, text_prompt)
+        result = AIProvider.predict(project_id, integration, model_settings, prompt_struct)
         if not result['ok']:
             return str(result['error']), 400
         return result['response'], 200
