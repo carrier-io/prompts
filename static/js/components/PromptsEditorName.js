@@ -69,7 +69,7 @@ const PromptsEditorName = {
                 </button>
             </div>
             <div v-if="showEditor" class="d-flex justify-content-end">
-                <div class="custom-input flex-grow-1 need-validation":class="{'invalid-input': hasError(modelValue)}"
+                <div class="custom-input flex-grow-1 need-validation" :class="{'invalid-input': hasError(modelValue)}"
                     :data-valid="hasError(modelValue)">
                     <input rows="2" class="form-control" 
                     :value="modelValue" @input="updateField">
