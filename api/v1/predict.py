@@ -45,7 +45,7 @@ class ProjectAPI(api_tools.APIModeHandler):
                 data.context, data.examples, data.variables
             )
         except Exception as e:
-            log.error("************* AIProvider.get_integration and self.module.prepare_text_prompt")
+            log.error("************* AIProvider.get_integration and self.module.prepare_prompt_struct")
             log.error(str(e))
             log.error("*************")
             return str(e), 400
