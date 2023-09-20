@@ -45,8 +45,10 @@ class PromptUpdateModel(PromptModel):
     id: int
     version: Optional[str]
 
+
 class PromptUpdateNameModel(BaseModel):
     name: str
+
 
 class PredictPostModel(BaseModel):
     input_: str = ''
@@ -87,6 +89,6 @@ class PredictPostModel(BaseModel):
             # log.info(ValidationError(model=error.model, errors=error_items))
             # log.info(type(error))
             raise error
-        
+
         values['integration_settings'] = response['item']
         return values

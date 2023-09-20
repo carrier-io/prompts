@@ -41,7 +41,6 @@ def prompt(flow_context: dict, clean_data: PredictPostModel, **kwargs):
     # else:
     #     model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
 
-
     try:
         integration = AIProvider.get_integration(
             project_id=project_id,
@@ -63,4 +62,13 @@ def prompt(flow_context: dict, clean_data: PredictPostModel, **kwargs):
 
 @flow_tools.validator(flow_uid='prompt')
 def prompt_validate(**kwargs) -> PredictPostModel:
-    return PredictPostModel.validate(kwargs)
+    kwargs['input'] = kwargs.pop('prompt_input')
+    kwargs['integration_settings'] = kwargs.pop('model_settings')
+    variables = kwargs.pop('variables')
+    kwargs['variables'] = {}
+    for var in variables:
+        kwargs['variables'][var['name']] = var['value']
+    result = PredictPostModel.parse_obj(kwargs)
+    result.integration_settings.pop('service_account_info', None)
+    result.integration_settings.pop('api_token', None)
+    return result
