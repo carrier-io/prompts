@@ -92,6 +92,7 @@ const PromptsParams = {
         },
         selectedIntegration: {
             handler: function (newVal, oldVal) {
+                console.log(newVal)
                 if (!newVal) return
                 this.changeIntegration(newVal)
             },
@@ -604,7 +605,7 @@ const PromptsParams = {
                     :selected-prompt="editablePrompt"
                     @update-setting="updateSetting"
                     :key="selectedPrompt"
-                    v-if="selectedIntegration === 'ai_dial'">
+                    v-if="selectedIntegration.name === 'ai_dial'">
                 </PromptsAiDialIntegration>
                 <transition>
                     <prompts-tags-modal
