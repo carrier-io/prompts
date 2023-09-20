@@ -40,7 +40,7 @@ class ProjectAPI(api_tools.APIModeHandler):
                 project_id=project_id,
                 integration_uid=data.integration_uid,
             )
-            text_prompt = self.module.prepare_text_prompt(
+            prompt_struct = self.module.prepare_prompt_struct(
                 project_id, data.prompt_id, data.input_,
                 data.context, data.examples, data.variables
             )
@@ -50,7 +50,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.error("*************")
             return str(e), 400
 
-        result = AIProvider.predict(project_id, integration, model_settings, text_prompt)
+        result = AIProvider.predict(project_id, integration, model_settings, prompt_struct)
         if not result['ok']:
             log.error("************* if not result['ok']")
             log.error(str(result['error']))
