@@ -1,5 +1,5 @@
 const PromptsOpenaiIntegration = {
-    props: ['selectedPrompt', 'isRunClicked'],
+    props: ['selectedPrompt', 'isRunClicked', 'selectedIntegration'],
     components: {
         'prompts-range': PromptsRange,
     },
@@ -27,6 +27,9 @@ const PromptsOpenaiIntegration = {
             this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
             this.isComponentMounted = true;
         }
+        this.$nextTick(() => {
+            $('#selectModel').val(this.editableIntegrationSetting.model_name).selectpicker('refresh');
+        })
     },
     watch: {
         editableIntegrationSetting: {
@@ -39,13 +42,15 @@ const PromptsOpenaiIntegration = {
     template: `
         <div>
             <div class="mt-4" v-if="isComponentMounted">
-                <div class="form-group">
-                    <p class="font-h5 font-semibold">Model</p>
-                    <div class="custom-input custom-input__sm mb-3 mt-1" :class="{ 'invalid-input': isInvalid }">
-                        <input type="text" placeholder="Model name" 
-                        v-model="editableIntegrationSetting.model_name">
-                        <span class="input_error-msg"></span>
-                    </div>
+            <div class="select-validation mt-4 mb-4" :class="{ 'invalid-input': isInvalid }">
+                <p class="font-h5 font-semibold mb-1">Select model</p>
+                <select id="selectModel" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                    v-model="editableIntegrationSetting.model_name"
+                    data-size="8"
+                    data-style="btn">
+                    <option v-for="model in selectedIntegration.settings.models" :value="model">{{ model }}</option>
+                </select>
+            </div>
                 </div>
                 <prompts-range
                     @register="$root.register"
