@@ -92,7 +92,6 @@ const PromptsParams = {
         },
         selectedIntegration: {
             handler: function (newVal, oldVal) {
-                console.log(newVal)
                 if (!newVal) return
                 this.changeIntegration(newVal)
             },
