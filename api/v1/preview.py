@@ -1,17 +1,20 @@
+from flask import request
 from tools import api_tools
 
 
 class ProjectAPI(api_tools.APIModeHandler):
 
-    def get(self, project_id, prompt_id):
+    def get(self, project_id: int, prompt_id: int):
+        ignore_template_error = request.args.get('ignore_template_error', False)
         text_prompt = self.module.prepare_text_prompt(
-            project_id, prompt_id, ""
+            project_id, prompt_id, "",
+            ignore_template_error=ignore_template_error
         )
-        return text_prompt
+        return text_prompt, 200
 
 
-class AdminAPI(api_tools.APIModeHandler):
-    ...
+# class AdminAPI(api_tools.APIModeHandler):
+#     ...
 
 
 class API(api_tools.APIBase):
@@ -22,5 +25,5 @@ class API(api_tools.APIBase):
 
     mode_handlers = {
         'default': ProjectAPI,
-        'administration': AdminAPI,
+        # 'administration': AdminAPI,
     }

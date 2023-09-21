@@ -15,7 +15,8 @@ from pylon.core.tools import log
 class ProjectAPI(api_tools.APIModeHandler):
     @api_tools.endpoint_metrics
     def post(self, project_id):
-        payload = request.json
+        payload = dict(request.json)
+        ignore_template_error = payload.pop('ignore_template_error', False)
         payload['project_id'] = project_id
         try:
             data = PredictPostModel.parse_obj(payload)
@@ -39,7 +40,8 @@ class ProjectAPI(api_tools.APIModeHandler):
             )
             text_prompt = self.module.prepare_text_prompt(
                 project_id, data.prompt_id, data.input_, 
-                data.context, data.examples, data.variables
+                data.context, data.examples, data.variables,
+                ignore_template_error=ignore_template_error
             )
         except Exception as e:
             return str(e), 400

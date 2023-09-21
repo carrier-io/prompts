@@ -49,6 +49,7 @@ def prompt(flow_context: dict, clean_data: PredictPostModel, **kwargs):
         text_prompt = rpc_tools.RpcMixin().rpc.call.prompts_prepare_text_prompt(
             project_id, clean_data.prompt_id, clean_data.input_,
             clean_data.context, clean_data.examples, clean_data.variables
+            # todo: handle ignore_template_error - maybe this need to be take from clean_data
         )
     except Exception as e:
         log.error(str(e))

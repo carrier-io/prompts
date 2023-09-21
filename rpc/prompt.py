@@ -209,7 +209,7 @@ class RPC:
     @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
     def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
                                     input_: str = '', context: str = '', examples: list = [],
-                                    variables: dict = {},
+                                    variables: dict = {}, ignore_template_error: bool = False,
                                     **kwargs) -> str:
 
         example_template = '\ninput: {input}\noutput: {output}'
@@ -237,7 +237,7 @@ class RPC:
                     prompt_struct['variables'][variable['name']] = variable['value']
             prompt_struct['variables']['prompt'] = prompt_struct['prompt']
 
-        prompt_struct = resolve_variables(prompt_struct)
+        prompt_struct = resolve_variables(prompt_struct, ignore_template_error=ignore_template_error)
 
         for example in prompt_struct['examples']:
             prompt_struct['context'] += example_template.format(**example)
@@ -249,7 +249,7 @@ class RPC:
         return prompt_struct['context']
 
 
-def resolve_variables(prompt_struct):
+def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:
     try:
         environment = Environment(undefined=DebugUndefined)
         ast = environment.parse(prompt_struct['context'])
@@ -259,6 +259,7 @@ def resolve_variables(prompt_struct):
         prompt_struct['context'] = template.render(**prompt_struct['variables'])
     except:
         log.critical(format_exc())
-        raise Exception("Invalid jinja template in context")
+        if not ignore_template_error:
+            raise Exception("Invalid jinja template in context")
 
     return prompt_struct
