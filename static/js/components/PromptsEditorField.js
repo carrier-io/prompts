@@ -59,7 +59,7 @@ const PromptsEditorField = {
                 <span class="mr-2" v-if="!showEditor">{{ modelValue }}</span>
             </div>
             <div v-if="showEditor" class="d-flex justify-content-end align-items-center">
-                <div class="custom-input flex-grow-1 need-validation":class="{'invalid-input': hasError(modelValue)}"
+                <div class="custom-input flex-grow-1 need-validation" :class="{'invalid-input': hasError(modelValue)}"
                     :data-valid="hasError(modelValue)">
                     <textarea rows="2" class="form-control" 
                     :value="modelValue" @input="updateField">{{ modelValue }}</textarea>

@@ -1,4 +1,4 @@
-const PromptsVertexIntegration = {
+const PromptsAiDialIntegration = {
     props: ['selectedPrompt', 'isRunClicked'],
     components: {
         'prompts-range': PromptsRange,
@@ -7,12 +7,11 @@ const PromptsVertexIntegration = {
         return {
             editableIntegrationSetting: {
                 temperature: 0,
-                max_decode_steps: 1,
-                top_k: 1,
-                top_p: 0,
-                model_name: ""
+                model: "",
             },
             isComponentMounted: false,
+            allModels: [],
+            isModelsLoadung: false,
         }
     },
     computed: {
@@ -28,8 +27,18 @@ const PromptsVertexIntegration = {
             this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
             this.isComponentMounted = true;
         }
+        this.$nextTick(() => {
+            $('#selectModel').val(this.editableIntegrationSetting.model_name).selectpicker('refresh');
+        })
     },
     watch: {
+        selectedPrompt: {
+            handler: function (newVal, oldVal) {
+                if (newVal.id === oldVal.id) return
+                this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
+            },
+            deep: true
+        },
         editableIntegrationSetting: {
             handler: function (newVal, oldVal) {
                 this.$emit('update-setting', newVal)
@@ -40,14 +49,15 @@ const PromptsVertexIntegration = {
     template: `
         <div>
             <div class="mt-4" v-if="isComponentMounted">
-                <div class="form-group">
-                    <p class="font-h5 font-semibold">Model</p>
-                    <div class="custom-input custom-input__sm mb-3 mt-1" :class="{ 'invalid-input': isInvalid }">
-                        <input type="text" placeholder="Model name" 
-                        v-model="editableIntegrationSetting.model_name">
-                        <span class="input_error-msg"></span>
-                    </div>
+                <div class="select-validation mt-4 mb-4" :class="{ 'invalid-input': isInvalid }">
+                    <p class="font-h5 font-semibold mb-1">Select model</p>
+                    <select id="selectModel" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                        v-model="editableIntegrationSetting.model_name"
+                        data-style="btn">
+                        <option v-for="model in selectedPrompt.model_settings.models" :value="model">{{ model }}</option>
+                    </select>
                 </div>
+
                 <prompts-range
                     @register="$root.register"
                     instance_name="prompts-range"
@@ -63,17 +73,8 @@ const PromptsVertexIntegration = {
                     title="Token limit"
                     :step="1"
                     :minValue="1"
-                    :maxValue="8000"
-                    v-model:modelValue="editableIntegrationSetting.max_decode_steps"
-                ></prompts-range>
-                <prompts-range
-                    @register="$root.register"
-                    instance_name="prompts-range"
-                    title="Top-K"
-                    :step="1"
-                    :minValue="1"
-                    :maxValue="40"
-                    v-model:modelValue="editableIntegrationSetting.top_k"
+                    :maxValue="32000"
+                    v-model:modelValue="editableIntegrationSetting.max_tokens"
                 ></prompts-range>
                 <prompts-range
                     @register="$root.register"
