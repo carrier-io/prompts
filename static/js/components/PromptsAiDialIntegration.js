@@ -1,5 +1,5 @@
 const PromptsAiDialIntegration = {
-    props: ['selectedPrompt', 'isRunClicked'],
+    props: ['selectedPrompt', 'isRunClicked', 'selectedIntegration'],
     components: {
         'prompts-range': PromptsRange,
     },
@@ -10,8 +10,6 @@ const PromptsAiDialIntegration = {
                 model: "",
             },
             isComponentMounted: false,
-            allModels: [],
-            isModelsLoadung: false,
         }
     },
     computed: {
@@ -32,13 +30,6 @@ const PromptsAiDialIntegration = {
         })
     },
     watch: {
-        selectedPrompt: {
-            handler: function (newVal, oldVal) {
-                if (newVal.id === oldVal.id) return
-                this.editableIntegrationSetting = { ...this.selectedPrompt.model_settings };
-            },
-            deep: true
-        },
         editableIntegrationSetting: {
             handler: function (newVal, oldVal) {
                 this.$emit('update-setting', newVal)
@@ -53,11 +44,11 @@ const PromptsAiDialIntegration = {
                     <p class="font-h5 font-semibold mb-1">Select model</p>
                     <select id="selectModel" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         v-model="editableIntegrationSetting.model_name"
+                        data-size="8"
                         data-style="btn">
-                        <option v-for="model in selectedPrompt.model_settings.models" :value="model">{{ model }}</option>
+                        <option v-for="model in selectedIntegration.settings.models" :value="model">{{ model }}</option>
                     </select>
                 </div>
-
                 <prompts-range
                     @register="$root.register"
                     instance_name="prompts-range"

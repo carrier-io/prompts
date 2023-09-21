@@ -47,6 +47,7 @@ const PromptsParams = {
                 version: 'latest',
             },
             newDescription: '',
+            isVersionLoaded: false,
         }
     },
     computed: {
@@ -58,12 +59,15 @@ const PromptsParams = {
         },
         isLatestVersion() {
             return this.selectedPrompt.version === 'latest';
+        },
+        isDisableAddButton() {
+            return !this.testOutput || !this.testInput;
         }
     },
     watch: {
         selectedPrompt: {
             handler: function (newVal, oldVal) {
-                this.editablePrompt = Object.assign({}, newVal);
+                this.editablePrompt = _.cloneDeep(newVal);
                 if (newVal.integration_uid) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
@@ -84,8 +88,8 @@ const PromptsParams = {
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
                     $("#selectIntegration").selectpicker('refresh');
-                    $('#promptsParamsTable').bootstrapTable('load', this.selectedPrompt.examples);
-                    $('#variablesTable').bootstrapTable('load', this.selectedPrompt.variables);
+                    $('#promptsParamsTable').bootstrapTable('load', this.editablePrompt.examples);
+                    $('#variablesTable').bootstrapTable('load', this.editablePrompt.variables);
                 })
             },
             deep: true
@@ -115,9 +119,12 @@ const PromptsParams = {
             fetchPromptVersionsAPI(promptName).then((prompts) => {
                 this.promptVersions = prompts.map(({ id, version }) => ({ id, version }));
                 this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
-                this.$nextTick(() => {
-                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id).selectpicker('refresh');
-                })
+            }).finally(() => {
+                this.isVersionLoaded = true;
+                setTimeout(() => {
+                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
+                    $('#selectedPromptVersion').selectpicker('refresh');
+                }, 0)
             })
         },
         changeIntegration(newVal) {
@@ -247,7 +254,7 @@ const PromptsParams = {
                 'append',
                 {id: rowId,"input": this.testInput, "output": this.testOutput, "action": ""}
             )
-            this.checkFields(rowId)
+            this.checkFields(rowId);
         },
         showError(value) {
             return this.isRunClicked ? value : true;
@@ -279,12 +286,13 @@ const PromptsParams = {
             });
         },
         updateInput({ target: { checked }}) {
-            this.editablePrompt.is_active_input = checked;
-            const isActive = checked ? 'enabled' : 'disabled';
+            this.editablePrompt.is_active_input = !checked;
+            this.isRunClicked = false;
+            const isActive = !checked ? 'enabled' : 'disabled';
             ApiUpdatePrompt(this.editablePrompt).then(data => {
                 showNotify('INFO', `Input ${isActive}.`)
             });
-        }
+        },
     },
     template: `
     <div class="d-flex">
@@ -447,7 +455,7 @@ const PromptsParams = {
                         <p class="font-h5 font-bold font-uppercase mr-4">INPUT</p>
                         <label class="custom-toggle mr-2" style="margin-top: 0">
                             <input type="checkbox"
-                                   :checked="editablePrompt.is_active_input"
+                                   :checked="!editablePrompt.is_active_input"
                                    @click="updateInput">
                             <span class="custom-toggle_slider round"></span>
                         </label>
@@ -483,10 +491,6 @@ const PromptsParams = {
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
                                 </th>
-                                <th data-width="56" data-width-unit="px"
-                                    data-field="action"
-                                    data-formatter="ParamsTable.parametersDeleteFormatter"
-                                ></th>
                             </tr>
                         </thead>
                         <tbody style="border-bottom: solid 1px #EAEDEF">
@@ -511,8 +515,8 @@ const PromptsParams = {
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
-                                <td style="width: 56px;" class="p-2">
-                                    <button :disabled="!testOutput || !testInput"
+                                <td style="width: 56px;" class="p-2" v-if="editablePrompt.is_active_input">
+                                    <button :disabled="isDisableAddButton"
                                         class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
                                         <i class="icon__14x14 icon-add-column"></i>
                                     </button>
@@ -535,7 +539,7 @@ const PromptsParams = {
                 </div>
             </div>
             <template v-else>
-                <div class="select-validation mt-4">
+                <div class="select-validation mt-4" v-if="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         @change="selectPromptVersion"
@@ -581,6 +585,7 @@ const PromptsParams = {
                 <PromptsVertexIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'vertex_ai'">
@@ -588,6 +593,7 @@ const PromptsParams = {
                 <PromptsOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai'">
@@ -595,6 +601,7 @@ const PromptsParams = {
                 <PromptsAzureOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai_azure'">
@@ -602,8 +609,9 @@ const PromptsParams = {
                 <PromptsAiDialIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
-                    :key="selectedPrompt"
+                    :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'ai_dial'">
                 </PromptsAiDialIntegration>
                 <transition>
