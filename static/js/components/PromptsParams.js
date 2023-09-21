@@ -585,6 +585,7 @@ const PromptsParams = {
                 <PromptsVertexIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'vertex_ai'">
@@ -592,6 +593,7 @@ const PromptsParams = {
                 <PromptsOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai'">
@@ -599,6 +601,7 @@ const PromptsParams = {
                 <PromptsAzureOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai_azure'">
@@ -606,8 +609,9 @@ const PromptsParams = {
                 <PromptsAiDialIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
+                    :selected-integration="selectedIntegration"
                     @update-setting="updateSetting"
-                    :key="selectedPrompt"
+                    :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'ai_dial'">
                 </PromptsAiDialIntegration>
                 <transition>
