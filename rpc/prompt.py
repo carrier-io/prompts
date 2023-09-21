@@ -206,13 +206,13 @@ class RPC:
                 ).all()
             return [prompt.to_json() for prompt in prompts]
 
-    @web.rpc(f'prompts_prepare_text_prompt', "prepare_text_prompt")
-    def prompts_prepare_text_prompt(self, project_id: int, prompt_id: Optional[int],
+    @web.rpc(f'prompts_prepare_prompt_struct', "prepare_prompt_struct")
+    def prompts_prepare_prompt_struct(self, project_id: int, prompt_id: Optional[int],
                                     input_: str = '', context: str = '', examples: list = [],
                                     variables: dict = {}, ignore_template_error: bool = False,
                                     **kwargs) -> str:
 
-        example_template = '\ninput: {input}\noutput: {output}'
+        # example_template = '\ninput: {input}\noutput: {output}'
 
         prompt_struct = {
             "context": context,
@@ -235,18 +235,22 @@ class RPC:
             for variable in prompt_template['variables']:
                 if not prompt_struct['variables'].get(variable['name']):
                     prompt_struct['variables'][variable['name']] = variable['value']
-            prompt_struct['variables']['prompt'] = prompt_struct['prompt']
+            if prompt_struct['prompt']:
+                prompt_struct['variables']['prompt'] = prompt_struct['prompt']
 
         prompt_struct = resolve_variables(prompt_struct, ignore_template_error=ignore_template_error)
+        prompt_struct.pop('variables')
 
-        for example in prompt_struct['examples']:
-            prompt_struct['context'] += example_template.format(**example)
+        # for example in prompt_struct['examples']:
+        #     prompt_struct['context'] += example_template.format(**example)
 
-        if prompt_struct['prompt']:
-            prompt_struct['context'] += example_template.format(input=prompt_struct['prompt'], output='')
+        # if prompt_struct['prompt']:
+        #     prompt_struct['context'] += example_template.format(input=prompt_struct['prompt'], output='')
 
-        log.info(f"FINAL: {prompt_struct['context']}")
-        return prompt_struct['context']
+        # if prompt_struct['prompt']:
+        #     prompt_struct['prompt'] = example_template.format(input=prompt_struct['prompt'], output='')
+        log.info(f"FINAL: {prompt_struct=}")
+        return prompt_struct
 
 
 def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:

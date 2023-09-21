@@ -1,4 +1,5 @@
 from flask import request
+from flask import request
 from tools import api_tools
 
 
@@ -6,11 +7,11 @@ class ProjectAPI(api_tools.APIModeHandler):
 
     def get(self, project_id: int, prompt_id: int):
         ignore_template_error = request.args.get('ignore_template_error', False)
-        text_prompt = self.module.prepare_text_prompt(
+        prompt_struct = self.module.prepare_prompt_struct(
             project_id, prompt_id, "",
             ignore_template_error=ignore_template_error
         )
-        return text_prompt, 200
+        return prompt_struct, 200
 
 
 # class AdminAPI(api_tools.APIModeHandler):

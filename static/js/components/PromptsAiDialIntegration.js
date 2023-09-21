@@ -1,4 +1,4 @@
-const PromptsOpenaiIntegration = {
+const PromptsAiDialIntegration = {
     props: ['selectedPrompt', 'isRunClicked', 'selectedIntegration'],
     components: {
         'prompts-range': PromptsRange,
@@ -7,9 +7,7 @@ const PromptsOpenaiIntegration = {
         return {
             editableIntegrationSetting: {
                 temperature: 0,
-                max_tokens: 1,
-                top_p: 0,
-                model: ""
+                model: "",
             },
             isComponentMounted: false,
         }
@@ -42,15 +40,14 @@ const PromptsOpenaiIntegration = {
     template: `
         <div>
             <div class="mt-4" v-if="isComponentMounted">
-            <div class="select-validation mt-4 mb-4" :class="{ 'invalid-input': isInvalid }">
-                <p class="font-h5 font-semibold mb-1">Select model</p>
-                <select id="selectModel" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
-                    v-model="editableIntegrationSetting.model_name"
-                    data-size="8"
-                    data-style="btn">
-                    <option v-for="model in selectedIntegration.settings.models" :value="model">{{ model }}</option>
-                </select>
-            </div>
+                <div class="select-validation mt-4 mb-4" :class="{ 'invalid-input': isInvalid }">
+                    <p class="font-h5 font-semibold mb-1">Select model</p>
+                    <select id="selectModel" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                        v-model="editableIntegrationSetting.model_name"
+                        data-size="8"
+                        data-style="btn">
+                        <option v-for="model in selectedIntegration.settings.models" :value="model">{{ model }}</option>
+                    </select>
                 </div>
                 <prompts-range
                     @register="$root.register"

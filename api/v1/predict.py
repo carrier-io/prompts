@@ -21,6 +21,9 @@ class ProjectAPI(api_tools.APIModeHandler):
         try:
             data = PredictPostModel.parse_obj(payload)
         except Exception as e:
+            log.error("************* data = PredictPostModel.parse_obj(payload)")
+            log.error(str(e))
+            log.error("*************")
             return {"error": str(e)}, 400
         model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
         with db.with_project_schema_session(project_id) as session:
@@ -38,16 +41,22 @@ class ProjectAPI(api_tools.APIModeHandler):
                 project_id=project_id,
                 integration_uid=data.integration_uid,
             )
-            text_prompt = self.module.prepare_text_prompt(
-                project_id, data.prompt_id, data.input_, 
+            prompt_struct = self.module.prepare_prompt_struct(
+                project_id, data.prompt_id, data.input_,
                 data.context, data.examples, data.variables,
                 ignore_template_error=ignore_template_error
             )
         except Exception as e:
+            log.error("************* AIProvider.get_integration and self.module.prepare_prompt_struct")
+            log.error(str(e))
+            log.error("*************")
             return str(e), 400
 
-        result = AIProvider.predict(project_id, integration, model_settings, text_prompt)
+        result = AIProvider.predict(project_id, integration, model_settings, prompt_struct)
         if not result['ok']:
+            log.error("************* if not result['ok']")
+            log.error(str(result['error']))
+            log.error("*************")
             return str(result['error']), 400
         return result['response'], 200
 
