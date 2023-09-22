@@ -33,7 +33,7 @@ const PromptsParams = {
                 model_settings: {},
             },
             testInput: '',
-            testOutput: '',
+            testOutput: {},
             isRunClicked: false,
             selectedIntegration: "",
             selectedComponentInt: "",
@@ -82,7 +82,7 @@ const PromptsParams = {
                     this.selectedIntegration = "";
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
-                this.testOutput = '';
+                this.testOutput = {};
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
@@ -218,12 +218,22 @@ const PromptsParams = {
                 const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
                 ApiRunTest(this.editablePrompt, computedInput, integrationId.uid).then(data => {
                     this.testOutput = data;
+                    if (data.custom_content) {
+                        this.testOutput.custom_content = this.prepareImages(data.custom_content);
+                    }
                 }).catch(err => {
                     showNotify('ERROR', err)
                 }).finally(() => {
                     this.isRunLoading = false;
                 })
             }
+        },
+        prepareImages(images) {
+            return images.map(img => {
+                return {
+                    data: `data:${img.type};base64, ${img.data}`
+                }
+            })
         },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
@@ -252,7 +262,12 @@ const PromptsParams = {
             const rowId = Date.now() + Math.floor(Math.random() * 1000)
             $('#promptsParamsTable').bootstrapTable(
                 'append',
-                {id: rowId,"input": this.testInput, "output": this.testOutput, "action": ""}
+                {
+                    id: rowId,
+                    "input": this.testInput,
+                    "output": this.testOutput.content || this.testOutput.custom_content[0].data,
+                    "action": ""
+                }
             )
             this.checkFields(rowId);
         },
@@ -487,6 +502,7 @@ const PromptsParams = {
                                     <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
                                 </th>
                                 <th data-field="outputTest"
+                                    v-if="!testOutput.custom_content"
                                 >
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
@@ -504,12 +520,12 @@ const PromptsParams = {
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
-                                <td class="p-2">
+                                <td class="p-2" v-if="!testOutput.custom_content">
                                     <div>
                                         <textarea disabled type="text"
                                             rows="5"
                                             style="color: var(--green)"
-                                            v-model="testOutput"
+                                            v-model="testOutput.content"
                                             class="form-control form-control-alternative">
                                         </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
@@ -523,6 +539,25 @@ const PromptsParams = {
                                 </td>
                             </tr>
                         </tbody>
+
+                        <thead v-if="testOutput.custom_content" class="thead-light">
+                            <tr>
+                                <th data-field="outputTest">
+                                    <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody v-if="testOutput.custom_content" style="border-bottom: solid 1px #EAEDEF">
+                            <tr>
+                                <td class="p-2">
+                                    <div class="text-center">
+                                        <img v-for="img in testOutput.custom_content" :src="img.data">
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+
                     </table>
                 </div>
             </div>
