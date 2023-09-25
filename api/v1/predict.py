@@ -59,8 +59,8 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         if isinstance(result['response'], str):
             result['response'] = {
+                'type': 'text',
                 'content': result['response'],
-                'custom_content': ''
             }
         return result['response'], 200
 

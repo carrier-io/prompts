@@ -218,8 +218,8 @@ const PromptsParams = {
                 const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
                 ApiRunTest(this.editablePrompt, computedInput, integrationId.uid).then(data => {
                     this.testOutput = data;
-                    if (data.custom_content) {
-                        this.testOutput.custom_content = this.prepareImages(data.custom_content);
+                    if (data.type === 'image') {
+                        this.testOutput.content = this.prepareImages(data.content);
                     }
                 }).catch(err => {
                     showNotify('ERROR', err)
@@ -265,7 +265,7 @@ const PromptsParams = {
                 {
                     id: rowId,
                     "input": this.testInput,
-                    "output": this.testOutput.content || this.testOutput.custom_content[0].data,
+                    "output": this.testOutput.type === 'text' ? this.testOutput.content : this.testOutput.content[0].data,
                     "action": ""
                 }
             )
@@ -502,7 +502,7 @@ const PromptsParams = {
                                     <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
                                 </th>
                                 <th data-field="outputTest"
-                                    v-if="!testOutput.custom_content"
+                                    v-if="testOutput && testOutput.type !== 'image'"
                                 >
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
                                     <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
@@ -520,7 +520,7 @@ const PromptsParams = {
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
-                                <td class="p-2" v-if="!testOutput.custom_content">
+                                <td class="p-2" v-if="testOutput && testOutput.type !== 'image'">
                                     <div>
                                         <textarea disabled type="text"
                                             rows="5"
@@ -540,7 +540,7 @@ const PromptsParams = {
                             </tr>
                         </tbody>
 
-                        <thead v-if="testOutput.custom_content" class="thead-light">
+                        <thead v-if="testOutput.type === 'image'" class="thead-light">
                             <tr>
                                 <th data-field="outputTest">
                                     <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
@@ -548,11 +548,11 @@ const PromptsParams = {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody v-if="testOutput.custom_content" style="border-bottom: solid 1px #EAEDEF">
+                        <tbody v-if="testOutput.type === 'image'" style="border-bottom: solid 1px #EAEDEF">
                             <tr>
                                 <td class="p-2">
                                     <div class="text-center">
-                                        <img v-for="img in testOutput.custom_content" :src="img.data">
+                                        <img v-for="img in testOutput.content" :src="img.data">
                                     </div>
                                 </td>
                             </tr>
