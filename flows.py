@@ -46,7 +46,7 @@ def prompt(flow_context: dict, clean_data: PredictPostModel, **kwargs):
             project_id=project_id,
             integration_uid=clean_data.integration_uid,
         )
-        text_prompt = rpc_tools.RpcMixin().rpc.call.prompts_prepare_text_prompt(
+        prompt_struct = rpc_tools.RpcMixin().rpc.call.prompts_prepare_prompt_struct(
             project_id, clean_data.prompt_id, clean_data.input_,
             clean_data.context, clean_data.examples, clean_data.variables
             # todo: handle ignore_template_error - maybe this need to be take from clean_data
@@ -55,7 +55,7 @@ def prompt(flow_context: dict, clean_data: PredictPostModel, **kwargs):
         log.error(str(e))
         return {"ok": False, "error": str(e)}
 
-    output = AIProvider.predict(project_id, integration, clean_data.integration_settings, text_prompt)
+    output = AIProvider.predict(project_id, integration, clean_data.integration_settings, prompt_struct)
     if not output['ok']:
         return output
     return {"ok": True, "result": output['response']}
