@@ -62,6 +62,12 @@ const PromptsParams = {
         },
         isDisableAddButton() {
             return !this.testOutput || !this.testInput;
+        },
+        responsiveBarHeight() {
+            return `${(window.innerHeight - 95)}px`;
+        },
+        responsiveContentHeight() {
+            return `${(window.innerHeight - 155)}px`;
         }
     },
     watch: {
@@ -358,7 +364,7 @@ const PromptsParams = {
                         v-model="editablePrompt.description">
                     </promptsEditorField>
                     <div>
-                        <p class="font-h6 font-bold font-uppercase mb-1 text-gray-700 flex-grow-1">CONTEXT</p>
+                        <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">CONTEXT</p>
                         <div class="w-100">
                             <div class="custom-input w-100 position-relative"
                                 :class="{ 'invalid-input': isInvalidContext }">
@@ -374,6 +380,7 @@ const PromptsParams = {
                         </div>
                     </div>
                     <div class="mt-3">
+                        <p class="font-h6 font-bold text-gray-800" style="color: #32325D">VARIABLES</p>
                         <table
                             id="variablesTable"
                             class="w-100 table-transparent mb-2 params-table"
@@ -386,14 +393,12 @@ const PromptsParams = {
                                     <th data-field="name"
                                         data-formatter="VariableTable.textareaFormatter"
                                     >
-                                        <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Name</span>
-                                        <span class="font-h5 font-weight-400 text-capitalize">Variable name</span>
+                                        <span class="font-h6 font-semibold text-gray-800">Name</span>
                                     </th>
                                     <th data-field="value"
                                         data-formatter="VariableTable.textareaFormatter"
                                     >
-                                        <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Value</span>
-                                        <span class="font-h5 font-weight-400 text-capitalize">Variable value</span>
+                                        <span class="font-h6 font-semibold text-gray-800">Value</span>
                                     </th>
                                     <th data-width="56" data-width-unit="px"
                                         data-field="action"
@@ -414,7 +419,7 @@ const PromptsParams = {
             </div>
 
             <div class="card mt-3 p-28">
-                <p class="font-h5 font-bold font-uppercase">EXAMPLES</p>
+             <p class="font-h6 font-bold text-gray-800" style="color: #32325D">EXAMPLES</p>
                 <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
                     <div class="layout-spinner">
                         <div class="spinner-centered">
@@ -438,14 +443,14 @@ const PromptsParams = {
                                 <th data-field="input"
                                     data-formatter="ParamsTable.textareaFormatter"
                                 >
-                                    <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
+                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
                                 </th>
                                 <th data-field="output"
                                     data-formatter="ParamsTable.textareaFormatter"
                                 >
-                                    <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
+                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input expected result.</span>
                                 </th>
                                 <th data-width="56" data-width-unit="px"
                                     data-field="action"
@@ -467,7 +472,7 @@ const PromptsParams = {
             <div class="card mt-3 p-28">
                 <div class="d-flex justify-content-between mb-2">
                     <div class="d-flex align-items-center">
-                        <p class="font-h5 font-bold font-uppercase mr-4">INPUT</p>
+                        <p class="font-h6 font-bold text-gray-800 mr-4" style="color: #32325D">PROMPT</p>
                         <label class="custom-toggle mr-2" style="margin-top: 0">
                             <input type="checkbox"
                                    :checked="!editablePrompt.is_active_input"
@@ -498,14 +503,14 @@ const PromptsParams = {
                                 <th data-field="inputTest"
                                     v-if="editablePrompt.is_active_input"
                                     >
-                                    <span class="font-h6 font-semibold mr-2" style="color: var(--green)">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize">Input condition or question.</span>
+                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
                                 </th>
                                 <th data-field="outputTest"
                                     v-if="testOutput && testOutput.type !== 'image'"
                                 >
-                                    <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
+                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input result.</span>
                                 </th>
                             </tr>
                         </thead>
@@ -562,9 +567,9 @@ const PromptsParams = {
                 </div>
             </div>
         </div>
-        <div class="card p-4" style="min-width: 340px">
+        <div class="card p-4" style="min-width: 340px" :style="{'height': responsiveBarHeight}">
             <div class="d-flex justify-content-between">
-                <p class="font-h4 font-bold">Settings</p>
+                <p class="font-h4 font-bold mb-4">Settings</p>
             </div>
             <div class="position-relative h-100" v-if="isPromptLoading">
                 <div class="layout-spinner">
@@ -573,8 +578,8 @@ const PromptsParams = {
                     </div>
                 </div>
             </div>
-            <template v-else>
-                <div class="select-validation mt-4" v-if="isVersionLoaded">
+            <div v-else :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
+                <div class="select-validation" v-if="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
                         @change="selectPromptVersion"
@@ -658,7 +663,7 @@ const PromptsParams = {
                     >
                     </prompts-tags-modal>
                 </transition>
-            </template>
+            </div :style="{'height': responsiveBarHeight}">
         </div>
     </div>
     `

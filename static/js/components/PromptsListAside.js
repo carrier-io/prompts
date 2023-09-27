@@ -11,8 +11,11 @@ const PromptsListAside = {
         }
     },
     computed: {
+        responsiveAsideHeight() {
+            return `${(window.innerHeight - 95)}px`;
+        },
         responsiveTableHeight() {
-            return `${(window.innerHeight - 270)}px`;
+            return `${(window.innerHeight - 371)}px`;
         }
     },
     mounted() {
@@ -34,7 +37,7 @@ const PromptsListAside = {
         },
     },
     template: `
-        <aside class="card card-table-sm" style="min-width: 340px; width: 340px">
+        <aside class="card card-table-sm" style="min-width: 340px; width: 340px" :style="{'height': responsiveAsideHeight}">
             <div class="p-4 d-flex justify-content-between">
                 <div>
                     <p class="font-h4 font-bold">Prompts</p>
@@ -57,7 +60,7 @@ const PromptsListAside = {
                 :allTags="allTags">
             
             </PromptsTagsFilter>
-            <div class="card-body" style="padding-top: 0">
+            <div class="card-body pb-4" style="padding-top: 0">
                 <table class="table table-borderless table-fix-thead"
                     id="prompts-aside-table"
                     data-toggle="table"
@@ -65,7 +68,7 @@ const PromptsListAside = {
                     <thead class="thead-light bg-transparent">
                         <tr>
                             <th data-visible="false" data-field="id">index</th>
-                            <th data-sortable="true" data-field="name" data-width="40" data-width-unit="%" >NAME</th>
+                            <th data-sortable="true" data-field="name" data-width="40" data-width-unit="%" class="cut-text">NAME</th>
                             <th scope="col" data-sortable="false" data-field="tags" data-formatter="ParamsTable.tagFormatter">Tags</th>
                             <th data-width="56" data-formatter='<div class="d-none justify-content-end">
                                     <button class="btn btn-default btn-xs btn-table btn-icon__xs prompt_delete"><i class="icon__18x18 icon-delete"></i></button>
