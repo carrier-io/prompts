@@ -22,4 +22,18 @@
     #promptsParamsTable tbody tr td:first-child {
         vertical-align: middle !important;
     }
+    .cut-text {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 50px;
+        height: 1.2em;
+        white-space: nowrap;
+    }
+    .highlight .cut-text {
+        color: var(--basic);
+        font-weight: 600;
+    }
+    #prompts-aside-table tr:hover {
+        cursor: pointer;
+    }
 </style>
