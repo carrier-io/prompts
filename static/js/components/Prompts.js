@@ -40,33 +40,38 @@ const Prompts = {
                 $("#prompts-aside-table").bootstrapTable('append', data);
                 this.promptsList = data;
                 if (data.length > 0) {
-                    this.selectedPrompt = data[0];
+                    const hash_id = location.hash.substring(1)
+                    this.selectedPrompt = data.find(i => hash_id === String(i.id)) || data[0];
                     this.setBucketEvents();
-                    this.selectFirstPrompt();
+                    this.selectActivePrompt();
                 }
                 this.isPromptListLoading = false;
             })
         })
+    },
+    watch: {
+        selectedPrompt(newValue) {
+            location.hash = newValue.id
+        }
     },
     methods: {
         FetchPromptById(promptId) {
             this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
                 this.isPromptLoading = false;
-                this.selectedPrompt = { ...data };
+                this.selectedPrompt = {...data};
             })
         },
         setBucketEvents() {
             $('#prompts-aside-table').on('click', 'tbody tr:not(.no-records-found)', highlightOnClick);
         },
-        selectFirstPrompt() {
+        selectActivePrompt() {
             this.FetchPromptById(this.selectedPrompt.id);
-            $('#prompts-aside-table tbody tr').each(function (i, item) {
-                if (i === 0) {
-                    const firstRow = $(item);
-                    firstRow.addClass('highlight');
-                }
-            })
+            const selected_id = this.selectedPrompt?.id
+            if (selected_id !== undefined) {
+                $(`#prompts-aside-table tbody tr[data-uniqueid=${selected_id}]`).addClass('highlight')
+            }
+
         },
         openCreateModal(modalType, prompt = '') {
             this.showCreateModal = true;
@@ -112,7 +117,7 @@ const Prompts = {
                 } else {
                     if (data.length > 0) {
                         this.selectedPrompt = data[0];
-                        this.selectFirstPrompt();
+                        this.selectActivePrompt();
                     }
                 }
             });

@@ -138,6 +138,7 @@ const ApiRunTest = async (prompt, input = null, integrationUid) => {
         "prompt_id": prompt.id,
         "integration_uid": integrationUid,
         "integration_settings": prompt.integration_settings,
+        update_prompt: true
     }
     if (input) params["input"] = input;
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {

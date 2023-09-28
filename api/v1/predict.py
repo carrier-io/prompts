@@ -14,8 +14,10 @@ from pylon.core.tools import log
 
 class ProjectAPI(api_tools.APIModeHandler):
     @api_tools.endpoint_metrics
-    def post(self, project_id):
-        payload = request.json
+    def post(self, project_id: int):
+        payload = dict(request.json)
+        ignore_template_error = payload.pop('ignore_template_error', False)
+        update_prompt = payload.pop('update_prompt', False)
         payload['project_id'] = project_id
         try:
             data = PredictPostModel.parse_obj(payload)
@@ -25,15 +27,17 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.error("*************")
             return {"error": str(e)}, 400
         model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
-        with db.with_project_schema_session(project_id) as session:
-            session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
-                dict(
-                    model_settings=model_settings,
-                    test_input=data.input_,
-                    integration_uid=data.integration_uid
+
+        if update_prompt:
+            with db.with_project_schema_session(project_id) as session:
+                session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
+                    dict(
+                        model_settings=model_settings,
+                        test_input=data.input_,
+                        integration_uid=data.integration_uid
+                    )
                 )
-            )
-            session.commit()
+                session.commit()
 
         try:
             integration = AIProvider.get_integration(
@@ -42,7 +46,8 @@ class ProjectAPI(api_tools.APIModeHandler):
             )
             prompt_struct = self.module.prepare_prompt_struct(
                 project_id, data.prompt_id, data.input_,
-                data.context, data.examples, data.variables
+                data.context, data.examples, data.variables,
+                ignore_template_error=ignore_template_error
             )
         except Exception as e:
             log.error("************* AIProvider.get_integration and self.module.prepare_prompt_struct")

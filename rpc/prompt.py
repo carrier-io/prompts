@@ -209,7 +209,7 @@ class RPC:
     @web.rpc(f'prompts_prepare_prompt_struct', "prepare_prompt_struct")
     def prompts_prepare_prompt_struct(self, project_id: int, prompt_id: Optional[int],
                                     input_: str = '', context: str = '', examples: list = [],
-                                    variables: dict = {},
+                                    variables: dict = {}, ignore_template_error: bool = False,
                                     **kwargs) -> str:
 
         # example_template = '\ninput: {input}\noutput: {output}'
@@ -222,6 +222,8 @@ class RPC:
         }
         if prompt_id:
             prompt_template = self.get_by_id(project_id, prompt_id)
+            if not prompt_template:
+                raise Exception(f"Prompt with id {prompt_id} in project {project_id} not found")
             prompt_struct['context'] = prompt_template['prompt'] + prompt_struct['context']
             for example in prompt_template['examples']:
                 if not example['is_active']:
@@ -236,7 +238,7 @@ class RPC:
             if prompt_struct['prompt']:
                 prompt_struct['variables']['prompt'] = prompt_struct['prompt']
 
-        prompt_struct = resolve_variables(prompt_struct)
+        prompt_struct = resolve_variables(prompt_struct, ignore_template_error=ignore_template_error)
         prompt_struct.pop('variables')
 
         # for example in prompt_struct['examples']:
@@ -251,7 +253,7 @@ class RPC:
         return prompt_struct
 
 
-def resolve_variables(prompt_struct):
+def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:
     try:
         environment = Environment(undefined=DebugUndefined)
         ast = environment.parse(prompt_struct['context'])
@@ -261,6 +263,7 @@ def resolve_variables(prompt_struct):
         prompt_struct['context'] = template.render(**prompt_struct['variables'])
     except:
         log.critical(format_exc())
-        raise Exception("Invalid jinja template in context")
+        if not ignore_template_error:
+            raise Exception("Invalid jinja template in context")
 
     return prompt_struct
