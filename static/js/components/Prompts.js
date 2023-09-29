@@ -135,7 +135,7 @@ const Prompts = {
                 <div class="card w-100" style="height: calc(100vh - 92px)">
                     <div class="d-flex justify-content-center align-items-center h-100">
                         <div class="d-flex flex-column align-items-center">
-                            <p class="font-h4 text-gray-700">Need to 
+                            <p class="font-h4 text-gray-700">Need to
                                 <a href="/-/configuration/integrations/" target="_blank">require AI integration,</a>
                                 before creating prompts.
                             </p>
@@ -178,7 +178,7 @@ const Prompts = {
                             <div class="d-flex justify-content-center align-items-center h-100">
                                 <div class="d-flex flex-column align-items-center">
                                     <p class="font-h5 text-gray-500">Still no prompts created.</p>
-                                    <button type="button" class="btn btn-sm btn-secondary mt-1" 
+                                    <button type="button" class="btn btn-sm btn-secondary mt-1"
                                         @click="openCreateModal">
                                         <i class="fas fa-plus mr-2"></i>Create prompt
                                     </button>
@@ -188,7 +188,7 @@ const Prompts = {
                     </template>
                 </div>
             </div>
-            
+
             <transition>
                 <prompts-modal-create
                     v-if="showCreateModal"

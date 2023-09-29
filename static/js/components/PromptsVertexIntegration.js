@@ -1,5 +1,5 @@
 const PromptsVertexIntegration = {
-    props: ['selectedPrompt', 'isRunClicked', 'selectedIntegration'],
+    props: ['selectedPrompt', 'isRunClicked', 'filteredModels'],
     components: {
         'prompts-range': PromptsRange,
     },
@@ -49,7 +49,7 @@ const PromptsVertexIntegration = {
                         v-model="editableIntegrationSetting.model_name"
                         data-size="8"
                         data-style="btn">
-                        <option v-for="model in selectedIntegration.settings.models" :value="model">{{ model }}</option>
+                        <option v-for="model in filteredModels" :value="model">{{ model }}</option>
                     </select>
                 </div>
                 <prompts-range
