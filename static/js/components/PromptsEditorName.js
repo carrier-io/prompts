@@ -9,12 +9,16 @@ const PromptsEditorName = {
             showEditor: false,
             MIN_VALUES: 3,
             loading: false,
+            initValue: '',
         }
     },
     computed: {
         fieldLength() {
             return this.modelValue?.length ?? 0
         }
+    },
+    mounted() {
+        this.initValue = this.modelValue;
     },
     methods: {
         updateField({ target: { value }}) {
@@ -23,13 +27,17 @@ const PromptsEditorName = {
         openEditDesc() {
             this.showEditor = !this.showEditor;
         },
+        closeEditor() {
+            this.$emit('update:modelValue', this.initValue);
+            this.showEditor = false;
+        },
         saveDesc() {
             if (this.hasError(this.modelValue)) {
                 return;
             }
             this.loading = true;
             updatePromptNameAPI(this.editablePrompt.id, this.modelValue).then(data => {
-                this.$emit('update:modelValue', this.modelValue.trim());
+                this.$emit('update:modelValue', this.modelValue);
                 showNotify('SUCCESS', `Prompt name updated.`);
                 this.showEditor = false;
                 $("#prompts-aside-table").bootstrapTable('updateByUniqueId', {
@@ -80,6 +88,10 @@ const PromptsEditorName = {
                         :disabled="hasError(modelValue)">
                         <i class="preview-loader__white" v-if="loading"></i>
                         <i v-else class="icon__16x16 icon-check__white"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-xs btn-icon__xs ml-2" 
+                        @click="closeEditor">
+                        <i class="icon__16x16 icon-close__16"></i>
                     </button>
                 </div>
             </div>   

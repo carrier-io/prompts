@@ -10,12 +10,16 @@ const PromptsEditorField = {
             showEditor: false,
             MAX_VALUES: 256,
             loading: false,
+            initValue: '',
         }
     },
     computed: {
         fieldLength() {
             return this.modelValue?.length ?? 0
         }
+    },
+    mounted() {
+        this.initValue = this.modelValue;
     },
     methods: {
         updateField({ target: { value }}) {
@@ -30,7 +34,7 @@ const PromptsEditorField = {
             }
             this.loading = true;
             ApiUpdatePrompt(this.editablePrompt).then(data => {
-                this.$emit('update:modelValue', this.modelValue.trim());
+                this.$emit('update:modelValue', this.modelValue);
                 showNotify('SUCCESS', `${this.title} updated.`);
                 this.showEditor = false;
             }).finally(() => {
@@ -40,6 +44,10 @@ const PromptsEditorField = {
         hasError(value) {
             if (!value) return false
             return value.length > this.MAX_VALUES;
+        },
+        closeEditor() {
+            this.$emit('update:modelValue', this.initValue);
+            this.showEditor = false;
         },
     },
     template: `
@@ -65,11 +73,17 @@ const PromptsEditorField = {
                     :value="modelValue" @input="updateField">{{ modelValue }}</textarea>
                     <span class="input_error-msg font-h6 font-weight-400 text-right">{{ fieldLength }}/256</span>
                 </div>
-                <button class="btn btn-success__custom btn-xs btn-icon__xs ml-2" @click="saveDesc"
-                    :disabled="hasError(modelValue)">
-                    <i class="preview-loader__white" v-if="loading"></i>
-                    <i v-else class="icon__16x16 icon-check__white"></i>
-                </button>
+                <div>
+                    <button class="btn btn-success__custom btn-xs btn-icon__xs ml-2 mb-2" @click="saveDesc"
+                        :disabled="hasError(modelValue)">
+                        <i class="preview-loader__white" v-if="loading"></i>
+                        <i v-else class="icon__16x16 icon-check__white"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-xs btn-icon__xs ml-2" 
+                        @click="closeEditor">
+                        <i class="icon__16x16 icon-close__16"></i>
+                    </button>
+                </div>
             </div>   
         </div> 
         

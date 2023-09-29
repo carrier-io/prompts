@@ -33,7 +33,7 @@ const PromptsParams = {
                 model_settings: {},
             },
             testInput: '',
-            testOutput: {},
+            testOutput: [],
             isRunClicked: false,
             selectedIntegration: "",
             selectedComponentInt: "",
@@ -61,7 +61,7 @@ const PromptsParams = {
             return this.selectedPrompt.version === 'latest';
         },
         isDisableAddButton() {
-            return !this.testOutput || !this.testInput;
+            return !this.testOutput.length || !this.testInput;
         },
         responsiveBarHeight() {
             return `${(window.innerHeight - 95)}px`;
@@ -321,7 +321,7 @@ const PromptsParams = {
             <div class="card p-28">
                 <div class="d-flex justify-content-between mb-2">
                     <promptsEditorName
-                        v-show="!isPromptLoading"
+                        v-if="!isPromptLoading"
                         :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
                         v-model="editablePrompt.name">
@@ -358,6 +358,7 @@ const PromptsParams = {
                 </div>
                 <div v-show="!isPromptLoading">
                     <promptsEditorField
+                        v-if="!isPromptLoading"
                         title="Description"
                         :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
@@ -481,11 +482,20 @@ const PromptsParams = {
                         </label>
                         <p class="font-h6 font-weight-400">Disable input</p>
                     </div>
-                    <button type="button" :disabled="isRunLoading || isPromptLoading"
-                        class="btn btn-basic d-flex align-items-center" @click="runTest">
-                        Run
-                        <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                    </button>
+                    <div class="d-flex">
+                        <div v-if="editablePrompt.is_active_input">
+                            <button :disabled="isDisableAddButton"
+                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="addTestResult">
+                                    <i class="icon__18x18 icon-create-element mr-1"></i>
+                                    <span>Add to examples</span>
+                            </button>
+                        </div>
+                        <button type="button" :disabled="isRunLoading || isPromptLoading"
+                            class="btn btn-basic d-flex align-items-center ml-2" @click="runTest">
+                            Run
+                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="position-relative" style="height: 188px" v-if="isPromptLoading">
                     <div class="layout-spinner">
@@ -535,12 +545,6 @@ const PromptsParams = {
                                         </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
-                                </td>
-                                <td style="width: 56px;" class="p-2" v-if="editablePrompt.is_active_input">
-                                    <button :disabled="isDisableAddButton"
-                                        class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
-                                        <i class="icon__14x14 icon-add-column"></i>
-                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -663,7 +667,7 @@ const PromptsParams = {
                     >
                     </prompts-tags-modal>
                 </transition>
-            </div :style="{'height': responsiveBarHeight}">
+            </div>
         </div>
     </div>
     `
