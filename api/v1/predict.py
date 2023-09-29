@@ -63,10 +63,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             return str(result['error']), 400
 
         if isinstance(result['response'], str):
-            result['response'] = {
-                'type': 'text',
-                'content': result['response'],
-            }
+            result['response'] = {'messages': [{'type': 'text', 'content': result['response']}]}
         return result['response'], 200
 
 # class AdminAPI(api_tools.APIModeHandler):
