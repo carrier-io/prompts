@@ -33,9 +33,13 @@ const PromptsParams = {
                 model_settings: {},
             },
             testInput: '',
-            testOutput: [],
+            testOutput: [{
+                type: 'text',
+                content: '',
+            }],
             isRunClicked: false,
             selectedIntegration: "",
+            filteredModels: [],
             selectedComponentInt: "",
             isRunLoading: false,
             isContextLoading: false,
@@ -61,7 +65,8 @@ const PromptsParams = {
             return this.selectedPrompt.version === 'latest';
         },
         isDisableAddButton() {
-            return !this.testOutput.length || !this.testInput;
+            return !this.testOutput[0].content || !this.testInput ||
+                this.testOutput[0].type === 'image' || this.testOutput.length > 1;
         },
         responsiveBarHeight() {
             return `${(window.innerHeight - 95)}px`;
@@ -88,7 +93,10 @@ const PromptsParams = {
                     this.selectedIntegration = "";
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
-                this.testOutput = {};
+                this.testOutput = [{
+                    type: 'text',
+                    content: '',
+                }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
                 this.fetchPromptVersions(newVal.name);
@@ -134,6 +142,7 @@ const PromptsParams = {
             })
         },
         changeIntegration(newVal) {
+            this.filteredModels = this.filterModelsByType(newVal.settings.models, this.editablePrompt);
             if (this.selectedPrompt.integration_uid) {
                 const existedInt = this.integrations
                     .find(integration => integration.uid === newVal.uid)
@@ -146,6 +155,23 @@ const PromptsParams = {
             this.editablePrompt.model_settings = this.integrations
                 .find(integration => integration.uid === newVal.uid).settings;
             this.selectedComponentInt = newVal.name;
+        },
+        filterModelsByType(models, prompt) {
+            try {
+                if (prompt.type === 'freeform') {
+                    return models.filter(model =>
+                        model.capabilities.completion === true ||
+                        model.capabilities.chat_completion === true
+                    ).map(model => model.name)
+                }
+                if (prompt.type === 'chat') {
+                    return models.filter(model =>
+                        model.capabilities.chat_completion === true
+                    ).map(model => model.name)
+                }
+            } catch (e) {
+                return models;
+            }
         },
         addEmptyParamsRow()  {
             $('#promptsParamsTable').bootstrapTable(
@@ -223,10 +249,12 @@ const PromptsParams = {
                 this.isRunLoading = true;
                 const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
                 ApiRunTest(this.editablePrompt, computedInput, integrationId.uid).then(data => {
-                    this.testOutput = data;
-                    if (data.type === 'image') {
-                        this.testOutput.content = this.prepareImages(data.content);
-                    }
+                    this.testOutput = data.messages;
+                    this.testOutput.map(msg => {
+                        if (msg.type === 'image') {
+                            msg.content = `data:${msg.content.type};base64, ${msg.content.data}`;
+                        }
+                    })
                 }).catch(err => {
                     showNotify('ERROR', err)
                 }).finally(() => {
@@ -234,13 +262,13 @@ const PromptsParams = {
                 })
             }
         },
-        prepareImages(images) {
-            return images.map(img => {
-                return {
-                    data: `data:${img.type};base64, ${img.data}`
-                }
-            })
-        },
+        // prepareImages(images) {
+        //     return images.map(img => {
+        //         return {
+        //             data: `data:${img.type};base64, ${img.data}`
+        //         }
+        //     })
+        // },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
             this.isContextLoading= true;
@@ -271,7 +299,7 @@ const PromptsParams = {
                 {
                     id: rowId,
                     "input": this.testInput,
-                    "output": this.testOutput.type === 'text' ? this.testOutput.content : this.testOutput.content[0].data,
+                    "output": this.testOutput[0].content,
                     "action": ""
                 }
             )
@@ -321,7 +349,7 @@ const PromptsParams = {
             <div class="card p-28">
                 <div class="d-flex justify-content-between mb-2">
                     <promptsEditorName
-                        v-if="!isPromptLoading"
+                        v-show="!isPromptLoading"
                         :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
                         v-model="editablePrompt.name">
@@ -358,7 +386,6 @@ const PromptsParams = {
                 </div>
                 <div v-show="!isPromptLoading">
                     <promptsEditorField
-                        v-if="!isPromptLoading"
                         title="Description"
                         :key="selectedPrompt.id"
                         :editable-prompt="editablePrompt"
@@ -516,12 +543,6 @@ const PromptsParams = {
                                     <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
                                     <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
                                 </th>
-                                <th data-field="outputTest"
-                                    v-if="testOutput && testOutput.type !== 'image'"
-                                >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input result.</span>
-                                </th>
                             </tr>
                         </thead>
                         <tbody style="border-bottom: solid 1px #EAEDEF">
@@ -535,33 +556,37 @@ const PromptsParams = {
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
-                                <td class="p-2" v-if="testOutput && testOutput.type !== 'image'">
-                                    <div>
-                                        <textarea disabled type="text"
-                                            rows="5"
-                                            style="color: var(--green)"
-                                            v-model="testOutput.content"
-                                            class="form-control form-control-alternative">
-                                        </textarea>
-                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
-                                    </div>
+                                <td style="width: 56px;" class="p-2" v-if="editablePrompt.is_active_input">
+                                    <button :disabled="isDisableAddButton"
+                                        class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
+                                        <i class="icon__14x14 icon-add-column"></i>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
 
-                        <thead v-if="testOutput.type === 'image'" class="thead-light">
+                        <thead class="thead-light">
                             <tr>
                                 <th data-field="outputTest">
-                                    <span class="font-h6 font-semibold mr-2" style="color: var(--basic)">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize">Input expected result.</span>
+                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
+                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input result.</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody v-if="testOutput.type === 'image'" style="border-bottom: solid 1px #EAEDEF">
-                            <tr>
+                        <tbody style="border-bottom: solid 1px #EAEDEF">
+                            <tr v-for="message in testOutput">
                                 <td class="p-2">
-                                    <div class="text-center">
-                                        <img v-for="img in testOutput.content" :src="img.data">
+                                    <div v-if="message.type === 'image'" class="text-center">
+                                        <img :src="message.content">
+                                    </div>
+                                    <div v-if="message.type === 'text'">
+                                        <textarea disabled type="text"
+                                            rows="5"
+                                            style="color: var(--green)"
+                                            v-model="message.content"
+                                            class="form-control form-control-alternative">
+                                        </textarea>
+                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
                             </tr>
@@ -637,7 +662,7 @@ const PromptsParams = {
                 <PromptsOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
-                    :selected-integration="selectedIntegration"
+                    :filtered-models="filteredModels"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai'">
@@ -645,7 +670,7 @@ const PromptsParams = {
                 <PromptsAzureOpenaiIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
-                    :selected-integration="selectedIntegration"
+                    :filtered-models="filteredModels"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'open_ai_azure'">
@@ -653,7 +678,7 @@ const PromptsParams = {
                 <PromptsAiDialIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
-                    :selected-integration="selectedIntegration"
+                    :filtered-models="filteredModels"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'ai_dial'">

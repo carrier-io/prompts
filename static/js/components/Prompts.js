@@ -40,33 +40,38 @@ const Prompts = {
                 $("#prompts-aside-table").bootstrapTable('append', data);
                 this.promptsList = data;
                 if (data.length > 0) {
-                    this.selectedPrompt = data[0];
+                    const hash_id = location.hash.substring(1)
+                    this.selectedPrompt = data.find(i => hash_id === String(i.id)) || data[0];
                     this.setBucketEvents();
-                    this.selectFirstPrompt();
+                    this.selectActivePrompt();
                 }
                 this.isPromptListLoading = false;
             })
         })
+    },
+    watch: {
+        selectedPrompt(newValue) {
+            location.hash = newValue.id
+        }
     },
     methods: {
         FetchPromptById(promptId) {
             this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
                 this.isPromptLoading = false;
-                this.selectedPrompt = { ...data };
+                this.selectedPrompt = {...data};
             })
         },
         setBucketEvents() {
             $('#prompts-aside-table').on('click', 'tbody tr:not(.no-records-found)', highlightOnClick);
         },
-        selectFirstPrompt() {
+        selectActivePrompt() {
             this.FetchPromptById(this.selectedPrompt.id);
-            $('#prompts-aside-table tbody tr').each(function (i, item) {
-                if (i === 0) {
-                    const firstRow = $(item);
-                    firstRow.addClass('highlight');
-                }
-            })
+            const selected_id = this.selectedPrompt?.id
+            if (selected_id !== undefined) {
+                $(`#prompts-aside-table tbody tr[data-uniqueid=${selected_id}]`).addClass('highlight')
+            }
+
         },
         openCreateModal(modalType, prompt = '') {
             this.showCreateModal = true;
@@ -112,7 +117,7 @@ const Prompts = {
                 } else {
                     if (data.length > 0) {
                         this.selectedPrompt = data[0];
-                        this.selectFirstPrompt();
+                        this.selectActivePrompt();
                     }
                 }
             });
@@ -130,7 +135,7 @@ const Prompts = {
                 <div class="card w-100" style="height: calc(100vh - 92px)">
                     <div class="d-flex justify-content-center align-items-center h-100">
                         <div class="d-flex flex-column align-items-center">
-                            <p class="font-h4 text-gray-700">Need to 
+                            <p class="font-h4 text-gray-700">Need to
                                 <a href="/-/configuration/integrations/" target="_blank">require AI integration,</a>
                                 before creating prompts.
                             </p>
@@ -173,7 +178,7 @@ const Prompts = {
                             <div class="d-flex justify-content-center align-items-center h-100">
                                 <div class="d-flex flex-column align-items-center">
                                     <p class="font-h5 text-gray-500">Still no prompts created.</p>
-                                    <button type="button" class="btn btn-sm btn-secondary mt-1" 
+                                    <button type="button" class="btn btn-sm btn-secondary mt-1"
                                         @click="openCreateModal">
                                         <i class="fas fa-plus mr-2"></i>Create prompt
                                     </button>
@@ -183,7 +188,7 @@ const Prompts = {
                     </template>
                 </div>
             </div>
-            
+
             <transition>
                 <prompts-modal-create
                     v-if="showCreateModal"

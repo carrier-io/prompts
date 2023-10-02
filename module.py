@@ -91,6 +91,11 @@ class Module(module.ModuleModel):
             }
         )
 
+        self.init_flows()
+
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
         log.info('De-initializing')
+
+    def init_flows(self):
+        from .flows import prompt, prompt_validate
