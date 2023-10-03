@@ -29,4 +29,6 @@ class Prompt(
     examples = relationship("Example", backref=backref("prompts"), lazy=True, cascade="all, delete")
     variables = relationship("Variable", backref=backref("prompts"), lazy=True, cascade="all, delete")
     tags = relationship("Tag", secondary='tenant.models_prompts_tags_association',
-        backref=backref("prompts"), lazy='joined')
+                        backref=backref("prompts"), lazy='joined')
+    embeddings = relationship("Embedding", secondary='tenant.models_prompts_embeddings_association',
+                              backref=backref("prompts"), lazy=True)

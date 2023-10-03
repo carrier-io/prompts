@@ -55,6 +55,8 @@ class RPC:
                 joinedload(Prompt.examples)
             ).options(
                 joinedload(Prompt.variables)
+            ).options(
+                joinedload(Prompt.embeddings)
             ).filter(
                 Prompt.id == prompt_id,
             ).one_or_none()
@@ -71,6 +73,7 @@ class RPC:
             result['examples'] = [example.to_json() for example in prompt.examples]
             result['variables'] = [var.to_json() for var in prompt.variables]
             result['tags'] = [tag.to_json() for tag in prompt.tags]
+            result['embeddings'] = [embedding.to_json() for embedding in prompt.embeddings]
 
             versions = session.query(Prompt).options(
                 defer(Prompt.prompt), defer(Prompt.test_input), defer(Prompt.model_settings)
@@ -108,6 +111,20 @@ class RPC:
     @web.rpc(f'prompts_update', "update")
     def prompts_update(self, project_id: int, prompt: dict, **kwargs) -> bool:
         prompt['project_id'] = project_id
+        embedding_id = int(prompt["embedding"])
+        if not embedding_id:
+            with db.with_project_schema_session(project_id) as session:
+                _prompt = session.query(Prompt).get(prompt["id"])
+                _prompt.embeddings.clear()
+                session.commit()
+        else:
+            with db.with_project_schema_session(project_id) as session:
+                embedding = rpc_tools.RpcMixin().rpc.call.embeddings_get_by_id(project_id, embedding_id)
+                embedding = session.merge(embedding)
+                _prompt = session.query(Prompt).get(prompt["id"])
+                _prompt.embeddings.clear()
+                _prompt.embeddings.append(embedding)
+                session.commit()
         prompt = PromptUpdateModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:
             session.query(Prompt).filter(Prompt.id == prompt.id).update(
