@@ -683,7 +683,7 @@ const PromptsParams = {
                     >
                     </prompts-tags-modal>
                 </transition>
-            </div :style="{'height': responsiveBarHeight}">
+            </div>
         </div>
     </div>
     `
