@@ -162,12 +162,12 @@ const PromptsParams = {
                     return models.filter(model =>
                         model.capabilities.completion === true ||
                         model.capabilities.chat_completion === true
-                    ).map(model => model.name)
+                    )
                 }
                 if (prompt.type === 'chat') {
                     return models.filter(model =>
                         model.capabilities.chat_completion === true
-                    ).map(model => model.name)
+                    )
                 }
             } catch (e) {
                 return models;

@@ -10,6 +10,7 @@ const PromptsAiDialIntegration = {
                 model: "",
             },
             isComponentMounted: false,
+            tokens_limit: 32000,
         }
     },
     computed: {
@@ -18,7 +19,10 @@ const PromptsAiDialIntegration = {
         },
         isInvalid() {
             return this.isRunClicked && !this.editableIntegrationSetting.model_name
-        }
+        },
+        selectedModel() {
+            return this.filteredModels.find(model => model.id === this.editableIntegrationSetting.model_name);
+        },
     },
     mounted() {
         if (this.selectedPrompt.model_settings) {
@@ -35,7 +39,14 @@ const PromptsAiDialIntegration = {
                 this.$emit('update-setting', newVal)
             },
             deep: true
-        }
+        },
+        selectedModel(newVal) {
+            if (newVal) {
+                this.tokens_limit = newVal.token_limit;
+            } else {
+                this.tokens_limit = 32000; // default value
+            }
+          },
     },
     template: `
         <div>
@@ -46,7 +57,7 @@ const PromptsAiDialIntegration = {
                         v-model="editableIntegrationSetting.model_name"
                         data-size="8"
                         data-style="btn">
-                        <option v-for="model in filteredModels" :value="model">{{ model }}</option>
+                        <option v-for="model in filteredModels" :value="model.id">{{ model.name }}</option>
                     </select>
                 </div>
                 <prompts-range
@@ -64,7 +75,8 @@ const PromptsAiDialIntegration = {
                     title="Token limit"
                     :step="1"
                     :minValue="1"
-                    :maxValue="32000"
+                    :maxValue="tokens_limit"
+                    :key="editableIntegrationSetting.model_name"
                     v-model:modelValue="editableIntegrationSetting.max_tokens"
                 ></prompts-range>
                 <prompts-range
