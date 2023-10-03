@@ -4,13 +4,18 @@ from typing import Optional
 from flask import send_file
 from pylon.core.tools import log
 
-from tools import api_tools, VaultClient, MinioClient
+from tools import api_tools, VaultClient, MinioClient, auth, config as c
 
 from hurry.filesize import size
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-
+    @auth.decorators.check_api({
+        "permissions": ["models.config"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def get(self, project_id: int, file_name: Optional[str] = None, **kwargs):
         project = self.module.context.rpc_manager.call.project_get_or_404(project_id=project_id)
         # s3_settings = test_data['test_config'].get(
@@ -36,15 +41,6 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         return list(map(compute_sizes, minio_client.list_files(bucket))), 200
 
-    # def put(self, project_id: int, **kwargs):
-    #     # used to regenerate token from ui
-    #     token = self.module.regenerate_token(user_id=g.auth.id)
-    #     return {'token': token}, 200
-
-
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
-
 
 class API(api_tools.APIBase):
     url_params = [
@@ -55,6 +51,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

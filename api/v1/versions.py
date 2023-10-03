@@ -1,16 +1,26 @@
 from itertools import chain
-from flask_restful import Resource
 from flask import request
 
 from pylon.core.tools import log
-from tools import api_tools
+from tools import api_tools, auth, config as c
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.versions.get"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def get(self, project_id, prompt_name):
         return self.module.get_versions_by_prompt_name(project_id, prompt_name), 200
 
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.versions.create"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def post(self, project_id):
         prompt_data = self.module.get_by_id(project_id, request.json['prompt_id'])
         prompt_data.pop('test_input')
@@ -23,6 +33,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         self.module.update_tags(project_id, prompt['id'], prompt_data['tags'])
         return prompt, 201
 
+
 class API(api_tools.APIBase):
     url_params = [
         '<string:mode>/<int:project_id>',
@@ -32,5 +43,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

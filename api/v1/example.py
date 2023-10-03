@@ -2,11 +2,16 @@ from flask import request
 from pydantic import ValidationError
 from pylon.core.tools import log
 
-from tools import session_project, api_tools
+from tools import session_project, api_tools, auth, config as c
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.example.post"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def post(self, project_id):
         try:
             from_test_input = request.json.pop('from_test_input', False)
@@ -15,6 +20,12 @@ class ProjectAPI(api_tools.APIModeHandler):
         except ValidationError as e:
             return e.errors(), 400
 
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.example.put"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def put(self, project_id):
         try:
             prompt = self.module.update_example(project_id, request.json)
@@ -22,13 +33,15 @@ class ProjectAPI(api_tools.APIModeHandler):
         except ValidationError as e:
             return e.errors(), 400
 
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.example.delete"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def delete(self, project_id, example_id):
         self.module.delete_example(project_id, example_id)
         return '', 204
-
-
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
 
 
 class API(api_tools.APIBase):
@@ -40,6 +53,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

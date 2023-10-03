@@ -1,18 +1,22 @@
 from flask import request
 from tools import api_tools
-from pylon.core.tools import log
 
 from ...models.pd.prompts_pd import PredictPostModel
 from ...models.prompts import Prompt
 from ...utils.ai_providers import AIProvider
 
-
-from tools import db
+from tools import db, auth, config as c
 
 from pylon.core.tools import log
 
 
 class ProjectAPI(api_tools.APIModeHandler):
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.predict"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     @api_tools.endpoint_metrics
     def post(self, project_id: int):
         payload = dict(request.json)
@@ -66,9 +70,6 @@ class ProjectAPI(api_tools.APIModeHandler):
             result['response'] = {'messages': [{'type': 'text', 'content': result['response']}]}
         return result['response'], 200
 
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
-
 
 class API(api_tools.APIBase):
     url_params = [
@@ -77,6 +78,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }
