@@ -12,7 +12,7 @@ from pylon.core.tools import log
 
 class ProjectAPI(api_tools.APIModeHandler):
     @auth.decorators.check_api({
-        "permissions": ["models.prompts.predict"],
+        "permissions": ["models.prompts.predict.post"],
         "recommended_roles": {
             c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
             c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
