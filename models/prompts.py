@@ -17,7 +17,7 @@ class Prompt(
     integration_uid = Column(String(128), nullable=True)
     # integration_id = Column(Integer, nullable=True)
     name = Column(String(128), nullable=False)
-    description = Column(String(256), nullable=True)
+    description = Column(String(512), nullable=True)
     prompt = Column(String, nullable=True)
     test_input = Column(String, nullable=True)
     is_active_input = Column(Boolean, nullable=False, default=True)
@@ -29,4 +29,4 @@ class Prompt(
     examples = relationship("Example", backref=backref("prompts"), lazy=True, cascade="all, delete")
     variables = relationship("Variable", backref=backref("prompts"), lazy=True, cascade="all, delete")
     tags = relationship("Tag", secondary='tenant.models_prompts_tags_association',
-        backref=backref("prompts"), lazy='joined')
+                        backref=backref("prompts"), lazy='joined')
