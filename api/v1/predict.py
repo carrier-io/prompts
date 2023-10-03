@@ -51,6 +51,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             prompt_struct = self.module.prepare_prompt_struct(
                 project_id, data.prompt_id, data.input_,
                 data.context, data.examples, data.variables,
+                chat_history=data.chat_history,
                 ignore_template_error=ignore_template_error
             )
         except Exception as e:
