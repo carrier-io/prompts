@@ -195,8 +195,8 @@ const Prompts = {
                     @close-create-modal="showCreateModal = false"
                     @save-prompt="handleCreatePrompt"
                     @update-prompt="handleCreatePrompt"
-                    :modal-type="modalType"
-                    :editable-roles="editableRoles"
+                    :modalType="modalType"
+                    :editableRoles="editableRoles"
                     :isModalLoading="isModalLoading">
                 </prompts-modal-create>
             </transition>
