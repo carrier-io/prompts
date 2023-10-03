@@ -1,4 +1,4 @@
-const regenerateToken = async (key='token', field='value') => {
+const regenerateToken = async (row_key='token', field='value') => {
     const api_url = V.build_api_url('prompts', 'config', {trailing_slash: true})
     const resp = await fetch(api_url + V.project_id, {
         method: 'PUT',
@@ -6,7 +6,7 @@ const regenerateToken = async (key='token', field='value') => {
     if (resp.ok) {
         const {token} = await resp.json()
         V.registered_components.table_config.table_action('updateCellByUniqueId', {
-            id: key,
+            id: row_key,
             field: field,
             value: token,
             reinit: true
@@ -15,6 +15,15 @@ const regenerateToken = async (key='token', field='value') => {
     } else {
         showNotify('ERROR', 'Token refresh error')
     }
+}
+
+const handleIntegrationChange = (newValue, row_key='integration_uid', field='value') => {
+    V.registered_components.table_config.table_action('updateCellByUniqueId', {
+        id: row_key,
+        field: field,
+        value: newValue,
+        reinit: true,
+    })
 }
 
 const valueFormatters = {
@@ -44,7 +53,7 @@ const getExpirationData = (expires) => {
 }
 
 const actionFormatters = {
-    integrations: (value, row, index, field) => {
+    integration_uid: (value, row, index, field) => {
         const processIntegrations = integrations => {
             return integrations.map(({uid, config}) => {
                 return `
@@ -66,16 +75,11 @@ const actionFormatters = {
 
         return `
             <select class="custom-select"
-                onchange="V.registered_components.table_config.table_action('updateRow', {
-                    index: ${index},
-                    row: {
-                        value: this.value
-                    }
-                })"
+                onchange="handleIntegrationChange(this.value)"
             >
                 ${Object.entries(value).map(
-            ([group, integrations]) => processGroup(group, integrations)
-        )}
+                    ([group, integrations]) => processGroup(group, integrations)
+                )}
             </select>
         `
     },

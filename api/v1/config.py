@@ -27,7 +27,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         table_data.append(token_data)
 
         integrations_data = {
-            'key': 'integration uid',
+            'key': 'integration_uid',
             'value': data.selected_integration.get('uid'),
             'action': data.formatted_integrations,
             'weight': 2
