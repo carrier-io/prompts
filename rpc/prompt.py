@@ -31,9 +31,9 @@ class RPC:
             queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
             if with_versions:
                 return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
-                    for prompt in queryset]
+                        for prompt in queryset]
             prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
-                for prompt in queryset if prompt.version == 'latest']
+                       for prompt in queryset if prompt.version == 'latest']
             for prompt in prompts:
                 prompt['versions'] = [{
                     'id': version.id,
@@ -90,11 +90,11 @@ class RPC:
     def prompts_get_version_id(self, project_id: int, prompt_id: int, version: str) -> dict | None:
         with db.with_project_schema_session(project_id) as session:
             if subquery := session.query(Prompt.name).filter(
-                Prompt.id == prompt_id
+                    Prompt.id == prompt_id
             ).one_or_none():
-                if ids:= session.query(Prompt.id).filter(
-                    Prompt.name.in_(subquery),
-                    Prompt.version == version,
+                if ids := session.query(Prompt.id).filter(
+                        Prompt.name.in_(subquery),
+                        Prompt.version == version,
                 ).one_or_none():
                     return ids[0]
 
@@ -139,10 +139,11 @@ class RPC:
         prompt_data = PromptUpdateNameModel.validate(prompt_date)
         with db.with_project_schema_session(project_id) as session:
             if subquery := session.query(Prompt.name).filter(
-                Prompt.id == prompt_id
+                    Prompt.id == prompt_id
             ).one_or_none():
-                session.query(Prompt).filter(Prompt.name.in_(subquery)
-                    ).update(prompt_data.dict())
+                session.query(Prompt).filter(
+                    Prompt.name.in_(subquery)
+                ).update(prompt_data.dict())
                 session.commit()
             return True
 
@@ -217,26 +218,29 @@ class RPC:
     def prompts_get_versions_by_prompt_name(self, project_id: int, prompt_name: str) -> list[dict]:
         with db.with_project_schema_session(project_id) as session:
             prompts = session.query(Prompt).filter(
-                    Prompt.name == prompt_name
-                ).order_by(
-                    Prompt.version
-                ).all()
+                Prompt.name == prompt_name
+            ).order_by(
+                Prompt.version
+            ).all()
             return [prompt.to_json() for prompt in prompts]
 
     @web.rpc(f'prompts_prepare_prompt_struct', "prepare_prompt_struct")
     def prompts_prepare_prompt_struct(self, project_id: int, prompt_id: Optional[int],
-                                    input_: str = '', context: str = '', examples: list = [],
-                                    variables: dict = {}, ignore_template_error: bool = False,
-                                    **kwargs) -> str:
+                                      input_: str = '', context: str = '', examples: list = [],
+                                      variables: dict = {}, ignore_template_error: bool = False,
+                                      chat_history: Optional[dict] = None,
+                                      **kwargs) -> dict:
 
         # example_template = '\ninput: {input}\noutput: {output}'
 
         prompt_struct = {
             "context": context,
-            "examples": examples,       # list of dicts {"input": "value", "output": "value"}
-            "variables": variables,     # list of dicts {"var_name": "value"}
+            "examples": examples,  # list of dicts {"input": "value", "output": "value"}
+            "variables": variables,  # list of dicts {"var_name": "value"}
             "prompt": input_
         }
+        if chat_history:
+            prompt_struct['chat_history'] = chat_history
         if prompt_id:
             prompt_template = self.get_by_id(project_id, prompt_id)
             if not prompt_template:

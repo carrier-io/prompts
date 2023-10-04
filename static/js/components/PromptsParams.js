@@ -706,7 +706,7 @@ const PromptsParams = {
                     >
                     </prompts-tags-modal>
                 </transition>
-            </div :style="{'height': responsiveBarHeight}">
+            </div>
                  <div class="section" style="margin-top: 50px" @click="handle_advanced_settings_icon">
                     <div class="row" data-toggle="collapse" data-target="#advancedSettings" role="button" aria-expanded="false" aria-controls="advancedSettings">
                         <div class="col">

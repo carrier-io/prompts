@@ -7,8 +7,7 @@ from ...models.prompts import Prompt
 from ...utils.ai_providers import AIProvider
 from traceback import format_exc
 
-
-from tools import db
+from tools import db, auth, config as c
 
 from pylon.core.tools import log
 
@@ -19,6 +18,12 @@ MODEL_TOKENS_MAPPER = {
 
 
 class ProjectAPI(api_tools.APIModeHandler):
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.predict.post"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     @api_tools.endpoint_metrics
     def post(self, project_id: int):
         payload = dict(request.json)
@@ -79,6 +84,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             prompt_struct = self.module.prepare_prompt_struct(
                 project_id, data.prompt_id, _input,
                 _context, data.examples, data.variables,
+                chat_history=data.chat_history,
                 ignore_template_error=ignore_template_error
             )
         except Exception as e:
@@ -99,9 +105,6 @@ class ProjectAPI(api_tools.APIModeHandler):
             result['response'] = {'messages': [{'type': 'text', 'content': result['response']}]}
         return result['response'], 200
 
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
-
 
 class API(api_tools.APIBase):
     url_params = [
@@ -110,6 +113,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

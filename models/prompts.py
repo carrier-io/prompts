@@ -17,7 +17,7 @@ class Prompt(
     integration_uid = Column(String(128), nullable=True)
     # integration_id = Column(Integer, nullable=True)
     name = Column(String(128), nullable=False)
-    description = Column(String(256), nullable=True)
+    description = Column(String, nullable=True)
     prompt = Column(String, nullable=True)
     test_input = Column(String, nullable=True)
     is_active_input = Column(Boolean, nullable=False, default=True)

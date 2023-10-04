@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from typing import Optional
+
 from pylon.core.tools import web, log
 
-from ..models.pd.config_pd import ModelsConfig
+from pydantic import BaseModel
+from ..models.pd.config_pd import ModelsConfig, TokenPD
 from tools import rpc_tools, db, VaultClient, auth, api_tools
-
 
 TOKEN_NAME = 'ai_token'
 
@@ -24,8 +26,10 @@ class RPC:
         )
         try:
             token = all_tokens[0]
-            token = auth.encode_token(token['id'])
+            # token_encoded, expires = token.encoded, token.expires.isoformat(timespec='seconds')
+            # log.info(f'config.token {token}')
         except IndexError:
+            # token_encoded = expires = None
             token = None
 
         ai_integrations = self.context.rpc_manager.call.integrations_get_all_integrations_by_section(
@@ -42,7 +46,7 @@ class RPC:
         return data
 
     @web.rpc('prompts_regenerate_token', 'regenerate_token')
-    def regenerate_token(self, user_id: int) -> str:
+    def regenerate_token(self, user_id: int) -> TokenPD:
         all_tokens = auth.list_tokens(
             user_id=user_id,
             name=TOKEN_NAME
@@ -50,10 +54,17 @@ class RPC:
         for i in all_tokens:
             auth.delete_token(token_id=i['id'])
 
+        expires = datetime.now() + timedelta(days=30)
         token_id = auth.add_token(
             user_id=user_id,
             name=TOKEN_NAME,
-            expires=datetime.now() + timedelta(days=30),
+            expires=expires,
+        )
+        token = TokenPD(
+            id=token_id,
+            user_id=user_id,
+            expires=expires,
+            name=TOKEN_NAME
         )
 
-        return auth.encode_token(token_id)
+        return token
