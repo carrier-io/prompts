@@ -610,7 +610,7 @@ const PromptsParams = {
             <div v-else :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
                 <div class="select-validation" v-if="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
-                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"
                         @change="selectPromptVersion"
                         data-style="btn">
                         <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
@@ -644,7 +644,7 @@ const PromptsParams = {
                 </div>
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
-                    <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                    <select id="selectIntegration" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"
                         v-model="selectedIntegration"
                         data-style="btn">
                         <option v-for="integration in integrations" :value="integration">{{ integration.config.name }}</option>
