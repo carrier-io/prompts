@@ -654,7 +654,7 @@ const PromptsParams = {
                 <PromptsVertexIntegration
                     :is-run-clicked="isRunClicked"
                     :selected-prompt="editablePrompt"
-                    :selected-integration="selectedIntegration"
+                    :filtered-models="filteredModels"
                     @update-setting="updateSetting"
                     :key="selectedIntegration.uid"
                     v-if="selectedIntegration.name === 'vertex_ai'">
