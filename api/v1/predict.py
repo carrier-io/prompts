@@ -11,9 +11,10 @@ from tools import db, auth, config as c
 
 from pylon.core.tools import log
 
-
+# TODO add more models or find an API to get tokens limit
 MODEL_TOKENS_MAPPER = {
-    "text-davinci-003": 4097
+    "text-davinci-003": 4097,
+    "text-davinci-002": 4097
 }
 
 

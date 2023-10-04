@@ -30,9 +30,11 @@ class RPC:
         with db.with_project_schema_session(project_id) as session:
             queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
             if with_versions:
-                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
+                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} |
+                        {'embeddings': [embedding.to_json() for embedding in prompt.embeddings]}
                         for prompt in queryset]
-            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
+            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} |
+                        {'embeddings': [embedding.to_json() for embedding in prompt.embeddings]}
                        for prompt in queryset if prompt.version == 'latest']
             for prompt in prompts:
                 prompt['versions'] = [{

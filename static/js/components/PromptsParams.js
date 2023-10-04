@@ -31,6 +31,7 @@ const PromptsParams = {
                 prompt: "",
                 examples: [],
                 model_settings: {},
+                embeddings: null,
             },
             testInput: '',
             testOutput: [{
@@ -77,6 +78,11 @@ const PromptsParams = {
         }
     },
     watch: {
+        promptEmbeddings(newVal, oldVal) {
+            this.$nextTick(() => {
+                 $('.selectpicker').selectpicker('render').selectpicker('refresh');
+            })
+        },
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = _.cloneDeep(newVal);
@@ -100,6 +106,12 @@ const PromptsParams = {
                 }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
+                if (newVal["embeddings"].length > 0) {
+                    this.editablePrompt.embeddings = newVal["embeddings"][0]["id"];
+                }
+                else {
+                    this.editablePrompt.embeddings = 0;
+                }
                 this.fetchPromptEmbeddings();
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
@@ -723,7 +735,7 @@ const PromptsParams = {
                             <p class="font-h5 font-semibold mb-1">Select embeddings</p>
 
                             <select id="selectedPromptEmbedding" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
-                            @change="updateEmbeddings" data-style="btn">
+                            @change="updateEmbeddings" v-model="editablePrompt.embeddings" data-style="btn">
                                 <option v-for="embedding in promptEmbeddings" :value="embedding.id">{{ embedding.library_name }}</option>
                             </select>
                         </div>
