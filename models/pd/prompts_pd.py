@@ -59,6 +59,7 @@ class PredictPostModel(BaseModel):
     examples: Optional[list] = []
     context: Optional[str] = ''
     variables: Optional[dict] = {}
+    chat_history: Optional[dict] = {}
 
     class Config:
         fields = {'input_': 'input'}
@@ -92,3 +93,10 @@ class PredictPostModel(BaseModel):
 
         values['integration_settings'] = response['item']
         return values
+
+    @validator('chat_history')
+    def check_prompt_type(cls, value: Optional[dict], values: dict):
+        if values['prompt_id'] and value:
+            # assert check that type is 'chat'
+            ...
+        return value

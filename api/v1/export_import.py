@@ -7,19 +7,22 @@ from pylon.core.tools import log
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from ...models.example import Example
 from ...models.pd.example import ExampleModel
 from ...models.pd.export_import import PromptExport, PromptImport
 from ...models.pd.variable import VariableModel
 from ...models.pd.tag import PromptTagModel
 from ...models.prompts import Prompt
-from ...models.variable import Variable
-from ...utils.ai_providers import AIProvider
 
-from tools import api_tools, db
+from tools import api_tools, db, auth, config as c
 
 
 class ProjectAPI(api_tools.APIModeHandler):
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.export_import.export"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def get(self, project_id: int, prompt_id: int, **kwargs):
         with db.with_project_schema_session(project_id) as session:
             prompt = session.query(Prompt).options(
@@ -58,7 +61,12 @@ class ProjectAPI(api_tools.APIModeHandler):
                 return send_file(file, download_name=f'{prompt.name}.json', as_attachment=False)
             return result, 200
 
-
+    @auth.decorators.check_api({
+        "permissions": ["models.prompts.export_import.import"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def post(self, project_id: int, **kwargs):
         try:
             integration_uid = request.json['integration_uid']
@@ -100,10 +108,6 @@ class ProjectAPI(api_tools.APIModeHandler):
         return self.module.get_by_id(project_id, p['id']), 201
 
 
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
-
-
 class API(api_tools.APIBase):
     url_params = [
         '<int:project_id>/<int:prompt_id>',
@@ -113,6 +117,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

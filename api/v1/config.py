@@ -1,42 +1,51 @@
 from itertools import groupby
 
-from flask import request, g
+from flask import g
 from pylon.core.tools import log
 
-from tools import session_project, api_tools
+from tools import session_project, api_tools, auth, config as c
+
+from ...models.pd.config_pd import ModelsConfig, TokenPD
 
 
 class ProjectAPI(api_tools.APIModeHandler):
-
+    @auth.decorators.check_api({
+        "permissions": ["models.config"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def get(self, project_id: int, **kwargs):
-        data = self.module.get_config(project_id=project_id, user_id=g.auth.id)
-        formatted_integrations = {
-            str(k): list(v)
-            for k, v in
-            groupby(sorted(data.integrations, key=lambda x: x['name']), lambda x: x['name'])
+        data: ModelsConfig = self.module.get_config(project_id=project_id, user_id=g.auth.id)
+
+        table_data = [{'key': k, 'value': v, 'weight': 4} for k, v in data.dict(exclude={'integrations', 'token'}).items()]
+
+        token_data = {'key': 'token', 'value': {'token': None, 'expires': None}, 'weight': 6}
+        if data.token:
+            token_data['value']['token'] = data.token.encoded
+            token_data['value']['expires'] = data.token.expires.isoformat(timespec='seconds')
+        table_data.append(token_data)
+
+        integrations_data = {
+            'key': 'integration_uid',
+            'value': data.selected_integration.get('uid'),
+            'action': data.formatted_integrations,
+            'weight': 2
         }
-
-        try:
-            selected_integration = next(i for i in data.integrations if i['is_default'])
-        except StopIteration:
-            try:
-                selected_integration = data.integrations[0]
-            except IndexError:
-                selected_integration = {}
-
-        table_data = [{'key': k, 'value': v} for k, v in data.dict(exclude={'integrations'}).items()]
-        integrations_data = {'key': 'integrations', 'value': selected_integration.get('uid'), 'action': formatted_integrations}
         table_data.append(integrations_data)
+
         return table_data, 200
 
+    @auth.decorators.check_api({
+        "permissions": ["models.config"],
+        "recommended_roles": {
+            c.ADMINISTRATION_MODE: {"admin": True, "editor": True, "viewer": False},
+            c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
+        }})
     def put(self, project_id: int, **kwargs):
         # used to regenerate token from ui
-        token = self.module.regenerate_token(user_id=g.auth.id)
-        return {'token': token}, 200
-
-
-# class AdminAPI(api_tools.APIModeHandler):
-#     ...
+        token: TokenPD = self.module.regenerate_token(user_id=g.auth.id)
+        return {'token': {'token': token.encoded, 'expires': token.expires.isoformat(timespec='seconds')}}, 200
 
 
 class API(api_tools.APIBase):
@@ -46,6 +55,5 @@ class API(api_tools.APIBase):
     ]
 
     mode_handlers = {
-        'default': ProjectAPI,
-        # 'administration': AdminAPI,
+        c.DEFAULT_MODE: ProjectAPI,
     }

@@ -166,7 +166,6 @@ const ImportPromptModal = {
                 <div class="d-flex form-group">
                     <label class="font-semibold flex-grow-1 mr-1">
                         Name
-<!--                            :value="prompt_json?.name"-->
                         <input
                             class="form-control"
                             type="text"
@@ -233,7 +232,7 @@ const ImportPromptModal = {
                     @click="handleImport"
                     :disabled="is_loading"
                 >
-                    Import <i v-if="isModalLoading" class="preview-loader__white ml-2"></i>
+                    Import <i v-if="is_loading" class="preview-loader__white ml-2"></i>
                 </button>
            </div>
         </div>

@@ -8,7 +8,10 @@
                 'data-unique-id': null,
                 'data-virtual-scroll': false,
                 'data-pagination': false,
-                'data-side-pagination': 'client'
+                'data-side-pagination': 'client',
+                'data-sort-name': 'weight',
+                'data-sort-order': 'desc',
+                'data-unique-id': 'key'
             }"
             container_classes="my-3 pb-0"
     >
@@ -27,6 +30,11 @@
         </template>
         <template #table_headers>
             <th scope="col"
+                data-visible="false"
+                data-sortable="false"
+                data-field="weight"
+            >weight</th>
+            <th scope="col"
                 data-sortable="true"
                 data-field="key"
             >
@@ -40,7 +48,7 @@
             >
                 Value
             </th>
-            <th scope="col" data-align="center"
+            <th scope="col" data-align="right"
                 data-field="action"
                 data-formatter="actionFormatter"
             >
