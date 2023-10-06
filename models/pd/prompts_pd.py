@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, validator, root_validator, ValidationError
 from pylon.core.tools import log
 from ...utils.ai_providers import AIProvider
+from tools import rpc_tools
 
 
 class PromptType(str, enum.Enum):
@@ -59,7 +60,7 @@ class PredictPostModel(BaseModel):
     examples: Optional[list] = []
     context: Optional[str] = ''
     variables: Optional[dict] = {}
-    chat_history: Optional[dict] = {}
+    chat_history: Optional[list] = []
 
     class Config:
         fields = {'input_': 'input'}
@@ -96,7 +97,9 @@ class PredictPostModel(BaseModel):
 
     @validator('chat_history')
     def check_prompt_type(cls, value: Optional[dict], values: dict):
-        if values['prompt_id'] and value:
-            # assert check that type is 'chat'
-            ...
+        if values['prompt_id'] and values['project_id'] and value:
+            log.info(f'{values["prompt_id"]=}')
+            prompt = rpc_tools.RpcMixin().rpc.call.prompts_get_by_id(values['project_id'], values['prompt_id'])
+            log.info(f'{prompt=}')
+            assert prompt['type'] == 'chat', 'Prompt type must be chat'
         return value
