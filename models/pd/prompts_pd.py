@@ -99,5 +99,5 @@ class PredictPostModel(BaseModel):
     def check_prompt_type(cls, value: Optional[dict], values: dict):
         if values['prompt_id'] and values['project_id'] and value:
             prompt = rpc_tools.RpcMixin().rpc.call.prompts_get_by_id(values['project_id'], values['prompt_id'])
-            assert prompt['type'] == 'chat', 'Prompt type must be chat'
+            assert prompt['type'] == 'chat', 'Prompt type must be chat to support chat history'
         return value
