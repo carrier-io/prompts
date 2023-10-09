@@ -45,11 +45,23 @@ const PromptsListAside = {
                 <div>
                     <div class="d-flex justify-content-end">
                         <ImportPromptButton></ImportPromptButton>
-                        <button type="button"
-                            @click="$emit('open-create-modal')"
-                            class="btn btn-basic btn-sm btn-icon__sm">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <div class="dropdown left dropdown_action mr-2">
+                            <button class="btn btn-sm btn-icon__sm dropdown-toggle btn-secondary"
+                                    role="button"
+                                    id="dropdownMenuAction"
+                                    data-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuAction">
+                                <li class="px-3 py-1 font-weight-500">Create</li>
+                                <li class="dropdown-item" @click="$emit('open-create-modal', 'freeform')">
+                                    <span class="pl-2">Completion prompt</span></li>
+                                <li class="dropdown-item" @click="$emit('open-create-modal', 'chat')">
+                                    <span class="pl-2">Chat prompt</span></li>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

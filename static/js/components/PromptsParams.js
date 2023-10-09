@@ -16,6 +16,8 @@ const PromptsParams = {
         isPromptLoading: false,
     },
     components: {
+        PromptFreeform,
+        PromptChat,
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
@@ -334,7 +336,7 @@ const PromptsParams = {
                 vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
             });
         },
-        updateInput({ target: { checked }}) {
+        updateCbxInput({ target: { checked }}) {
             this.editablePrompt.is_active_input = !checked;
             this.isRunClicked = false;
             const isActive = !checked ? 'enabled' : 'disabled';
@@ -342,6 +344,9 @@ const PromptsParams = {
                 showNotify('INFO', `Input ${isActive}.`)
             });
         },
+        changeTestInput({ target: { value }}) {
+            this.testInput = value;
+        }
     },
     template: `
     <div class="d-flex">
@@ -445,156 +450,34 @@ const PromptsParams = {
                     </div>
                 </div>
             </div>
-
-            <div class="card mt-3 p-28">
-             <p class="font-h6 font-bold text-gray-800" style="color: #32325D">EXAMPLES</p>
-                <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
-                    <div class="layout-spinner">
-                        <div class="spinner-centered">
-                            <i class="spinner-loader__32x32"></i>
-                        </div>
-                    </div>
-                </div>
-                <div v-show="!isPromptLoading">
-                    <table
-                        id="promptsParamsTable"
-                        class="w-100 table-transparent mb-2 params-table"
-                        data-toggle="table"
-                        data-unique-id="id"
-                    >
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="id" data-visible="false"></th>
-                                <th data-field="is_active"
-                                    data-formatter="ParamsTable.cbxFormatter"
-                                ></th>
-                                <th data-field="input"
-                                    data-formatter="ParamsTable.textareaFormatter"
-                                >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
-                                </th>
-                                <th data-field="output"
-                                    data-formatter="ParamsTable.textareaFormatter"
-                                >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input expected result.</span>
-                                </th>
-                                <th data-width="56" data-width-unit="px"
-                                    data-field="action"
-                                    data-formatter="ParamsTable.parametersDeleteFormatter"
-                                ></th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn btn-sm btn-secondary mt-2"
-                        :disabled="!isLatestVersion"
-                        @click="addEmptyParamsRow">
-                        <i class="fas fa-plus mr-2"></i>Add Parameter
-                    </button>
-                </div>
-            </div>
-
-            <div class="card mt-3 p-28">
-                <div class="d-flex justify-content-between mb-2">
-                    <div class="d-flex align-items-center">
-                        <p class="font-h6 font-bold text-gray-800 mr-4" style="color: #32325D">PROMPT</p>
-                        <label class="custom-toggle mr-2" style="margin-top: 0">
-                            <input type="checkbox"
-                                   :checked="!editablePrompt.is_active_input"
-                                   @click="updateInput">
-                            <span class="custom-toggle_slider round"></span>
-                        </label>
-                        <p class="font-h6 font-weight-400">Disable input</p>
-                    </div>
-                    <div class="d-flex">
-                        <div v-if="editablePrompt.is_active_input">
-                            <button :disabled="isDisableAddButton"
-                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="addTestResult">
-                                    <i class="icon__18x18 icon-create-element mr-1"></i>
-                                    <span>Add to examples</span>
-                            </button>
-                        </div>
-                        <button type="button" :disabled="isRunLoading || isPromptLoading"
-                            class="btn btn-basic d-flex align-items-center ml-2" @click="runTest">
-                            Run
-                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="position-relative" style="height: 188px" v-if="isPromptLoading">
-                    <div class="layout-spinner">
-                        <div class="spinner-centered">
-                            <i class="spinner-loader__32x32"></i>
-                        </div>
-                    </div>
-                </div>
-                <div v-else>
-                    <table
-                        class="w-100 table-transparent mb-2 params-table"
-                        id="testResult">
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="inputTest"
-                                    v-if="editablePrompt.is_active_input"
-                                    >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                            <tr>
-                                <td class="p-2" v-if="editablePrompt.is_active_input">
-                                    <div class="custom-input" :class="{ 'invalid-input': isInvalidTestInput }">
-                                        <textarea type="text" class="form-control form-control-alternative"
-                                            rows="5"
-                                            v-model="testInput">
-                                        </textarea>
-                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
-                                    </div>
-                                </td>
-                                <td style="width: 56px;" class="p-2" v-if="editablePrompt.is_active_input">
-                                    <button :disabled="isDisableAddButton"
-                                        class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
-                                        <i class="icon__14x14 icon-add-column"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="outputTest">
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input result.</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                            <tr v-for="message in testOutput">
-                                <td class="p-2">
-                                    <div v-if="message.type === 'image'" class="text-center">
-                                        <img :src="message.content">
-                                    </div>
-                                    <div v-if="message.type === 'text'">
-                                        <textarea disabled type="text"
-                                            rows="5"
-                                            style="color: var(--green)"
-                                            v-model="message.content"
-                                            class="form-control form-control-alternative">
-                                        </textarea>
-                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                    </table>
-                </div>
-            </div>
+            <PromptFreeform
+                v-show="editablePrompt.type === 'freeform'"
+                :selectedPrompt="selectedPrompt"
+                :isPromptLoading="isPromptLoading"
+                :isLatestVersion="isLatestVersion"
+                :editablePrompt="editablePrompt"
+                :isPromptLoading="isPromptLoading"
+                :testOutput="testOutput"
+                :testInput="testInput"
+                :is-run-loading="isRunLoading"
+                @run-test="runTest"
+                @change-test-input="changeTestInput"
+                @update-cbx-input="updateCbxInput">
+            </PromptFreeform>
+            <PromptChat
+                v-show="editablePrompt.type === 'chat'"
+                :selectedPrompt="selectedPrompt"
+                :isPromptLoading="isPromptLoading"
+                :isLatestVersion="isLatestVersion"
+                :editablePrompt="editablePrompt"
+                :isPromptLoading="isPromptLoading"
+                :testOutput="testOutput"
+                :testInput="testInput"
+                :is-run-loading="isRunLoading"
+                @run-test="runTest"
+                @change-test-input="changeTestInput"
+                @update-cbx-input="updateCbxInput">
+            </PromptChat>
         </div>
         <div class="card p-4" style="min-width: 340px" :style="{'height': responsiveBarHeight}">
             <div class="d-flex justify-content-between">

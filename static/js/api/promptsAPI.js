@@ -14,7 +14,7 @@ const ApiFetchPromptById = async (promptId) => {
     return res.json();
 }
 
-const ApiCreatePrompt = async (promptName) => {
+const ApiCreatePrompt = async (promptName, type) => {
     const api_url = V.build_api_url('prompts', 'prompts')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'POST',
@@ -23,7 +23,7 @@ const ApiCreatePrompt = async (promptName) => {
         },
         body: JSON.stringify({
             "name": promptName,
-            "type": "freeform",
+            "type": type,
             "prompt": "",
         })
     })
@@ -40,7 +40,7 @@ const ApiUpdatePrompt = async (prompt) => {
         body: JSON.stringify({
             "id": prompt.id,
             "name": prompt.name,
-            "type": "freeform",
+            "type": prompt.type,
             "prompt": prompt.prompt,
             "description": prompt.description,
             "tags": prompt.tags,
