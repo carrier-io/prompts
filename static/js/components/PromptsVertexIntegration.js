@@ -13,6 +13,7 @@ const PromptsVertexIntegration = {
                 model_name: ""
             },
             isComponentMounted: false,
+            tokens_limit: 8192,
         }
     },
     computed: {
@@ -21,7 +22,10 @@ const PromptsVertexIntegration = {
         },
         isInvalid() {
             return this.isRunClicked && !this.editableIntegrationSetting.model_name
-        }
+        },
+        selectedModel() {
+            return this.filteredModels.find(model => model.id === this.editableIntegrationSetting.model_name);
+        },
     },
     mounted() {
         if (this.selectedPrompt.model_settings) {
@@ -38,7 +42,14 @@ const PromptsVertexIntegration = {
                 this.$emit('update-setting', newVal)
             },
             deep: true
-        }
+        },
+        selectedModel(newVal) {
+            if (newVal) {
+                this.tokens_limit = newVal.token_limit.output;
+            } else {
+                this.tokens_limit = 8192; // default value
+            }
+          },
     },
     template: `
         <div>
@@ -49,7 +60,7 @@ const PromptsVertexIntegration = {
                         v-model="editableIntegrationSetting.model_name"
                         data-size="8"
                         data-style="btn">
-                        <option v-for="model in filteredModels" :value="model">{{ model }}</option>
+                        <option v-for="model in filteredModels" :value="model.id">{{ model.name }}</option>
                     </select>
                 </div>
                 <prompts-range
@@ -67,7 +78,8 @@ const PromptsVertexIntegration = {
                     title="Token limit"
                     :step="1"
                     :minValue="1"
-                    :maxValue="8000"
+                    :maxValue="tokens_limit"
+                    :key="editableIntegrationSetting.model_name"
                     v-model:modelValue="editableIntegrationSetting.max_decode_steps"
                 ></prompts-range>
                 <prompts-range
