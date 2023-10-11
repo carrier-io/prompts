@@ -1,5 +1,5 @@
 const PromptsModalCreate = {
-    props: ['editableRoles', 'modalType', 'isModalLoading'],
+    props: ['modalType', 'isModalLoading'],
     emits: ['close-create-modal', 'save-prompt', 'update-prompt'],
     data() {
         return {

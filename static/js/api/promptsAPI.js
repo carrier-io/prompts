@@ -157,6 +157,28 @@ const ApiRunTest = async (prompt, input = null, integrationUid) => {
     return res.json();
 }
 
+const ApiRunChat = async (prompt, input = null, chat_history, integrationUid) => {
+    const api_url = V.build_api_url('prompts', 'predict')
+    const params = {
+        "prompt_id": prompt.id,
+        "integration_uid": integrationUid,
+        "integration_settings": prompt.integration_settings,
+        "update_prompt": true,
+        "input": input,
+        "chat_history": chat_history,
+    }
+
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+    })
+
+    return res.json();
+}
+
 const ApiDeletePrompt = async (promptId) => {
     const api_url = V.build_api_url('prompts', 'prompt')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptId}`, {

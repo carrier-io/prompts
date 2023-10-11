@@ -58,7 +58,7 @@ const PromptsListAside = {
                                 <li class="dropdown-item" @click="$emit('open-create-modal', 'freeform')">
                                     <span class="pl-2">Completion prompt</span></li>
                                 <li class="dropdown-item" @click="$emit('open-create-modal', 'chat')">
-                                    <span class="pl-2">Chat prompt</span></li>
+                                    <span class="pl-2">Chat prompt</span>
                                 </li>
                             </ul>
                         </div>

@@ -198,7 +198,6 @@ const Prompts = {
                     @save-prompt="handleCreatePrompt"
                     @update-prompt="handleCreatePrompt"
                     :modalType="modalType"
-                    :editableRoles="editableRoles"
                     :isModalLoading="isModalLoading">
                 </prompts-modal-create>
             </transition>

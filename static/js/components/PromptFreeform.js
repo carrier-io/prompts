@@ -1,9 +1,21 @@
 const PromptFreeform = {
-    props: ['selectedPrompt', 'editablePrompt', 'isPromptLoading', 'isLatestVersion', 'testInput', 'testOutput', 'isRunLoading'],
+    props: [
+        'selectedPrompt',
+        'editablePrompt',
+        'isPromptLoading',
+        'isLatestVersion',
+        'testInput',
+        'testOutput',
+        'isRunLoading',
+        'isRunClicked',
+    ],
     computed: {
         isDisableAddButton() {
             return !this.testOutput[0].content || !this.testInput ||
                 this.testOutput[0].type === 'image' || this.testOutput.length > 1;
+        },
+        isInvalidTestInput() {
+            return this.isRunClicked && !this.testInput
         },
     },
     methods: {
@@ -82,7 +94,7 @@ const PromptFreeform = {
                     <div class="d-flex">
                         <div v-if="editablePrompt.is_active_input">
                             <button :disabled="isDisableAddButton"
-                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="addTestResult">
+                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="$emit('add-test-result')">
                                     <i class="icon__18x18 icon-create-element mr-1"></i>
                                     <span>Add to examples</span>
                             </button>

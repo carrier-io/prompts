@@ -60,9 +60,6 @@ const PromptsParams = {
         isInvalidContext() {
             return this.isRunClicked && !this.editablePrompt.prompt
         },
-        isInvalidTestInput() {
-            return this.isRunClicked && !this.testInput
-        },
         isLatestVersion() {
             return this.selectedPrompt.version === 'latest';
         },
@@ -133,13 +130,16 @@ const PromptsParams = {
         },
         fetchPromptVersions(promptName) {
             fetchPromptVersionsAPI(promptName).then((prompts) => {
+                console.log(prompts)
                 this.promptVersions = prompts.map(({ id, version }) => ({ id, version }));
                 this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
             }).finally(() => {
                 this.isVersionLoaded = true;
                 setTimeout(() => {
-                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
-                    $('#selectedPromptVersion').selectpicker('refresh');
+                    if (this.selectedPromptVersion) {
+                        $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
+                        $('#selectedPromptVersion').selectpicker('refresh');
+                    }
                 }, 0)
             })
         },
@@ -264,13 +264,6 @@ const PromptsParams = {
                 })
             }
         },
-        // prepareImages(images) {
-        //     return images.map(img => {
-        //         return {
-        //             data: `data:${img.type};base64, ${img.data}`
-        //         }
-        //     })
-        // },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
             this.isContextLoading= true;
@@ -376,6 +369,7 @@ const PromptsParams = {
                             Save version
                         </button>
                         <button type="button" :disabled="isRunLoading || isPromptLoading"
+                            v-if="selectedPrompt.type === 'freeform'"
                             class="btn btn-basic d-flex align-items-center" @click="runTest">
                             Run
                             <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
@@ -453,29 +447,29 @@ const PromptsParams = {
             <PromptFreeform
                 v-show="editablePrompt.type === 'freeform'"
                 :selectedPrompt="selectedPrompt"
-                :isPromptLoading="isPromptLoading"
                 :isLatestVersion="isLatestVersion"
                 :editablePrompt="editablePrompt"
                 :isPromptLoading="isPromptLoading"
                 :testOutput="testOutput"
                 :testInput="testInput"
                 :is-run-loading="isRunLoading"
+                :is-run-clicked="isRunClicked"
                 @run-test="runTest"
+                @add-test-result="addTestResult"
                 @change-test-input="changeTestInput"
                 @update-cbx-input="updateCbxInput">
             </PromptFreeform>
             <PromptChat
                 v-show="editablePrompt.type === 'chat'"
                 :selectedPrompt="selectedPrompt"
-                :isPromptLoading="isPromptLoading"
                 :isLatestVersion="isLatestVersion"
                 :editablePrompt="editablePrompt"
                 :isPromptLoading="isPromptLoading"
                 :testOutput="testOutput"
+                :integrations="integrations"
+                :selectedIntegration="selectedIntegration"
                 :testInput="testInput"
-                :is-run-loading="isRunLoading"
-                @run-test="runTest"
-                @change-test-input="changeTestInput"
+                @run-chat="isRunClicked = true"
                 @update-cbx-input="updateCbxInput">
             </PromptChat>
         </div>
