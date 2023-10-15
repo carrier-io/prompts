@@ -8,20 +8,30 @@ const PromptsListAside = {
         return {
             isTagsLoaded: false,
             allTags: [],
+            windowHeight: window.innerHeight,
         }
     },
     computed: {
         responsiveAsideHeight() {
-            return `${(window.innerHeight - 95)}px`;
+            return `${(this.windowHeight - 95)}px`;
         },
         responsiveTableHeight() {
-            return `${(window.innerHeight - 371)}px`;
+            return `${(this.windowHeight - 371)}px`;
         }
     },
     mounted() {
         this.fetchTags();
+        this.$nextTick(() => {
+            window.addEventListener('resize', this.onResize);
+        })
+    },
+    beforeDestroy() {
+        window.removeEventListener('resize', this.onResize);
     },
     methods: {
+        onResize() {
+            this.windowHeight = window.innerHeight
+        },
         fetchTags() {
             this.$nextTick(() => {
                 this.isTagsLoaded = false;

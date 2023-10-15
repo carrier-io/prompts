@@ -28,7 +28,7 @@ const PromptFreeform = {
     },
     template: `
         <div class="flex-grow-1">
-            <div class="card mt-3 p-28">
+            <div class="mt-3">
              <p class="font-h6 font-bold text-gray-800" style="color: #32325D">EXAMPLES</p>
                 <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
                     <div class="layout-spinner">
@@ -79,7 +79,7 @@ const PromptFreeform = {
                 </div>
             </div>
 
-            <div class="card mt-3 p-28">
+            <div class="mt-3">
                 <div class="d-flex justify-content-between mb-2">
                     <div class="d-flex align-items-center">
                         <p class="font-h6 font-bold text-gray-800 mr-4" style="color: #32325D">TEST</p>
@@ -134,7 +134,7 @@ const PromptFreeform = {
                                         <textarea type="text" class="form-control form-control-alternative"
                                             rows="5"
                                             :value="testInput"
-                                            @change="('change-test-input', $event)">
+                                            @change="$emit('change-test-input', $event)">
                                         </textarea>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
