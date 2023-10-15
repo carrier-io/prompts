@@ -340,7 +340,6 @@ const PromptsParams = {
         deleteVersion() {
             ApiDeletePrompt(this.selectedPromptVersion.id).then(data => {
                 showNotify('SUCCESS', 'Version delete.');
-                console.log('promptVersions', this.promptVersions)
                 const latestVersionId = this.promptVersions.find(v => v.version === 'latest').id;
                 vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
             });
@@ -354,7 +353,6 @@ const PromptsParams = {
             });
         },
         changeTestInput({ target: { value }}) {
-            console.log('value', value)
             this.testInput = value;
         }
     },

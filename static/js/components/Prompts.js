@@ -57,7 +57,6 @@ const Prompts = {
     },
     methods: {
         FetchPromptById(promptId) {
-            // TODO ok
             this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
                 this.isPromptLoading = false;
