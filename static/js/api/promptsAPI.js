@@ -44,6 +44,7 @@ const ApiUpdatePrompt = async (prompt) => {
             "prompt": prompt.prompt,
             "description": prompt.description,
             "tags": prompt.tags,
+            "embedding": prompt.embeddings,
             "is_active_input": prompt.is_active_input,
         })
     })
@@ -245,6 +246,14 @@ const updatePromptNameAPI = async (promptId, promptName) => {
 const fetchPromptVersionsAPI = async (promptName) => {
     const api_url = V.build_api_url('prompts', 'versions')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}/${promptName}`, {
+        method: 'GET',
+    })
+    return res.json();
+}
+
+const fetchPromptEmbeddingsAPI = async () => {
+    const api_url = V.build_api_url('embeddings', 'embedding')
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'GET',
     })
     return res.json();
