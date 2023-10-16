@@ -55,16 +55,18 @@ class ProjectAPI(api_tools.APIModeHandler):
         _input = data.input_
         prompt = self.module.get_by_id(project_id, data.prompt_id)
         _context = prompt["prompt"]
-        embeddings = prompt["embeddings"]
+        embeddings = prompt.get("embeddings", [])
         model_name = model_settings["model_name"]
         encoding = tiktoken.encoding_for_model(model_name)
+        top_k = prompt.get("top_k", 20)
+        cutoff = prompt.get("cutoff", 0.1)
         try:
             for each in embeddings:
                 max_tokens = MODEL_TOKENS_MAPPER.get(model_name, 4000)
                 tokens_for_completion = model_settings["max_tokens"]
                 tokens_for_context = max_tokens - tokens_for_completion
                 results_list = self.module.context.rpc_manager.call.embeddings_similarity_search(project_id, each["id"],
-                                                                                                 _input)
+                                                                                                 _input, top_k, cutoff)
                 for item in results_list:
                     if len(encoding.encode(item + _context)) <= tokens_for_context:
                         _context += item
