@@ -544,11 +544,20 @@ const PromptsParams = {
                         </label>
                         <p class="font-h6 font-weight-400">Disable input</p>
                     </div>
-                    <button type="button" :disabled="isRunLoading || isPromptLoading"
-                        class="btn btn-basic d-flex align-items-center" @click="runTest">
-                        Run
-                        <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                    </button>
+                    <div class="d-flex">
+                        <div v-if="editablePrompt.is_active_input">
+                            <button :disabled="isDisableAddButton"
+                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="addTestResult">
+                                    <i class="icon__18x18 icon-create-element mr-1"></i>
+                                    <span>Add to examples</span>
+                            </button>
+                        </div>
+                        <button type="button" :disabled="isRunLoading || isPromptLoading"
+                            class="btn btn-basic d-flex align-items-center ml-2" @click="runTest">
+                            Run
+                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="position-relative" style="height: 188px" v-if="isPromptLoading">
                     <div class="layout-spinner">
@@ -636,7 +645,7 @@ const PromptsParams = {
             <div v-else :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
                 <div class="select-validation" v-if="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
-                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                    <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"
                         @change="selectPromptVersion"
                         data-style="btn">
                         <option v-for="version in promptVersions" :value="version.id">{{ version.version }}</option>
@@ -670,7 +679,7 @@ const PromptsParams = {
                 </div>
                 <div class="select-validation mt-4" :class="{'invalid-select': !showError(selectedIntegration)}">
                     <p class="font-h5 font-semibold mb-1">Select integration</p>
-                    <select id="selectIntegration" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                    <select id="selectIntegration" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"
                         v-model="selectedIntegration"
                         data-style="btn">
                         <option v-for="integration in integrations" :value="integration">{{ integration.config.name }}</option>
