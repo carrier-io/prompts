@@ -8,17 +8,11 @@ const PromptChat = {
         }
     },
     watch: {
-        editablePrompt: {
-            handler: function (newVal, oldVal) {
-                if (!newVal) return
-                this.cleatChat();
-                this.newMessage = '';
-            },
-            deep: true
-        }
-    },
-    computed() {
-
+        'editablePrompt.id': function (newVal, oldVal) {
+            if (!newVal) return
+            this.cleatChat();
+            this.newMessage = '';
+        },
     },
     methods: {
         addEmptyParamsRow()  {
@@ -193,7 +187,7 @@ const PromptChat = {
                         <div v-if="chat_history.length > 0" 
                             class="d-flex gap-3 align-items-center rounded-sm" :style="[ isAiRole(message.role) ? { 'background': '#F9FAFF'} : '' ]" 
                             v-for="message in chat_history">
-                            <p class="font-h6 font-weight-600 w-20 p-3 text-uppercase"
+                            <p class="font-h6 font-weight-600 p-3 text-uppercase" style="min-width: 4rem;"
                                 :style="[ isAiRole(message.role) ? { 'color': '#6C44DD' } : { 'color': '#757F99' }]">{{ message.role }}</p>
                             <div class="p-3">
                                 {{ message.content }}
