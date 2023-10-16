@@ -218,15 +218,12 @@ class RPC:
 
     @web.rpc("prompts_get_versions_by_prompt_name", "get_versions_by_prompt_name")
     def prompts_get_versions_by_prompt_name(self, project_id: int, prompt_name: str) -> list[dict]:
-        log.info("prompt_name")
-        log.info(prompt_name)
         with db.with_project_schema_session(project_id) as session:
             prompts = session.query(Prompt).filter(
                 Prompt.name == prompt_name
             ).order_by(
                 Prompt.version
             ).all()
-            log.info(prompts)
             return [prompt.to_json() for prompt in prompts]
 
     @web.rpc(f'prompts_prepare_prompt_struct', "prepare_prompt_struct")
