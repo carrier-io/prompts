@@ -31,6 +31,7 @@ const PromptsParams = {
                 prompt: "",
                 examples: [],
                 model_settings: {},
+                embeddings: null,
             },
             testInput: '',
             testOutput: [{
@@ -44,6 +45,7 @@ const PromptsParams = {
             isRunLoading: false,
             isContextLoading: false,
             promptTags: [],
+            promptEmbeddings: [],
             showTagsModal: false,
             promptVersions: [],
             selectedPromptVersion: {
@@ -76,6 +78,11 @@ const PromptsParams = {
         }
     },
     watch: {
+        promptEmbeddings(newVal, oldVal) {
+            this.$nextTick(() => {
+                 $('.selectpicker').selectpicker('render').selectpicker('refresh');
+            })
+        },
         selectedPrompt: {
             handler: function (newVal, oldVal) {
                 this.editablePrompt = _.cloneDeep(newVal);
@@ -99,6 +106,13 @@ const PromptsParams = {
                 }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
+                if (newVal["embeddings"].length > 0) {
+                    this.editablePrompt.embeddings = newVal["embeddings"][0]["id"];
+                }
+                else {
+                    this.editablePrompt.embeddings = 0;
+                }
+                this.fetchPromptEmbeddings();
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
                     $("#selectIntegration").selectpicker('refresh');
@@ -155,6 +169,16 @@ const PromptsParams = {
             this.editablePrompt.model_settings = this.integrations
                 .find(integration => integration.uid === newVal.uid).settings;
             this.selectedComponentInt = newVal.name;
+        },
+        fetchPromptEmbeddings() {
+            fetchPromptEmbeddingsAPI().then((embeddings) => {
+                this.promptEmbeddings = embeddings.map(({ id, library_name }) => ({ id, library_name }));
+                this.promptEmbeddings = [{id: 0, library_name: "Without embeddings"}].concat(this.promptEmbeddings);
+            })
+        },
+        handle_advanced_settings_icon(e) {
+            this.advanced_settings_icon = this.$refs.advanced_settings.classList.contains('show') ?
+                'icon__16x16 icon-arrow-up__16 rotate-90' : 'icon__16x16 icon-arrow-down__16'
         },
         filterModelsByType(models, prompt) {
             try {
@@ -271,10 +295,21 @@ const PromptsParams = {
         // },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
-            this.isContextLoading= true;
+            this.isContextLoading = true;
+            this.editablePrompt.embeddings = $('#selectedPromptEmbedding').find(":selected").val();
             ApiUpdatePrompt(this.editablePrompt).then(data => {
                 this.isContextLoading = false;
                 showNotify('SUCCESS', `Context updated.`)
+            });
+        },
+        updateEmbeddings(e) {
+            this.editablePrompt.embeddings = $('#selectedPromptEmbedding').find(":selected").val();
+            console.log("this.editablePrompt.embeddings")
+            console.log(this.editablePrompt)
+            console.log(this.editablePrompt.embeddings)
+            ApiUpdatePrompt(this.editablePrompt).then(data => {
+                this.isContextLoading = false;
+                showNotify('SUCCESS', `Embedding updated.`)
             });
         },
         saveSettings() {
@@ -693,6 +728,28 @@ const PromptsParams = {
                     </prompts-tags-modal>
                 </transition>
             </div>
+                 <div class="section" style="margin-top: 50px" @click="handle_advanced_settings_icon">
+                    <div class="row" data-toggle="collapse" data-target="#advancedSettings" role="button" aria-expanded="false" aria-controls="advancedSettings">
+                        <div class="col">
+                            <p class="font-h5 font-bold">ADVANCED SETTINGS
+                                <button type="button" class="btn btn-nooutline-secondary p-0 pb-1 ml-1"
+                                    data-toggle="collapse" data-target="#advancedSettings">
+                                    <i class='icon__16x16 icon-arrow-up__16 rotate-90'></i>
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="collapse row pt-4 px-1" id="advancedSettings" ref="advanced_settings">
+                        <div class="select-validation mt-4" style="min-width: 340px">
+                            <p class="font-h5 font-semibold mb-1">Select embeddings</p>
+
+                            <select id="selectedPromptEmbedding" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
+                            @change="updateEmbeddings" v-model="editablePrompt.embeddings" data-style="btn">
+                                <option v-for="embedding in promptEmbeddings" :value="embedding.id">{{ embedding.library_name }}</option>
+                            </select>
+                        </div>
+                    </div>
+                 </div>
         </div>
     </div>
     `
