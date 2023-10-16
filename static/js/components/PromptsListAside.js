@@ -8,20 +8,30 @@ const PromptsListAside = {
         return {
             isTagsLoaded: false,
             allTags: [],
+            windowHeight: window.innerHeight,
         }
     },
     computed: {
         responsiveAsideHeight() {
-            return `${(window.innerHeight - 95)}px`;
+            return `${(this.windowHeight - 95)}px`;
         },
         responsiveTableHeight() {
-            return `${(window.innerHeight - 371)}px`;
+            return `${(this.windowHeight - 371)}px`;
         }
     },
     mounted() {
         this.fetchTags();
+        this.$nextTick(() => {
+            window.addEventListener('resize', this.onResize);
+        })
+    },
+    beforeDestroy() {
+        window.removeEventListener('resize', this.onResize);
     },
     methods: {
+        onResize() {
+            this.windowHeight = window.innerHeight
+        },
         fetchTags() {
             this.$nextTick(() => {
                 this.isTagsLoaded = false;
@@ -45,11 +55,23 @@ const PromptsListAside = {
                 <div>
                     <div class="d-flex justify-content-end">
                         <ImportPromptButton></ImportPromptButton>
-                        <button type="button"
-                            @click="$emit('open-create-modal')"
-                            class="btn btn-basic btn-sm btn-icon__sm">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <div class="dropdown left dropdown_action mr-2">
+                            <button class="btn btn-sm btn-icon__sm dropdown-toggle btn-secondary"
+                                    role="button"
+                                    id="dropdownMenuAction"
+                                    data-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuAction">
+                                <li class="px-3 py-1 font-weight-500">Create</li>
+                                <li class="dropdown-item" @click="$emit('open-create-modal', 'freeform')">
+                                    <span class="pl-2">Completion prompt</span></li>
+                                <li class="dropdown-item" @click="$emit('open-create-modal', 'chat')">
+                                    <span class="pl-2">Chat prompt</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

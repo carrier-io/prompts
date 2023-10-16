@@ -3,6 +3,7 @@ const PromptsParams = {
         selectedPrompt: {
             type: Object,
             default: {
+                "id": null,
                 "name": "",
                 "prompt": "",
                 "examples": [],
@@ -16,6 +17,8 @@ const PromptsParams = {
         isPromptLoading: false,
     },
     components: {
+        PromptFreeform,
+        PromptChat,
         PromptsVertexIntegration,
         PromptsOpenaiIntegration,
         PromptsAzureOpenaiIntegration,
@@ -39,7 +42,7 @@ const PromptsParams = {
                 content: '',
             }],
             isRunClicked: false,
-            selectedIntegration: "",
+            selectedIntegration: {},
             filteredModels: [],
             selectedComponentInt: "",
             isRunLoading: false,
@@ -54,14 +57,12 @@ const PromptsParams = {
             },
             newDescription: '',
             isVersionLoaded: false,
+            windowHeight: window.innerHeight,
         }
     },
     computed: {
         isInvalidContext() {
             return this.isRunClicked && !this.editablePrompt.prompt
-        },
-        isInvalidTestInput() {
-            return this.isRunClicked && !this.testInput
         },
         isLatestVersion() {
             return this.selectedPrompt.version === 'latest';
@@ -71,10 +72,13 @@ const PromptsParams = {
                 this.testOutput[0].type === 'image' || this.testOutput.length > 1;
         },
         responsiveBarHeight() {
-            return `${(window.innerHeight - 95)}px`;
+            return `${(this.windowHeight - 95)}px`;
         },
         responsiveContentHeight() {
-            return `${(window.innerHeight - 155)}px`;
+            return `${(this.windowHeight - 155)}px`;
+        },
+        responsiveMainContainerHeight() {
+            return `${(this.windowHeight - 207)}px`;
         }
     },
     watch: {
@@ -85,6 +89,7 @@ const PromptsParams = {
         },
         selectedPrompt: {
             handler: function (newVal, oldVal) {
+                if (newVal.id === this.editablePrompt.id) return;
                 this.editablePrompt = _.cloneDeep(newVal);
                 if (newVal.integration_uid) {
                     this.integrations.forEach(integration => {
@@ -133,8 +138,17 @@ const PromptsParams = {
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
         $('#variablesTable').bootstrapTable();
+        this.$nextTick(() => {
+            window.addEventListener('resize', this.onResize);
+        })
+    },
+    beforeDestroy() {
+        window.removeEventListener('resize', this.onResize);
     },
     methods: {
+        onResize() {
+            this.windowHeight = window.innerHeight
+        },
         selectPromptVersion({ target: { value }}) {
             this.selectedPromptVersion = this.promptVersions.find(v => v.id === +value);
         },
@@ -150,8 +164,10 @@ const PromptsParams = {
             }).finally(() => {
                 this.isVersionLoaded = true;
                 setTimeout(() => {
-                    $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
-                    $('#selectedPromptVersion').selectpicker('refresh');
+                    if (this.selectedPromptVersion) {
+                        $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
+                        $('#selectedPromptVersion').selectpicker('refresh');
+                    }
                 }, 0)
             })
         },
@@ -283,16 +299,10 @@ const PromptsParams = {
                     showNotify('ERROR', err)
                 }).finally(() => {
                     this.isRunLoading = false;
+                    this.isRunClicked = false;
                 })
             }
         },
-        // prepareImages(images) {
-        //     return images.map(img => {
-        //         return {
-        //             data: `data:${img.type};base64, ${img.data}`
-        //         }
-        //     })
-        // },
         updatePrompt(e) {
             this.editablePrompt.prompt = e.target.value;
             this.isContextLoading = true;
@@ -369,7 +379,7 @@ const PromptsParams = {
                 vueVm.registered_components['prompts'].FetchPromptById(latestVersionId);
             });
         },
-        updateInput({ target: { checked }}) {
+        updateCbxInput({ target: { checked }}) {
             this.editablePrompt.is_active_input = !checked;
             this.isRunClicked = false;
             const isActive = !checked ? 'enabled' : 'disabled';
@@ -377,6 +387,9 @@ const PromptsParams = {
                 showNotify('INFO', `Input ${isActive}.`)
             });
         },
+        changeTestInput({ target: { value }}) {
+            this.testInput = value;
+        }
     },
     template: `
     <div class="d-flex">
@@ -406,228 +419,107 @@ const PromptsParams = {
                             Save version
                         </button>
                         <button type="button" :disabled="isRunLoading || isPromptLoading"
+                            v-if="selectedPrompt.type === 'freeform'"
                             class="btn btn-basic d-flex align-items-center" @click="runTest">
                             Run
                             <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
                         </button>
                     </div>
                 </div>
-                <div class="position-relative" style="height: 164px" v-show="isPromptLoading">
-                    <div class="layout-spinner">
-                        <div class="spinner-centered">
-                            <i class="spinner-loader__32x32"></i>
-                        </div>
-                    </div>
-                </div>
-                <div v-show="!isPromptLoading">
-                    <promptsEditorField
-                        title="Description"
-                        :key="selectedPrompt.id"
-                        :editable-prompt="editablePrompt"
-                        v-model="editablePrompt.description">
-                    </promptsEditorField>
-                    <div>
-                        <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">CONTEXT</p>
-                        <div class="w-100">
-                            <div class="custom-input w-100 position-relative"
-                                :class="{ 'invalid-input': isInvalidContext }">
-                                <textarea
-                                    :disabled="isContextLoading || !isLatestVersion"
-                                    :value="editablePrompt.prompt"
-                                    @change="updatePrompt"
-                                    class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
-                                    <div class="spinner__right-bottom" v-if="isContextLoading">
-                                        <i class="spinner-loader__16x16"></i>
-                                    </div>
+                <div class="container-scroll mt-3" :style="{'height': responsiveMainContainerHeight}">
+                    <div class="position-relative" style="height: 164px" v-show="isPromptLoading">
+                        <div class="layout-spinner">
+                            <div class="spinner-centered">
+                                <i class="spinner-loader__32x32"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <p class="font-h6 font-bold text-gray-800" style="color: #32325D">VARIABLES</p>
-                        <table
-                            id="variablesTable"
-                            class="w-100 table-transparent mb-2 params-table"
-                            data-toggle="table"
-                            data-unique-id="id"
-                        >
-                            <thead class="thead-light">
-                                <tr>
-                                    <th data-field="id" data-visible="false"></th>
-                                    <th data-field="name"
-                                        data-formatter="VariableTable.textareaFormatter"
-                                    >
-                                        <span class="font-h6 font-semibold text-gray-800">Name</span>
-                                    </th>
-                                    <th data-field="value"
-                                        data-formatter="VariableTable.textareaFormatter"
-                                    >
-                                        <span class="font-h6 font-semibold text-gray-800">Value</span>
-                                    </th>
-                                    <th data-width="56" data-width-unit="px"
-                                        data-field="action"
-                                        data-formatter="VariableTable.deleteFormatter"
-                                    ></th>
-                                </tr>
-                            </thead>
-                            <tbody style="border-bottom: solid 1px #EAEDEF">
-                            </tbody>
-                        </table>
-                        <button type="button" class="btn btn-sm btn-secondary mt-2"
-                            :disabled="!isLatestVersion"
-                            @click="addEmptyVariableRow">
-                            <i class="fas fa-plus mr-2"></i>Add Variable
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mt-3 p-28">
-             <p class="font-h6 font-bold text-gray-800" style="color: #32325D">EXAMPLES</p>
-                <div class="position-relative" style="height: 116px" v-show="isPromptLoading">
-                    <div class="layout-spinner">
-                        <div class="spinner-centered">
-                            <i class="spinner-loader__32x32"></i>
+                    <div v-show="!isPromptLoading">
+                        <promptsEditorField
+                            title="Description"
+                            :key="selectedPrompt.id"
+                            :editable-prompt="editablePrompt"
+                            v-model="editablePrompt.description">
+                        </promptsEditorField>
+                        <div>
+                            <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">CONTEXT</p>
+                            <div class="w-100">
+                                <div class="custom-input w-100 position-relative"
+                                    :class="{ 'invalid-input': isInvalidContext }">
+                                    <textarea
+                                        :disabled="isContextLoading || !isLatestVersion"
+                                        :value="editablePrompt.prompt"
+                                        @change="updatePrompt"
+                                        class="form-control password-mask" rows="5" id="SecretUpdateValue"></textarea>
+                                        <div class="spinner__right-bottom" v-if="isContextLoading">
+                                            <i class="spinner-loader__16x16"></i>
+                                        </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div v-show="!isPromptLoading">
-                    <table
-                        id="promptsParamsTable"
-                        class="w-100 table-transparent mb-2 params-table"
-                        data-toggle="table"
-                        data-unique-id="id"
-                    >
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="id" data-visible="false"></th>
-                                <th data-field="is_active"
-                                    data-formatter="ParamsTable.cbxFormatter"
-                                ></th>
-                                <th data-field="input"
-                                    data-formatter="ParamsTable.textareaFormatter"
-                                >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
-                                </th>
-                                <th data-field="output"
-                                    data-formatter="ParamsTable.textareaFormatter"
-                                >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input expected result.</span>
-                                </th>
-                                <th data-width="56" data-width-unit="px"
-                                    data-field="action"
-                                    data-formatter="ParamsTable.parametersDeleteFormatter"
-                                ></th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn btn-sm btn-secondary mt-2"
-                        :disabled="!isLatestVersion"
-                        @click="addEmptyParamsRow">
-                        <i class="fas fa-plus mr-2"></i>Add Parameter
-                    </button>
-                </div>
-            </div>
-
-            <div class="card mt-3 p-28">
-                <div class="d-flex justify-content-between mb-2">
-                    <div class="d-flex align-items-center">
-                        <p class="font-h6 font-bold text-gray-800 mr-4" style="color: #32325D">PROMPT</p>
-                        <label class="custom-toggle mr-2" style="margin-top: 0">
-                            <input type="checkbox"
-                                   :checked="!editablePrompt.is_active_input"
-                                   @click="updateInput">
-                            <span class="custom-toggle_slider round"></span>
-                        </label>
-                        <p class="font-h6 font-weight-400">Disable input</p>
-                    </div>
-                    <div class="d-flex">
-                        <div v-if="editablePrompt.is_active_input">
-                            <button :disabled="isDisableAddButton"
-                                class="btn btn-secondary btn-icon__purple mr-2 d-flex cursor-pointer align-items-center" @click="addTestResult">
-                                    <i class="icon__18x18 icon-create-element mr-1"></i>
-                                    <span>Add to examples</span>
+                        <div class="mt-3">
+                            <p class="font-h6 font-bold text-gray-800" style="color: #32325D">VARIABLES</p>
+                            <table
+                                id="variablesTable"
+                                class="w-100 table-transparent mb-2 params-table"
+                                data-toggle="table"
+                                data-unique-id="id"
+                            >
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th data-field="id" data-visible="false"></th>
+                                        <th data-field="name"
+                                            data-formatter="VariableTable.textareaFormatter"
+                                        >
+                                            <span class="font-h6 font-semibold text-gray-800">Name</span>
+                                        </th>
+                                        <th data-field="value"
+                                            data-formatter="VariableTable.textareaFormatter"
+                                        >
+                                            <span class="font-h6 font-semibold text-gray-800">Value</span>
+                                        </th>
+                                        <th data-width="56" data-width-unit="px"
+                                            data-field="action"
+                                            data-formatter="VariableTable.deleteFormatter"
+                                        ></th>
+                                    </tr>
+                                </thead>
+                                <tbody style="border-bottom: solid 1px #EAEDEF">
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-sm btn-secondary mt-2"
+                                :disabled="!isLatestVersion"
+                                @click="addEmptyVariableRow">
+                                <i class="fas fa-plus mr-2"></i>Add Variable
                             </button>
                         </div>
-                        <button type="button" :disabled="isRunLoading || isPromptLoading"
-                            class="btn btn-basic d-flex align-items-center ml-2" @click="runTest">
-                            Run
-                            <i v-if="isRunLoading" class="preview-loader__white ml-2"></i>
-                        </button>
                     </div>
-                </div>
-                <div class="position-relative" style="height: 188px" v-if="isPromptLoading">
-                    <div class="layout-spinner">
-                        <div class="spinner-centered">
-                            <i class="spinner-loader__32x32"></i>
-                        </div>
-                    </div>
-                </div>
-                <div v-else>
-                    <table
-                        class="w-100 table-transparent mb-2 params-table"
-                        id="testResult">
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="inputTest"
-                                    v-if="editablePrompt.is_active_input"
-                                    >
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Input</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input condition or question.</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                            <tr>
-                                <td class="p-2" v-if="editablePrompt.is_active_input">
-                                    <div class="custom-input" :class="{ 'invalid-input': isInvalidTestInput }">
-                                        <textarea type="text" class="form-control form-control-alternative"
-                                            rows="5"
-                                            v-model="testInput">
-                                        </textarea>
-                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
-                                    </div>
-                                </td>
-                                <td style="width: 56px;" class="p-2" v-if="editablePrompt.is_active_input">
-                                    <button :disabled="isDisableAddButton"
-                                        class="btn btn-default btn-xs btn-table btn-icon__xs prompt_setting" @click="addTestResult">
-                                        <i class="icon__14x14 icon-add-column"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                        <thead class="thead-light">
-                            <tr>
-                                <th data-field="outputTest">
-                                    <span class="font-h6 font-semibold text-gray-800 mr-2">Output</span>
-                                    <span class="font-h5 font-weight-400 text-capitalize text-gray-600">Input result.</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody style="border-bottom: solid 1px #EAEDEF">
-                            <tr v-for="message in testOutput">
-                                <td class="p-2">
-                                    <div v-if="message.type === 'image'" class="text-center">
-                                        <img :src="message.content">
-                                    </div>
-                                    <div v-if="message.type === 'text'">
-                                        <textarea disabled type="text"
-                                            rows="5"
-                                            style="color: var(--green)"
-                                            v-model="message.content"
-                                            class="form-control form-control-alternative">
-                                        </textarea>
-                                        <div class="invalid-tooltip invalid-tooltip-custom"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-
-                    </table>
+                    <PromptFreeform
+                        v-show="editablePrompt.type === 'freeform'"
+                        :selectedPrompt="selectedPrompt"
+                        :isLatestVersion="isLatestVersion"
+                        :editablePrompt="editablePrompt"
+                        :isPromptLoading="isPromptLoading"
+                        :testOutput="testOutput"
+                        :testInput="testInput"
+                        :is-run-loading="isRunLoading"
+                        :is-run-clicked="isRunClicked"
+                        @run-test="runTest"
+                        @add-test-result="addTestResult"
+                        @change-test-input="changeTestInput"
+                        @update-cbx-input="updateCbxInput">
+                    </PromptFreeform>
+                    <PromptChat
+                        v-show="editablePrompt.type === 'chat'"
+                        :selectedPrompt="selectedPrompt"
+                        :isLatestVersion="isLatestVersion"
+                        :editablePrompt="editablePrompt"
+                        :isPromptLoading="isPromptLoading"
+                        :integrations="integrations"
+                        :selectedIntegration="selectedIntegration"
+                        @run-chat="isRunClicked = true"
+                        @update-cbx-input="updateCbxInput">
+                    </PromptChat>
                 </div>
             </div>
         </div>
@@ -642,7 +534,7 @@ const PromptsParams = {
                     </div>
                 </div>
             </div>
-            <div v-else :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
+            <div v-show="!isPromptLoading" :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
                 <div class="select-validation" v-if="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"

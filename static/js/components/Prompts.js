@@ -31,6 +31,7 @@ const Prompts = {
             isModalLoading: false,
             isVersionModalLoading: false,
             isTagsLoaded: false,
+            newPromptType: null,
         }
     },
     mounted() {
@@ -73,7 +74,8 @@ const Prompts = {
             }
 
         },
-        openCreateModal(modalType, prompt = '') {
+        openCreateModal(modalType) {
+            this.newPromptType = modalType;
             this.showCreateModal = true;
         },
         openCreateVersionModal(modalVersionType, prompt = '') {
@@ -81,7 +83,7 @@ const Prompts = {
         },
         handleCreatePrompt(newRoleName) {
             this.isModalLoading = true;
-            ApiCreatePrompt(newRoleName, this.selectedMode).then(data => {
+            ApiCreatePrompt(newRoleName, this.newPromptType).then(data => {
                 this.refreshPromptsListTable(data.id);
                 this.isModalLoading = false;
                 this.showCreateModal = false;
@@ -196,7 +198,6 @@ const Prompts = {
                     @save-prompt="handleCreatePrompt"
                     @update-prompt="handleCreatePrompt"
                     :modalType="modalType"
-                    :editableRoles="editableRoles"
                     :isModalLoading="isModalLoading">
                 </prompts-modal-create>
             </transition>

@@ -14,7 +14,7 @@ const ApiFetchPromptById = async (promptId) => {
     return res.json();
 }
 
-const ApiCreatePrompt = async (promptName) => {
+const ApiCreatePrompt = async (promptName, type) => {
     const api_url = V.build_api_url('prompts', 'prompts')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'POST',
@@ -23,7 +23,7 @@ const ApiCreatePrompt = async (promptName) => {
         },
         body: JSON.stringify({
             "name": promptName,
-            "type": "freeform",
+            "type": type,
             "prompt": "",
         })
     })
@@ -40,7 +40,7 @@ const ApiUpdatePrompt = async (prompt) => {
         body: JSON.stringify({
             "id": prompt.id,
             "name": prompt.name,
-            "type": "freeform",
+            "type": prompt.type,
             "prompt": prompt.prompt,
             "description": prompt.description,
             "tags": prompt.tags,
@@ -154,6 +154,28 @@ const ApiRunTest = async (prompt, input = null, integrationUid) => {
         const errorMsg = await res.text();
         throw Error(errorMsg)
     }
+
+    return res.json();
+}
+
+const ApiRunChat = async (prompt, input = null, chat_history, integrationUid) => {
+    const api_url = V.build_api_url('prompts', 'predict')
+    const params = {
+        "prompt_id": prompt.id,
+        "integration_uid": integrationUid,
+        "integration_settings": prompt.integration_settings,
+        "update_prompt": true,
+        "input": input,
+        "chat_history": chat_history,
+    }
+
+    const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+    })
 
     return res.json();
 }
