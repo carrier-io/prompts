@@ -583,7 +583,7 @@ const PromptsParams = {
                     :selected-prompt="editablePrompt"
                     :filtered-models="filteredModels"
                     @update-setting="updateSetting"
-                    :key="selectedIntegration.uid"
+                    :key="selectedIntegration.uid + editablePrompt?.id"
                     v-if="selectedIntegration.name === 'vertex_ai'">
                 </PromptsVertexIntegration>
                 <PromptsOpenaiIntegration
@@ -591,7 +591,7 @@ const PromptsParams = {
                     :selected-prompt="editablePrompt"
                     :filtered-models="filteredModels"
                     @update-setting="updateSetting"
-                    :key="selectedIntegration.uid"
+                    :key="selectedIntegration.uid + editablePrompt?.id"
                     v-if="selectedIntegration.name === 'open_ai'">
                 </PromptsOpenaiIntegration>
                 <PromptsAzureOpenaiIntegration
@@ -599,7 +599,7 @@ const PromptsParams = {
                     :selected-prompt="editablePrompt"
                     :filtered-models="filteredModels"
                     @update-setting="updateSetting"
-                    :key="selectedIntegration.uid"
+                    :key="selectedIntegration.uid + editablePrompt?.id"
                     v-if="selectedIntegration.name === 'open_ai_azure'">
                 </PromptsAzureOpenaiIntegration>
                 <PromptsAiDialIntegration
@@ -607,7 +607,7 @@ const PromptsParams = {
                     :selected-prompt="editablePrompt"
                     :filtered-models="filteredModels"
                     @update-setting="updateSetting"
-                    :key="selectedIntegration.uid"
+                    :key="selectedIntegration.uid + editablePrompt?.id"
                     v-if="selectedIntegration.name === 'ai_dial'">
                 </PromptsAiDialIntegration>
                 <transition>
