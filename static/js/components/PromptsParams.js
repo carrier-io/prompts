@@ -563,7 +563,6 @@ const PromptsParams = {
                         @change-test-input="changeTestInput"
                         @update-cbx-input="updateCbxInput">
                     </PromptFreeform>
-                    embeddingSetting
                     <PromptChat
                         v-show="editablePrompt.type === 'chat'"
                         :selectedPrompt="selectedPrompt"
