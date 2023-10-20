@@ -54,16 +54,15 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         _input = data.input_
         prompt = self.module.get_by_id(project_id, data.prompt_id)
+        top_k = data.embedding_settings.get("top_k", 20)
+        cutoff = data.embedding_settings.get("cutoff", 0.1)
         if prompt:
             _context = prompt["prompt"]
             embeddings = prompt.get("embeddings", [])
-            top_k = prompt.get("top_k", 20)
-            cutoff = prompt.get("cutoff", 0.1)
         else:
             _context = data.context
             embeddings = []
-            top_k = 20
-            cutoff = 0.1
+
         model_name = model_settings["model_name"]
         encoding = tiktoken.encoding_for_model(model_name)
 
