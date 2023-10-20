@@ -50,3 +50,13 @@ class AIProvider:
     def parse_settings(cls, integration, settings):
         rpc_func = cls._get_rpc_function(integration.name, "__parse_settings")
         return rpc_func(settings)
+
+    @classmethod
+    def chat_completion(cls, project_id, integration, request_data):
+        rpc_func = cls._get_rpc_function(integration.name, "__chat_completion")
+        return rpc_func(project_id, integration.settings, request_data)
+
+    @classmethod
+    def completion(cls, project_id, integration, request_data):
+        rpc_func = cls._get_rpc_function(integration.name, "__completion")
+        return rpc_func(project_id, integration.settings, request_data)
