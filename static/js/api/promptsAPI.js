@@ -133,13 +133,16 @@ const ApiCreateVariable = async (promptId, name, value) => {
     return res.json();
 }
 
-const ApiRunTest = async (prompt, input = null, integrationUid) => {
+const ApiRunTest = async (prompt, input = null, integrationUid, embedding_settings = null) => {
     const api_url = V.build_api_url('prompts', 'predict')
     const params = {
         "prompt_id": prompt.id,
         "integration_uid": integrationUid,
         "integration_settings": prompt.integration_settings,
         update_prompt: true
+    }
+    if (embedding_settings) {
+        params["embedding_settings"] = embedding_settings;
     }
     if (input) params["input"] = input;
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {

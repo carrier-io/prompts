@@ -26,6 +26,7 @@ const PromptsParams = {
         PromptsTagsModal,
         PromptsEditorName,
         PromptsEditorField,
+        PromptsRange,
     },
     data() {
         return {
@@ -58,6 +59,11 @@ const PromptsParams = {
             newDescription: '',
             isVersionLoaded: false,
             windowHeight: window.innerHeight,
+            isShowEmbedding: false,
+            embedding_settings: {
+                "top_k": 20,
+                "cutoff": 0.1
+            }
         }
     },
     computed: {
@@ -288,7 +294,10 @@ const PromptsParams = {
             if (computedCondition) {
                 this.isRunLoading = true;
                 const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
-                ApiRunTest(this.editablePrompt, computedInput, integrationId.uid).then(data => {
+                const embeddingSetting = !!this.editablePrompt.embeddings && this.isShowEmbedding
+                    ? this.embedding_settings
+                    : null;
+                ApiRunTest(this.editablePrompt, computedInput, integrationId.uid, embeddingSetting).then(data => {
                     this.testOutput = data.messages;
                     this.testOutput.map(msg => {
                         if (msg.type === 'image') {
@@ -314,9 +323,6 @@ const PromptsParams = {
         },
         updateEmbeddings(e) {
             this.editablePrompt.embeddings = $('#selectedPromptEmbedding').find(":selected").val();
-            console.log("this.editablePrompt.embeddings")
-            console.log(this.editablePrompt)
-            console.log(this.editablePrompt.embeddings)
             ApiUpdatePrompt(this.editablePrompt).then(data => {
                 this.isContextLoading = false;
                 showNotify('SUCCESS', `Embedding updated.`)
@@ -389,6 +395,9 @@ const PromptsParams = {
         },
         changeTestInput({ target: { value }}) {
             this.testInput = value;
+        },
+        showEmbedding() {
+            this.isShowEmbedding = !this.isShowEmbedding;
         }
     },
     template: `
@@ -454,6 +463,45 @@ const PromptsParams = {
                                         <div class="spinner__right-bottom" v-if="isContextLoading">
                                             <i class="spinner-loader__16x16"></i>
                                         </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 mb-4">
+                            <div class="d-flex justify-content-between">
+                                <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">RETRIEVER</p>
+                                <label class="custom-toggle" style="margin-top: 0">
+                                    <input type="checkbox" 
+                                    @click="showEmbedding">
+                                    <span class="custom-toggle_slider round"></span>
+                                </label>
+                            </div>
+                            <div v-show="isShowEmbedding">
+                                <select 
+                                    id="selectedPromptEmbedding" class="selectpicker bootstrap-select__b bootstrap-select__b-sm w-100-imp displacement-ml-4"
+                                    @change="updateEmbeddings" v-model="editablePrompt.embeddings" data-style="btn">
+                                    <option v-for="embedding in promptEmbeddings" :value="embedding.id">{{ embedding.library_name }}</option>
+                                </select>
+                                <div class="d-flex justify-content-between gap-3 mt-4">
+                                    <prompts-range
+                                        @register="$root.register"
+                                        instance_name="prompts-range"
+                                        class="w-1/2"
+                                        title="Top-K"
+                                        :step="1"
+                                        :minValue="0"
+                                        :maxValue="20"
+                                        v-model:modelValue="embedding_settings.top_k"
+                                    ></prompts-range>
+                                    <prompts-range
+                                        @register="$root.register"
+                                        instance_name="prompts-range"
+                                        class="w-1/2"
+                                        title="Cut-off score"
+                                        :step="0.01"
+                                        :minValue="0"
+                                        :maxValue="1"
+                                        v-model:modelValue="embedding_settings.cutoff"
+                                    ></prompts-range>
                                 </div>
                             </div>
                         </div>
@@ -620,28 +668,6 @@ const PromptsParams = {
                     </prompts-tags-modal>
                 </transition>
             </div>
-                 <div class="section" style="margin-top: 50px" @click="handle_advanced_settings_icon">
-                    <div class="row" data-toggle="collapse" data-target="#advancedSettings" role="button" aria-expanded="false" aria-controls="advancedSettings">
-                        <div class="col">
-                            <p class="font-h5 font-bold">ADVANCED SETTINGS
-                                <button type="button" class="btn btn-nooutline-secondary p-0 pb-1 ml-1"
-                                    data-toggle="collapse" data-target="#advancedSettings">
-                                    <i class='icon__16x16 icon-arrow-up__16 rotate-90'></i>
-                                </button>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="collapse row pt-4 px-1" id="advancedSettings" ref="advanced_settings">
-                        <div class="select-validation mt-4" style="min-width: 340px">
-                            <p class="font-h5 font-semibold mb-1">Select embeddings</p>
-
-                            <select id="selectedPromptEmbedding" class="selectpicker bootstrap-select__b bootstrap-select__b-sm"
-                            @change="updateEmbeddings" v-model="editablePrompt.embeddings" data-style="btn">
-                                <option v-for="embedding in promptEmbeddings" :value="embedding.id">{{ embedding.library_name }}</option>
-                            </select>
-                        </div>
-                    </div>
-                 </div>
         </div>
     </div>
     `
