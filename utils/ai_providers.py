@@ -13,6 +13,8 @@ class AIProvider:
     def get_integration_settings(
         cls, project_id: int, integration_uid: str, prompt_settings: dict
     ) -> dict:
+        if not prompt_settings:
+            prompt_settings = {}
         try:
             integration = cls.get_integration(project_id, integration_uid)
         except IntegrationNotFound as e:
