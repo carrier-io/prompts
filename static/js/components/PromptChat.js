@@ -1,5 +1,5 @@
 const PromptChat = {
-    props: ['editablePrompt', 'isPromptLoading', 'isLatestVersion', 'integrations', 'selectedIntegration'],
+    props: ['editablePrompt', 'isPromptLoading', 'isLatestVersion', 'integrations', 'selectedIntegration', 'embedding_settings', 'isShowEmbedding'],
     data() {
         return {
             chat_history: [],
@@ -41,7 +41,10 @@ const PromptChat = {
                     this.scrollChat();
                 })
                 this.isRunLoading = true;
-                ApiRunChat(this.editablePrompt, this.newMessage, chatHistory, integrationId.uid).then(data => {
+                const embeddingSetting = !!this.editablePrompt.embeddings && this.isShowEmbedding
+                    ? this.embedding_settings
+                    : null;
+                ApiRunChat(this.editablePrompt, this.newMessage, chatHistory, integrationId.uid, embeddingSetting).then(data => {
                     this.chat_history.push({
                         'role': 'ai',
                         'content': data['messages'][0].content,
