@@ -28,6 +28,8 @@ class ProjectAPI(api_tools.APIModeHandler):
     @api_tools.endpoint_metrics
     def post(self, project_id: int):
         payload = dict(request.json)
+        log.info("payload **************")
+        log.info(payload)
         ignore_template_error = payload.pop('ignore_template_error', False)
         update_prompt = payload.pop('update_prompt', False)
         payload['project_id'] = project_id
@@ -54,25 +56,30 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         _input = data.input_
         prompt = self.module.get_by_id(project_id, data.prompt_id)
-        top_k = data.embedding_settings.get("top_k", 20)
-        cutoff = data.embedding_settings.get("cutoff", 0.1)
         if prompt:
             _context = prompt["prompt"]
-            embeddings = prompt.get("embeddings", [])
+            embedding = prompt.get("embeddings", [])
+            if embedding:
+                embedding[0]["top_k"] = payload.get("embedding_settings", {}).get("top_k", 20)
+                embedding[0]["cutoff"] = payload.get("embedding_settings", {}).get("cutoff", 0.1)
         else:
             _context = data.context
-            embeddings = []
+            embedding = []
+
+        if payload.get("embedding"):
+            embedding = [payload.get("embedding")]
 
         model_name = model_settings["model_name"]
         encoding = tiktoken.encoding_for_model(model_name)
 
         try:
-            for each in embeddings:
+            if embedding:
                 max_tokens = MODEL_TOKENS_MAPPER.get(model_name, 4000)
                 tokens_for_completion = model_settings["max_tokens"]
                 tokens_for_context = max_tokens - tokens_for_completion
-                results_list = self.module.context.rpc_manager.call.embeddings_similarity_search(project_id, each["id"],
-                                                                                                 _input, top_k, cutoff)
+                results_list = self.module.context.rpc_manager.call.embeddings_similarity_search(project_id,
+                                                                                                 embedding[0]["id"],
+                                                                                                 _input, embedding[0]["top_k"], embedding[0]["cutoff"])
                 for item in results_list:
                     if len(encoding.encode(item + _context)) <= tokens_for_context:
                         _context += item
