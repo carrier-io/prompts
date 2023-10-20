@@ -161,7 +161,7 @@ const ApiRunTest = async (prompt, input = null, integrationUid, embedding_settin
     return res.json();
 }
 
-const ApiRunChat = async (prompt, input = null, chat_history, integrationUid) => {
+const ApiRunChat = async (prompt, input = null, chat_history, integrationUid, embedding_settings = null) => {
     const api_url = V.build_api_url('prompts', 'predict')
     const params = {
         "prompt_id": prompt.id,
@@ -170,6 +170,9 @@ const ApiRunChat = async (prompt, input = null, chat_history, integrationUid) =>
         "update_prompt": true,
         "input": input,
         "chat_history": chat_history,
+    }
+    if (embedding_settings) {
+        params["embedding_settings"] = embedding_settings;
     }
 
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {

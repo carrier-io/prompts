@@ -398,6 +398,12 @@ const PromptsParams = {
         },
         showEmbedding() {
             this.isShowEmbedding = !this.isShowEmbedding;
+            if (!this.isShowEmbedding) {
+                this.editablePrompt.embeddings = "0";
+                ApiUpdatePrompt(this.editablePrompt).then(data => {
+                    showNotify('SUCCESS', `Embedding updated.`)
+                });
+            }
         }
     },
     template: `
@@ -566,6 +572,8 @@ const PromptsParams = {
                         :integrations="integrations"
                         :selectedIntegration="selectedIntegration"
                         @run-chat="isRunClicked = true"
+                        :isShowEmbedding="isShowEmbedding"
+                        :embedding_settings="embedding_settings"
                         @update-cbx-input="updateCbxInput">
                     </PromptChat>
                 </div>
