@@ -75,17 +75,18 @@ class ProjectAPI(api_tools.APIModeHandler):
         if payload.get("embedding"):
             embedding = [payload.get("embedding")]
 
-        model_name = model_settings["model_name"]
-
         try:
-            if payload.get("embedding"):
+            if embedding:
+                model_name = model_settings["model_name"]
                 encoding = tiktoken.encoding_for_model(model_name)
                 max_tokens = MODEL_TOKENS_MAPPER.get(model_name, 4000)
                 tokens_for_completion = model_settings["max_tokens"]
                 tokens_for_context = max_tokens - tokens_for_completion
                 results_list = self.module.context.rpc_manager.call.embeddings_similarity_search(project_id,
                                                                                                  embedding[0]["id"],
-                                                                                                 _input, embedding[0]["top_k"], embedding[0]["cutoff"])
+                                                                                                 _input,
+                                                                                                 embedding[0]["top_k"],
+                                                                                                 embedding[0]["cutoff"])
                 for item in results_list:
                     if len(encoding.encode(item + _context)) <= tokens_for_context:
                         _context += item
@@ -98,6 +99,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.error(str(e))
             log.info(str(format_exc()))
             log.error("Failed to append embedding to the context")
+
         try:
             integration = AIProvider.get_integration(
                 project_id=project_id,
