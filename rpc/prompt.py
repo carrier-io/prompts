@@ -276,6 +276,11 @@ class RPC:
         return prompt_struct
 
 
+    @web.rpc("prompts_get_ai_provider", "get_ai_provider")
+    def prompts_get_ai_provider(self) -> AIProvider:
+        return AIProvider
+
+
 def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:
     try:
         environment = Environment(undefined=DebugUndefined)

@@ -33,6 +33,13 @@ class ProjectAPI(api_tools.APIModeHandler):
         ignore_template_error = payload.pop('ignore_template_error', False)
         update_prompt = payload.pop('update_prompt', False)
         payload['project_id'] = project_id
+        if payload.get('prompt_id'):
+            with db.with_project_schema_session(project_id) as session:
+                prompt = session.query(Prompt).get(payload.get('prompt_id'))
+            if not payload.get('integration_settings'):
+                payload['integration_settings'] = prompt.model_settings or {}
+            if not payload.get('integration_uid'):
+                payload['integration_uid'] = prompt.integration_uid
         try:
             data = PredictPostModel.parse_obj(payload)
         except Exception as e:
@@ -41,8 +48,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.info(str(format_exc()))
             log.error("*************")
             return {"error": str(e)}, 400
-        model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
-
+        model_settings = data.integration_settings.dict(exclude={'project_id'})
         if update_prompt:
             with db.with_project_schema_session(project_id) as session:
                 session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
