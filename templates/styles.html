@@ -39,7 +39,7 @@
     .prompt-chat {
         padding: 10px;
         overflow: scroll;
-        height: 200px;
+        height: 300px;
         border: solid 1px var(--gray400);
         border-radius: 4px;
     }
@@ -69,6 +69,11 @@
         background-color: #CAD1D7;
     }
     .container-scroll {
-        overflow: scroll;
+        overflow-y: scroll;
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    .container-scroll::-webkit-scrollbar {
+        display: none;
     }
 </style>

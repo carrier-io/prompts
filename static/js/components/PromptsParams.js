@@ -110,6 +110,11 @@ const PromptsParams = {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
                 }
+                if (newVal.embeddings && newVal.embeddings.length) {
+                    this.isShowEmbedding = true;
+                } else {
+                    this.isShowEmbedding = false;
+                }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = [{
                     type: 'text',
@@ -117,7 +122,7 @@ const PromptsParams = {
                 }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
-                if (newVal["embeddings"].length > 0) {
+                if (newVal.embeddings && newVal["embeddings"].length > 0) {
                     this.editablePrompt.embeddings = newVal["embeddings"][0]["id"];
                 }
                 else {
