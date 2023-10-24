@@ -30,11 +30,9 @@ class RPC:
         with db.with_project_schema_session(project_id) as session:
             queryset = session.query(Prompt).order_by(Prompt.id.asc()).all()
             if with_versions:
-                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} |
-                        {'embeddings': [embedding.to_json() for embedding in prompt.embeddings]}
+                return [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
                         for prompt in queryset]
-            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]} |
-                        {'embeddings': [embedding.to_json() for embedding in prompt.embeddings]}
+            prompts = [prompt.to_json() | {'tags': [tag.to_json() for tag in prompt.tags]}
                        for prompt in queryset if prompt.version == 'latest']
             for prompt in prompts:
                 prompt['versions'] = [{
@@ -57,8 +55,6 @@ class RPC:
                 joinedload(Prompt.examples)
             ).options(
                 joinedload(Prompt.variables)
-            ).options(
-                joinedload(Prompt.embeddings)
             ).filter(
                 Prompt.id == prompt_id,
             ).one_or_none()
@@ -75,7 +71,6 @@ class RPC:
             result['examples'] = [example.to_json() for example in prompt.examples]
             result['variables'] = [var.to_json() for var in prompt.variables]
             result['tags'] = [tag.to_json() for tag in prompt.tags]
-            result['embeddings'] = [embedding.to_json() for embedding in prompt.embeddings]
 
             versions = session.query(Prompt).options(
                 defer(Prompt.prompt), defer(Prompt.test_input), defer(Prompt.model_settings)
@@ -114,19 +109,22 @@ class RPC:
     def prompts_update(self, project_id: int, prompt: dict, **kwargs) -> bool:
         prompt['project_id'] = project_id
         embedding_id = int(prompt["embedding"])
+        top_k = prompt.get("embedding_settings", {}).get("top_k", 20)
+        cutoff = prompt.get("embedding_settings", {}).get("cutoff", 0.1)
         if not embedding_id:
             with db.with_project_schema_session(project_id) as session:
                 _prompt = session.query(Prompt).get(prompt["id"])
-                _prompt.embeddings.clear()
+                _prompt.embeddings = {}
                 session.commit()
         else:
             with db.with_project_schema_session(project_id) as session:
-                embedding = rpc_tools.RpcMixin().rpc.call.embeddings_get_by_id(project_id, embedding_id)
-                embedding = session.merge(embedding)
-                _prompt = session.query(Prompt).get(prompt["id"])
-                _prompt.embeddings.clear()
-                _prompt.embeddings.append(embedding)
-                session.commit()
+                if "embeddings" in self.context.module_manager.modules:
+                    embedding = rpc_tools.RpcMixin().rpc.call.embeddings_get_by_id(project_id, embedding_id).to_json()
+                    embedding["top_k"] = top_k
+                    embedding["cutoff"] = cutoff
+                    _prompt = session.query(Prompt).get(prompt["id"])
+                    _prompt.embeddings = embedding
+                    session.commit()
         prompt = PromptUpdateModel.validate(prompt)
         with db.with_project_schema_session(project_id) as session:
             session.query(Prompt).filter(Prompt.id == prompt.id).update(
@@ -274,11 +272,6 @@ class RPC:
         #     prompt_struct['prompt'] = example_template.format(input=prompt_struct['prompt'], output='')
         log.info(f"FINAL: {prompt_struct=}")
         return prompt_struct
-
-
-    @web.rpc("prompts_get_ai_provider", "get_ai_provider")
-    def prompts_get_ai_provider(self) -> AIProvider:
-        return AIProvider
 
 
 def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:

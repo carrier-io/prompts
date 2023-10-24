@@ -33,13 +33,6 @@ class ProjectAPI(api_tools.APIModeHandler):
         ignore_template_error = payload.pop('ignore_template_error', False)
         update_prompt = payload.pop('update_prompt', False)
         payload['project_id'] = project_id
-        if payload.get('prompt_id'):
-            with db.with_project_schema_session(project_id) as session:
-                prompt = session.query(Prompt).get(payload.get('prompt_id'))
-            if not payload.get('integration_settings'):
-                payload['integration_settings'] = prompt.model_settings or {}
-            if not payload.get('integration_uid'):
-                payload['integration_uid'] = prompt.integration_uid
         try:
             data = PredictPostModel.parse_obj(payload)
         except Exception as e:
@@ -64,16 +57,16 @@ class ProjectAPI(api_tools.APIModeHandler):
         prompt = self.module.get_by_id(project_id, data.prompt_id)
         if prompt:
             _context = prompt["prompt"]
-            embedding = prompt.get("embeddings", [])
+            embedding = prompt.get("embeddings", {})
             if embedding:
-                embedding[0]["top_k"] = payload.get("embedding_settings", {}).get("top_k", 20)
-                embedding[0]["cutoff"] = payload.get("embedding_settings", {}).get("cutoff", 0.1)
+                embedding["top_k"] = payload.get("embedding_settings", {}).get("top_k", 20)
+                embedding["cutoff"] = payload.get("embedding_settings", {}).get("cutoff", 0.1)
         else:
             _context = data.context
-            embedding = []
+            embedding = {}
 
         if payload.get("embedding"):
-            embedding = [payload.get("embedding")]
+            embedding = payload.get("embedding")
 
         try:
             if embedding:
@@ -83,10 +76,10 @@ class ProjectAPI(api_tools.APIModeHandler):
                 tokens_for_completion = model_settings["max_tokens"]
                 tokens_for_context = max_tokens - tokens_for_completion
                 results_list = self.module.context.rpc_manager.call.embeddings_similarity_search(project_id,
-                                                                                                 embedding[0]["id"],
+                                                                                                 embedding["id"],
                                                                                                  _input,
-                                                                                                 embedding[0]["top_k"],
-                                                                                                 embedding[0]["cutoff"])
+                                                                                                 embedding["top_k"],
+                                                                                                 embedding["cutoff"])
                 for item in results_list:
                     if len(encoding.encode(item + _context)) <= tokens_for_context:
                         _context += item
@@ -99,7 +92,6 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.error(str(e))
             log.info(str(format_exc()))
             log.error("Failed to append embedding to the context")
-
         try:
             integration = AIProvider.get_integration(
                 project_id=project_id,
