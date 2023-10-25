@@ -117,7 +117,7 @@ const PromptsParams = {
                 }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
-                if (newVal["embeddings"].length > 0) {
+                if (newVal["embeddings"]?.length > 0) {
                     this.editablePrompt.embeddings = newVal["embeddings"][0]["id"];
                 }
                 else {
