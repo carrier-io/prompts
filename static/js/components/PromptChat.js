@@ -44,7 +44,9 @@ const PromptChat = {
                 const embeddingSetting = !!this.editablePrompt.embeddings && this.isShowEmbedding
                     ? this.embedding_settings
                     : null;
-                ApiRunChat(this.editablePrompt, this.newMessage, chatHistory, integrationId.uid, embeddingSetting).then(data => {
+                const userMessage = this.newMessage;
+                this.newMessage = '';
+                ApiRunChat(this.editablePrompt, userMessage, chatHistory, integrationId.uid, embeddingSetting).then(data => {
                     this.chat_history.push({
                         'role': 'ai',
                         'content': data['messages'][0].content,
@@ -52,7 +54,6 @@ const PromptChat = {
                     this.$nextTick(() => {
                         this.scrollChat();
                     })
-                    this.newMessage = '';
                 }).catch(err => {
                     showNotify('ERROR', err)
                 }).finally(() => {
@@ -113,6 +114,10 @@ const PromptChat = {
         scrollChat() {
             const elem = document.getElementById('chatContainer');
             elem.scrollTop = elem.scrollHeight;
+        },
+        convertToMarkdown(text) {
+            const converter = new showdown.Converter();
+            return converter.makeHtml(text);
         }
     },
     template: `
@@ -191,9 +196,9 @@ const PromptChat = {
                             class="d-flex gap-3 align-items-center rounded-sm" :style="[ isAiRole(message.role) ? { 'background': '#F9FAFF'} : '' ]" 
                             v-for="message in chat_history">
                             <p class="font-h6 font-weight-600 p-3 text-uppercase" style="min-width: 4rem;"
-                                :style="[ isAiRole(message.role) ? { 'color': '#6C44DD' } : { 'color': '#757F99' }]">{{ message.role }}</p>
-                            <div class="p-3">
-                                {{ message.content }}
+                                :style="[ isAiRole(message.role) ? { 'color': '#6C44DD' } : { 'color': '#757F99' }]" v-html="convertToMarkdown(message.role)"/>
+                            <div class="p-3" >
+                                <div v-html="convertToMarkdown(message.content)" />
                             </div>
                         </div>
                         <div v-else class="h-100 d-flex flex-column align-items-center justify-content-center">

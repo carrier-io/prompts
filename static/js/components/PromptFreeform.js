@@ -25,6 +25,10 @@ const PromptFreeform = {
                 {id: Date.now() + Math.floor(Math.random() * 1000),"input": "", "output": "", "action": ""}
             )
         },
+        convertToMarkdown(text) {
+            const converter = new showdown.Converter();
+            return converter.makeHtml(text);
+        }
     },
     template: `
         <div class="flex-grow-1">
@@ -157,12 +161,10 @@ const PromptFreeform = {
                                         <img :src="message.content">
                                     </div>
                                     <div v-if="message.type === 'text'">
-                                        <textarea disabled type="text"
-                                            rows="5"
-                                            style="color: var(--green)"
-                                            v-model="message.content"
-                                            class="form-control form-control-alternative">
-                                        </textarea>
+                                        <div 
+                                            style="resize: vertical; height: 136px"
+                                            v-html="convertToMarkdown(message.content)"
+                                            class="prompt-chat form-control-alternative">
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
