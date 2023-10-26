@@ -235,7 +235,7 @@ class RPC:
     def prompts_prepare_prompt_struct(self, project_id: int, prompt_id: Optional[int],
                                       input_: str = '', context: str = '', examples: list = [],
                                       variables: dict = {}, ignore_template_error: bool = False,
-                                      chat_history: Optional[dict] = None,
+                                      chat_history: Optional[dict] = None, addons: Optional[dict] = None,
                                       **kwargs) -> dict:
 
         # example_template = '\ninput: {input}\noutput: {output}'
@@ -248,6 +248,8 @@ class RPC:
         }
         if chat_history:
             prompt_struct['chat_history'] = chat_history
+        if addons:
+            prompt_struct['addons'] = addons
         if prompt_id:
             prompt_template = self.get_by_id(project_id, prompt_id)
             if not prompt_template:

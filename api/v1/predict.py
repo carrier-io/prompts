@@ -109,7 +109,8 @@ class ProjectAPI(api_tools.APIModeHandler):
                 project_id, data.prompt_id, _input,
                 _context, data.examples, data.variables,
                 chat_history=data.chat_history,
-                ignore_template_error=ignore_template_error
+                ignore_template_error=ignore_template_error,
+                addons=data.addons
             )
         except Exception as e:
             log.error("************* AIProvider.get_integration and self.module.prepare_prompt_struct")
