@@ -33,6 +33,14 @@ class ProjectAPI(api_tools.APIModeHandler):
         ignore_template_error = payload.pop('ignore_template_error', False)
         update_prompt = payload.pop('update_prompt', False)
         payload['project_id'] = project_id
+        if payload.get('prompt_id') and not all(
+            (payload.get('integration_settings'), payload.get('integration_uid'))):
+            with db.with_project_schema_session(project_id) as session:
+                prompt = session.query(Prompt).get(payload.get('prompt_id'))
+            if not payload.get('integration_settings'):
+                payload['integration_settings'] = prompt.model_settings or {}
+            if not payload.get('integration_uid'):
+                payload['integration_uid'] = prompt.integration_uid
         try:
             data = PredictPostModel.parse_obj(payload)
         except Exception as e:
