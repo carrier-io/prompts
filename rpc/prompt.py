@@ -22,7 +22,10 @@ class RPC:
         rpc = rpc_tools.RpcMixin().rpc.call
         rpc_name = integration.name + "__predict"
         rpc_func = getattr(rpc, rpc_name)
-        result = rpc_func(project_id, model_settings, text_prompt)
+        if integration.name == 'ai_dial':
+            result = rpc_func(project_id, model_settings, text_prompt, **kwargs)
+        else:
+            result = rpc_func(project_id, model_settings, text_prompt)
         return result
 
     @web.rpc(f'prompts_get_all', "get_all")

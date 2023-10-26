@@ -62,6 +62,7 @@ class PredictPostModel(BaseModel):
     context: Optional[str] = ''
     variables: Optional[dict] = {}
     chat_history: Optional[list] = []
+    format_response: bool = True
 
     class Config:
         fields = {'input_': 'input'}

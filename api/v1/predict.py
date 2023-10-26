@@ -110,7 +110,10 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.error("*************")
             return str(e), 400
 
-        result = AIProvider.predict(project_id, integration, model_settings, prompt_struct)
+        result = AIProvider.predict(
+            project_id, integration, model_settings, prompt_struct,
+            format_response=data.format_response
+        )
         if not result['ok']:
             log.error("************* if not result['ok']")
             log.error(str(result['error']))
