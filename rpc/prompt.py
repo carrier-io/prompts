@@ -227,6 +227,10 @@ class RPC:
             ).all()
             return [prompt.to_json() for prompt in prompts]
 
+    @web.rpc("prompts_get_ai_provider", "get_ai_provider")
+    def prompts_get_ai_provider(self) -> AIProvider:
+        return AIProvider
+
     @web.rpc(f'prompts_prepare_prompt_struct', "prepare_prompt_struct")
     def prompts_prepare_prompt_struct(self, project_id: int, prompt_id: Optional[int],
                                       input_: str = '', context: str = '', examples: list = [],
