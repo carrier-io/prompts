@@ -265,8 +265,8 @@ class RPC:
             for variable in prompt_template['variables']:
                 if not prompt_struct['variables'].get(variable['name']):
                     prompt_struct['variables'][variable['name']] = variable['value']
-            if prompt_struct['prompt']:
-                prompt_struct['variables']['prompt'] = prompt_struct['prompt']
+            # if prompt_struct['prompt']:
+            #     prompt_struct['variables']['prompt'] = prompt_struct['prompt']
 
         prompt_struct = resolve_variables(prompt_struct, ignore_template_error=ignore_template_error)
         prompt_struct.pop('variables')
@@ -286,11 +286,19 @@ class RPC:
 def resolve_variables(prompt_struct: dict, ignore_template_error: bool = False) -> dict:
     try:
         environment = Environment(undefined=DebugUndefined)
-        ast = environment.parse(prompt_struct['context'])
-        if 'prompt' in set(meta.find_undeclared_variables(ast)):
+        ast_c = environment.parse(prompt_struct['context'])
+        ast_p = environment.parse(prompt_struct['prompt'])
+        if len(set(meta.find_undeclared_variables(ast_p))) > 0:
+            template_p = environment.from_string(prompt_struct['prompt'])
+            prompt_struct['prompt'] = template_p.render(**prompt_struct['variables'])
+
+        if 'prompt' in set(meta.find_undeclared_variables(ast_c)):
+            prompt_struct['variables']['prompt'] = prompt_struct['prompt']
             prompt_struct['prompt'] = ''
+
         template = environment.from_string(prompt_struct['context'])
         prompt_struct['context'] = template.render(**prompt_struct['variables'])
+
     except:
         log.critical(format_exc())
         if not ignore_template_error:
