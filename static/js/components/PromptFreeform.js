@@ -158,13 +158,15 @@ const PromptFreeform = {
                             <tr v-for="message in testOutput">
                                 <td class="p-2">
                                     <div v-if="message.type === 'image'" class="text-center">
-                                        <img :src="message.content">
+                                        <img :src="message.content"/>
                                     </div>
                                     <div v-if="message.type === 'text'">
                                         <div 
                                             style="resize: vertical; height: 136px"
                                             v-html="convertToMarkdown(message.content)"
-                                            class="prompt-chat form-control-alternative">
+                                            class="prompt-chat form-control-alternative"
+                                        >
+                                        </div>
                                         <div class="invalid-tooltip invalid-tooltip-custom"></div>
                                     </div>
                                 </td>
