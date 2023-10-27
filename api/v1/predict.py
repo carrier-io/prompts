@@ -49,7 +49,7 @@ class ProjectAPI(api_tools.APIModeHandler):
             log.info(str(format_exc()))
             log.error("*************")
             return {"error": str(e)}, 400
-        model_settings = data.integration_settings.dict(exclude={'project_id'})
+        model_settings = data.integration_settings.dict(exclude={'project_id'}, exclude_unset=True)
         if update_prompt:
             with db.with_project_schema_session(project_id) as session:
                 session.query(Prompt).filter(Prompt.id == data.prompt_id).update(
