@@ -30,7 +30,7 @@ const PromptChat = {
         },
         runChat() {
             this.$emit('run-chat');
-            if (this.editablePrompt.prompt && this.selectedIntegration.uid) {
+            if (this.selectedIntegration.uid) {
                 const integrationId = this.integrations.find(integration => integration.uid === this.selectedIntegration.uid);
                 const chatHistory = [ ...this.chat_history ];
                 this.chat_history.push({

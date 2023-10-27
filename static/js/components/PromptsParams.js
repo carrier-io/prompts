@@ -63,7 +63,8 @@ const PromptsParams = {
             embedding_settings: {
                 "top_k": 20,
                 "cutoff": 0.1
-            }
+            },
+            isShowContext: false,
         }
     },
     computed: {
@@ -110,10 +111,10 @@ const PromptsParams = {
                     this.selectedComponentInt = "";
                     this.selectedIntegration = "";
                 }
-                if (newVal.embeddings && newVal.embeddings.length) {
-                    this.isShowEmbedding = true;
+                if (newVal.prompt) {
+                    this.isShowContext = true;
                 } else {
-                    this.isShowEmbedding = false;
+                    this.isShowContext = false;
                 }
                 this.testInput = newVal.test_input ? newVal.test_input : "";
                 this.testOutput = [{
@@ -122,13 +123,13 @@ const PromptsParams = {
                 }];
                 this.isRunClicked = false;
                 this.fetchPromptTags(this.selectedPrompt.id);
-                if (newVal.embeddings && newVal["embeddings"].length > 0) {
-                    this.editablePrompt.embeddings = newVal["embeddings"][0]["id"];
+                if (newVal.embeddings?.id) {
+                    this.editablePrompt.embeddings = newVal["embeddings"];
                 }
                 else {
-                    this.editablePrompt.embeddings = 0;
+                    this.editablePrompt.embeddings = {};
                 }
-                this.fetchPromptEmbeddings();
+                this.fetchPromptEmbeddings(newVal.embeddings);
                 this.fetchPromptVersions(newVal.name);
                 this.$nextTick(() => {
                     $("#selectIntegration").selectpicker('refresh');
@@ -197,10 +198,19 @@ const PromptsParams = {
                 .find(integration => integration.uid === newVal.uid).settings;
             this.selectedComponentInt = newVal.name;
         },
-        fetchPromptEmbeddings() {
+        fetchPromptEmbeddings(promptEmbedding) {
             fetchPromptEmbeddingsAPI().then((embeddings) => {
                 this.promptEmbeddings = embeddings.map(({ id, library_name }) => ({ id, library_name }));
                 this.promptEmbeddings = [{id: 0, library_name: "Without embeddings"}].concat(this.promptEmbeddings);
+                if (promptEmbedding?.id) {
+                    this.$nextTick(() => {
+                        this.isShowEmbedding = true;
+                        $('#selectedPromptEmbedding').val(promptEmbedding.id);
+                        $('#selectedPromptEmbedding').selectpicker('refresh');
+                    })
+                } else {
+                    this.isShowEmbedding = false;
+                }
             })
         },
         handle_advanced_settings_icon(e) {
@@ -294,12 +304,12 @@ const PromptsParams = {
             this.isRunClicked = true;
             const integrationId = this.integrations.find(integration => integration.uid === this.selectedIntegration.uid)
             const computedCondition = this.editablePrompt.is_active_input
-                ? this.editablePrompt.prompt && this.testInput && this.selectedIntegration
-                : this.editablePrompt.prompt && this.selectedIntegration;
+                ? this.testInput && this.selectedIntegration
+                : this.selectedIntegration;
             if (computedCondition) {
                 this.isRunLoading = true;
                 const computedInput = this.editablePrompt.is_active_input ? this.testInput : null;
-                const embeddingSetting = !!this.editablePrompt.embeddings && this.isShowEmbedding
+                const embeddingSetting = !!this.editablePrompt.embeddings?.id && this.isShowEmbedding
                     ? this.embedding_settings
                     : null;
                 ApiRunTest(this.editablePrompt, computedInput, integrationId.uid, embeddingSetting).then(data => {
@@ -404,9 +414,18 @@ const PromptsParams = {
         showEmbedding() {
             this.isShowEmbedding = !this.isShowEmbedding;
             if (!this.isShowEmbedding) {
-                this.editablePrompt.embeddings = "0";
+                this.editablePrompt.embeddings = {};
                 ApiUpdatePrompt(this.editablePrompt).then(data => {
                     showNotify('SUCCESS', `Embedding updated.`)
+                });
+            }
+        },
+        showContext() {
+            this.isShowContext = !this.isShowContext;
+            if (!this.isShowContext) {
+                this.editablePrompt.prompt = ""
+                ApiUpdatePrompt(this.editablePrompt).then(data => {
+                    showNotify('SUCCESS', `Context updated.`)
                 });
             }
         }
@@ -462,8 +481,17 @@ const PromptsParams = {
                             v-model="editablePrompt.description">
                         </promptsEditorField>
                         <div>
-                            <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">CONTEXT</p>
-                            <div class="w-100">
+                            <div class="d-flex justify-content-between">
+                                <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">CONTEXT</p>
+                                <label class="custom-toggle" style="margin-top: 0">
+                                    <input type="checkbox" 
+                                    :checked="isShowContext"
+                                    @click="showContext">
+                                    <span class="custom-toggle_slider round"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="w-100" v-if="isShowContext">
                                 <div class="custom-input w-100 position-relative"
                                     :class="{ 'invalid-input': isInvalidContext }">
                                     <textarea
@@ -482,6 +510,7 @@ const PromptsParams = {
                                 <p class="font-h6 font-bold text-gray-800 flex-grow-1 mb-1" style="color: #32325D">RETRIEVER</p>
                                 <label class="custom-toggle" style="margin-top: 0">
                                     <input type="checkbox" 
+                                    :checked="isShowEmbedding"
                                     @click="showEmbedding">
                                     <span class="custom-toggle_slider round"></span>
                                 </label>
