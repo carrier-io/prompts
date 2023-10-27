@@ -32,6 +32,7 @@ const ApiCreatePrompt = async (promptName, type) => {
 
 const ApiUpdatePrompt = async (prompt) => {
     const api_url = V.build_api_url('prompts', 'prompt')
+    const embeddings = prompt.embeddings?.id ? prompt.embeddings : '0';
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         method: 'PUT',
         headers: {
@@ -44,7 +45,7 @@ const ApiUpdatePrompt = async (prompt) => {
             "prompt": prompt.prompt,
             "description": prompt.description,
             "tags": prompt.tags,
-            "embedding": prompt.embeddings,
+            "embedding": embeddings,
             "is_active_input": prompt.is_active_input,
         })
     })
