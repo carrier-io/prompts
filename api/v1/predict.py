@@ -14,9 +14,22 @@ from pylon.core.tools import log
 # TODO add more models or find an API to get tokens limit
 MODEL_TOKENS_MAPPER = {
     "text-davinci-003": 4097,
-    "text-davinci-002": 4097
+    "text-davinci-002": 4097,
+    "anthropic.claude-v2": 100_000,
+    "gpt-35-turbo": 4096,
+    "gpt-35-turbo16k": 16384,
+    "gpt-4": 8192,
+    "gpt-4-0613": 8192,
+    "gpt-4-32k": 32768,
+    "gpt-4-32k-0613": 32768,
+    "text-bison@001": 8192,
+    "text-bison": 8192,
+    "stability.stable-diffusion-xl": 77,
+    "gpt-world": 24000,
+    "epam10k-semantic-search": 24000,
+    "statgptpy": 24000,
+    "default": 4096
 }
-
 
 class ProjectAPI(api_tools.APIModeHandler):
     @auth.decorators.check_api({
@@ -79,7 +92,10 @@ class ProjectAPI(api_tools.APIModeHandler):
         try:
             if embedding:
                 model_name = model_settings["model_name"]
-                encoding = tiktoken.encoding_for_model(model_name)
+                try:
+                    encoding = tiktoken.encoding_for_model(model_name)
+                except KeyError:
+                    encoding = tiktoken.get_encoding("cl100k_base")
                 max_tokens = MODEL_TOKENS_MAPPER.get(model_name, 4000)
                 tokens_for_completion = model_settings["max_tokens"]
                 tokens_for_context = max_tokens - tokens_for_completion

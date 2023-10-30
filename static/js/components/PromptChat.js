@@ -14,8 +14,13 @@ const PromptChat = {
             this.newMessage = '';
         },
     },
+    computed: {
+        markdownParser() {
+            return new markdownit()
+        },
+    },
     methods: {
-        addEmptyParamsRow()  {
+        addEmptyParamsRow() {
             const newExample = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
                 input: '',
@@ -25,14 +30,14 @@ const PromptChat = {
             if (this.editablePrompt.hasOwnProperty('examples')) {
                 this.editablePrompt.examples.push(newExample);
             } else {
-                this.editablePrompt.examples = [ newExample ];
+                this.editablePrompt.examples = [newExample];
             }
         },
         runChat() {
             this.$emit('run-chat');
             if (this.selectedIntegration.uid) {
                 const integrationId = this.integrations.find(integration => integration.uid === this.selectedIntegration.uid);
-                const chatHistory = [ ...this.chat_history ];
+                const chatHistory = [...this.chat_history];
                 this.chat_history.push({
                     'role': 'user',
                     'content': this.newMessage,
@@ -75,7 +80,7 @@ const PromptChat = {
             }
             this.editablePrompt.examples = this.editablePrompt.examples.filter(example => example.id !== exampleId);
         },
-        checkExampleField(currentType, checkType, exampleId, { target }, fieldType) {
+        checkExampleField(currentType, checkType, exampleId, {target}, fieldType) {
             const currentExample = this.editablePrompt.examples.find(example => example.id === exampleId);
             if (exampleId > 1000000) {
                 if (fieldType === 'checkbox') return
@@ -116,8 +121,7 @@ const PromptChat = {
             elem.scrollTop = elem.scrollHeight;
         },
         convertToMarkdown(text) {
-            const converter = new showdown.Converter();
-            return converter.makeHtml(text);
+            return this.markdownParser.render(text)
         }
     },
     template: `

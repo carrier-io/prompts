@@ -17,6 +17,9 @@ const PromptFreeform = {
         isInvalidTestInput() {
             return this.isRunClicked && !this.testInput
         },
+        markdownParser() {
+            return new markdownit()
+        },
     },
     methods: {
         addEmptyParamsRow()  {
@@ -26,8 +29,7 @@ const PromptFreeform = {
             )
         },
         convertToMarkdown(text) {
-            const converter = new showdown.Converter();
-            return converter.makeHtml(text);
+            return this.markdownParser.render(text)
         }
     },
     template: `
