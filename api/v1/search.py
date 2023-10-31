@@ -23,11 +23,11 @@ class ProjectAPI(api_tools.APIModeHandler):
                            Prompt.description.like(search_query)))
 
         total, res = api_tools.get(
-            project_id = project_id,
-            args = args,
-            data_model = Prompt,
-            custom_filter = filter_,
-            is_project_schema = True
+            project_id=project_id,
+            args=args,
+            data_model=Prompt,
+            custom_filter=filter_,
+            is_project_schema=True
             )
 
         return {
