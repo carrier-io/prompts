@@ -69,7 +69,11 @@ const PromptsParams = {
     },
     computed: {
         isInvalidContext() {
-            return this.isRunClicked && !this.editablePrompt.prompt
+            if (this.isShowContext) {
+                return this.isRunClicked && !this.editablePrompt.prompt
+            } else {
+                return false
+            }
         },
         isLatestVersion() {
             return this.selectedPrompt.version === 'latest';
@@ -302,6 +306,7 @@ const PromptsParams = {
         },
         runTest() {
             this.isRunClicked = true;
+            if (this.isShowContext && !this.editablePrompt.prompt) return
             const integrationId = this.integrations.find(integration => integration.uid === this.selectedIntegration.uid)
             const computedCondition = this.editablePrompt.is_active_input
                 ? this.testInput && this.selectedIntegration
