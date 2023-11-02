@@ -3,7 +3,7 @@ from pydantic import ValidationError
 from pylon.core.tools import log
 from sqlalchemy import or_, and_
 
-from tools import session_project, api_tools, auth, config as c
+from tools import api_tools, auth, config as c
 
 from ...models.prompts import Prompt
 
