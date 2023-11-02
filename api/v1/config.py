@@ -1,9 +1,7 @@
-from itertools import groupby
-
 from flask import g
 from pylon.core.tools import log
 
-from tools import session_project, api_tools, auth, config as c
+from tools import api_tools, auth, config as c
 
 from ...models.pd.config_pd import ModelsConfig, TokenPD
 
