@@ -16,6 +16,9 @@ const Prompts = {
     props: ['integrations'],
     data() {
         return {
+            activePrompt: {
+                id: null,
+            },
             selectedPrompt: {
                 id: null
             },
@@ -42,7 +45,7 @@ const Prompts = {
                 this.promptsList = data;
                 if (data.length > 0) {
                     const hash_id = location.hash.substring(1)
-                    this.selectedPrompt = data.find(i => hash_id === String(i.id)) || data[0];
+                    this.activePrompt = _.cloneDeep(data.find(i => hash_id === String(i.id)) || data[0]);
                     this.setBucketEvents();
                     this.selectActivePrompt();
                 }
@@ -60,15 +63,15 @@ const Prompts = {
             this.isPromptLoading = true;
             ApiFetchPromptById(promptId).then(data => {
                 this.isPromptLoading = false;
-                this.selectedPrompt = {...data};
+                this.selectedPrompt = _.cloneDeep(data);
             })
         },
         setBucketEvents() {
             $('#prompts-aside-table').on('click', 'tbody tr:not(.no-records-found)', highlightOnClick);
         },
         selectActivePrompt() {
-            this.FetchPromptById(this.selectedPrompt.id);
-            const selected_id = this.selectedPrompt?.id
+            this.FetchPromptById(this.activePrompt.id);
+            const selected_id = this.activePrompt?.id
             if (selected_id !== undefined) {
                 $(`#prompts-aside-table tbody tr[data-uniqueid=${selected_id}]`).addClass('highlight')
             }
@@ -113,12 +116,12 @@ const Prompts = {
                 this.promptsList = data;
                 this.setBucketEvents();
                 if (promptId) {
-                    this.selectedPrompt = data.find(row => row.id === promptId);
+                    this.activePrompt = data.find(row => row.id === promptId);
                     $('#prompts-aside-table').find(`[data-uniqueid='${promptId}']`).addClass('highlight');
                     this.FetchPromptById(promptId);
                 } else {
                     if (data.length > 0) {
-                        this.selectedPrompt = data[0];
+                        this.activePrompt = data[0];
                         this.selectActivePrompt();
                     }
                 }
@@ -180,10 +183,23 @@ const Prompts = {
                             <div class="d-flex justify-content-center align-items-center h-100">
                                 <div class="d-flex flex-column align-items-center">
                                     <p class="font-h5 text-gray-500">Still no prompts created.</p>
-                                    <button type="button" class="btn btn-sm btn-secondary mt-1"
-                                        @click="openCreateModal">
-                                        <i class="fas fa-plus mr-2"></i>Create prompt
-                                    </button>
+                                    <div class="dropdown left dropdown_action mr-2">
+                                        <button class="btn btn-sm btn-secondary"
+                                                role="button"
+                                                id="dropdownMenuAction"
+                                                data-toggle="dropdown"
+                                                aria-expanded="false">
+                                            <i class="fas fa-plus mr-2"></i>Create prompt
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuAction">
+                                            <li class="px-3 py-1 font-weight-500">Create</li>
+                                            <li class="dropdown-item" @click="() => openCreateModal('freeform')">
+                                                <span class="pl-2">Completion prompt</span></li>
+                                            <li class="dropdown-item" @click="() => openCreateModal('chat')">
+                                                <span class="pl-2">Chat prompt</span>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>

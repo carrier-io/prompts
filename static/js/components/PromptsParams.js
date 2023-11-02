@@ -7,6 +7,7 @@ const PromptsParams = {
                 "name": "",
                 "prompt": "",
                 "examples": [],
+                "variables": [],
             }
         },
         integrations: {
@@ -179,12 +180,12 @@ const PromptsParams = {
                 this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
             }).finally(() => {
                 this.isVersionLoaded = true;
-                setTimeout(() => {
+                this.$nextTick(() => {
                     if (this.selectedPromptVersion) {
                         $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
                         $('#selectedPromptVersion').selectpicker('refresh');
                     }
-                }, 0)
+                })
             })
         },
         changeIntegration(newVal) {
@@ -618,7 +619,7 @@ const PromptsParams = {
                 </div>
             </div>
         </div>
-        <div class="card p-4" style="min-width: 340px" :style="{'height': responsiveBarHeight}">
+        <div class="card p-4" style="min-width: 340px; width: 340px" :style="{'height': responsiveBarHeight}">
             <div class="d-flex justify-content-between">
                 <p class="font-h4 font-bold mb-4">Settings</p>
             </div>
@@ -630,7 +631,7 @@ const PromptsParams = {
                 </div>
             </div>
             <div v-show="!isPromptLoading" :style="{'height': responsiveContentHeight}" style="overflow-y: scroll;">
-                <div class="select-validation" v-if="isVersionLoaded">
+                <div class="select-validation" v-show="isVersionLoaded">
                     <p class="font-h5 font-semibold mb-1">Select version</p>
                     <select id="selectedPromptVersion" class="selectpicker bootstrap-select__b displacement-ml-4 bootstrap-select__b-sm"
                         @change="selectPromptVersion"
