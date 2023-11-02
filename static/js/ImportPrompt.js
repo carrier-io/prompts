@@ -36,7 +36,10 @@ const ImportPromptModal = {
                 if (!resp.ok) {
                     showNotify('ERROR', 'Error fetching integrations')
                 } else {
-                    this.integrations = await resp.json()
+                    this.integrations = await resp.json();
+                    this.$nextTick(() => {
+                        $('#selectorImportIntegration').selectpicker('refresh');
+                    })
                 }
             }
         })
@@ -163,21 +166,23 @@ const ImportPromptModal = {
                     </div>
                 </div>
 
-                <div class="d-flex form-group">
-                    <label class="font-semibold flex-grow-1 mr-1">
-                        Name
-                        <input
-                            class="form-control"
-                            type="text"
-                            placeholder="Prompt name"
-                            v-model="name"
-                        />
-                    </label>
-                    <label class="font-semibold flex-grow-1 ml-1">
-                        Integration
-                        <select class="custom-select"
+                <div class="d-flex gap-3">
+                    <div class="w-1/2">
+                        <p class="font-h5 font-semibold">Name</p>
+                        <div class="custom-input mb-3 mt-2">
+                            <input
+                                type="text"
+                                placeholder="Prompt name"
+                                v-model="name"
+                            />
+                        </div>
+                    </div>
+                    <div class="w-1/2">
+                        <p class="font-h5 font-semibold">Integration</p>
+                        <select id="selectorImportIntegration"
+                            class="selectpicker bootstrap-select__b mt-2 w-100-imp"
                             v-model="integration_uid"
-                        >
+                            data-style="btn">
                             <option :value="null">
                                 Nothing selected
                             </option>
@@ -193,7 +198,7 @@ const ImportPromptModal = {
                                 </option>
                             </optgroup>
                         </select>
-                    </label>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -224,8 +229,8 @@ const ImportPromptModal = {
                 </div>
 
             </div>
-            <div class="modal-footer d-flex">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <div class="d-flex justify-content-end px-4 pb-4">
+                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">
                     Close
                 </button>
                 <button type="button" class="btn btn-basic"
@@ -234,7 +239,7 @@ const ImportPromptModal = {
                 >
                     Import <i v-if="is_loading" class="preview-loader__white ml-2"></i>
                 </button>
-           </div>
+            </div>
         </div>
     </div>
 </div>
