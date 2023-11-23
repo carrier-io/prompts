@@ -37,9 +37,24 @@ class Event:
                     return
             ai_project_roles = [i.strip() for i in ai_project_roles.split(',')]
             log.info('Adding epam user %s to project %s with roles %s', payload, ai_project_id, ai_project_roles)
-
-            context.rpc_manager.call.admin_add_user_to_project(
-                ai_project_id, payload['user_id'], ai_project_roles
-            )
+            #
+            users_roles = context.rpc_manager.call.admin_get_users_roles_in_project(ai_project_id)
+            #
+            needed_roles = []
+            if payload['user_id'] not in users_roles:
+                log.info("New AI user: %s", payload['user_id'])
+                needed_roles = ai_project_roles
+            else:
+                for ai_role in ai_project_roles:
+                    if ai_role not in users_roles[payload['user_id']]:
+                        needed_roles.append(ai_role)
+            #
+            if needed_roles:
+                log.info("Adding needed roles for user %s to project %s: %s", payload['user_id'], ai_project_id, needed_roles)
+                context.rpc_manager.call.admin_add_user_to_project(
+                    ai_project_id, payload['user_id'], needed_roles
+                )
+            else:
+                log.info("User already added (no roles to add)")
         else:
             log.warning('User with non-epam email registered %s', payload)
