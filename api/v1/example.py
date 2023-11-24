@@ -2,7 +2,7 @@ from flask import request
 from pydantic import ValidationError
 from pylon.core.tools import log
 
-from tools import session_project, api_tools, auth, config as c
+from tools import api_tools, auth, config as c
 
 
 class ProjectAPI(api_tools.APIModeHandler):
