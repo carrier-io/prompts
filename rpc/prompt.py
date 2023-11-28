@@ -254,7 +254,7 @@ class RPC:
             prompt_template = self.get_by_id(project_id, prompt_id)
             if not prompt_template:
                 raise Exception(f"Prompt with id {prompt_id} in project {project_id} not found")
-            prompt_struct['context'] = prompt_template['prompt'] + prompt_struct['context']
+#            prompt_struct['context'] = prompt_template['prompt'] + prompt_struct['context']
             for example in prompt_template['examples']:
                 if not example['is_active']:
                     continue
