@@ -35,6 +35,7 @@ const Prompts = {
             isVersionModalLoading: false,
             isTagsLoaded: false,
             newPromptType: null,
+            preparedDeletingPromptId: null,
         }
     },
     mounted() {
@@ -102,11 +103,12 @@ const Prompts = {
         },
         deletePrompt() {
             this.loadingDelete = true;
-            ApiDeletePrompt(this.selectedPrompt.id).then(data => {
+            ApiDeletePrompt(this.preparedDeletingPromptId).then(data => {
                 showNotify('SUCCESS', 'Prompt delete.');
                 this.loadingDelete = false;
                 this.showConfirm = !this.showConfirm;
-                this.refreshPromptsListTable()
+                this.preparedDeletingPromptId = null;
+                this.refreshPromptsListTable();
             });
         },
         refreshPromptsListTable(promptId = null) {
@@ -127,7 +129,8 @@ const Prompts = {
                 }
             });
         },
-        openConfirm() {
+        openConfirm(promptId) {
+            this.preparedDeletingPromptId = promptId;
             this.showConfirm = !this.showConfirm;
         },
         refreshPage() {

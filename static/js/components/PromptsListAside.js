@@ -111,7 +111,7 @@ var promptAsideEvents = {
     "click .prompt_delete": function (e, value, row, index) {
         e.stopPropagation();
         const vm = vueVm.registered_components.prompts;
-        vm.openConfirm();
+        vm.openConfirm(row.id);
     },
 }
 

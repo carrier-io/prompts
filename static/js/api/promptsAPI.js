@@ -53,6 +53,7 @@ const ApiUpdatePrompt = async (prompt) => {
             "description": prompt.description,
             "tags": prompt.tags,
             "embedding": embeddings,
+            "embedding_settings": prompt.embedding_settings,
             "is_active_input": prompt.is_active_input,
         })
     })
