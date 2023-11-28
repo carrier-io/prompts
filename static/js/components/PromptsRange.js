@@ -35,10 +35,14 @@ const PromptsRange = {
             this.noUiSliderData.set(inputtedNumber);
         });
         const vm = this;
-        this.noUiSliderData.on('update', function (values, handle) {
+        this.noUiSliderData.on('set', function (values, handle) {
             const vuh = vm.step < 1 ? values[0] : parseInt(values[handle])
             $(`#${vm.randomInputId}`).val(vuh);
             vm.$emit('update:modelValue', +vuh)
+        });
+        this.noUiSliderData.on('update', function (values, handle) {
+            const vuh = vm.step < 1 ? values[0] : parseInt(values[handle])
+            $(`#${vm.randomInputId}`).val(vuh);
         })
     },
     template: `
@@ -51,7 +55,7 @@ const PromptsRange = {
                     <div v-bind:id="randomWizardId"></div>
                 </div>
                 <div class="custom-input custom-input__sm ml-4">
-                    <input type="number" class="custom-input input-wizard" v-bind:id="randomInputId">
+                    <input type="number" :value="modelValue" class="custom-input input-wizard" v-bind:id="randomInputId">
                 </div>
             </div>    
         </div>

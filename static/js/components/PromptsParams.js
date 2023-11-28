@@ -61,6 +61,10 @@ const PromptsParams = {
             isVersionLoaded: false,
             windowHeight: window.innerHeight,
             isShowEmbedding: false,
+            default_embedding_settings: {
+                "top_k": 20,
+                "cutoff": 0.1
+            },
             embedding_settings: {
                 "top_k": 20,
                 "cutoff": 0.1
@@ -103,6 +107,10 @@ const PromptsParams = {
             handler: function (newVal, oldVal) {
                 if (newVal.id === this.editablePrompt.id) return;
                 this.editablePrompt = _.cloneDeep(newVal);
+                if (this.editablePrompt.embeddings?.id) {
+                    this.editablePrompt.embedding_settings = { ...newVal.embeddings };
+                    this.embedding_settings = { ...newVal.embeddings };
+                }
                 if (newVal.integration_uid) {
                     this.integrations.forEach(integration => {
                         if (integration.uid === newVal.integration_uid) {
@@ -151,6 +159,22 @@ const PromptsParams = {
             },
             deep: true
         },
+        embedding_settings: {
+            handler: function (newVal, oldVal) {
+                if (this.editablePrompt.embeddings?.id || +this.editablePrompt.embeddings > 0) {
+                    if (this.editablePrompt.embedding_settings.top_k !== newVal.top_k ||
+                        this.editablePrompt.embedding_settings.cutoff !== newVal.cutoff) {
+
+                        this.editablePrompt.embedding_settings.top_k = newVal.top_k;
+                        this.editablePrompt.embedding_settings.cutoff = newVal.cutoff;
+                        ApiUpdatePrompt(this.editablePrompt).then(data => {
+                            showNotify('SUCCESS', `Embedding settings updated.`)
+                        });
+                    }
+                }
+            },
+            deep: true
+        }
     },
     mounted() {
         $('#promptsParamsTable').bootstrapTable();
@@ -180,12 +204,12 @@ const PromptsParams = {
                 this.selectedPromptVersion = this.promptVersions.find(v => v.id === this.selectedPrompt.id);
             }).finally(() => {
                 this.isVersionLoaded = true;
-                this.$nextTick(() => {
+                setTimeout(() => {
                     if (this.selectedPromptVersion) {
                         $('#selectedPromptVersion').val(this.selectedPromptVersion.id);
                         $('#selectedPromptVersion').selectpicker('refresh');
                     }
-                })
+                }, 300)
             })
         },
         changeIntegration(newVal) {
@@ -344,8 +368,11 @@ const PromptsParams = {
         },
         updateEmbeddings(e) {
             this.editablePrompt.embeddings = $('#selectedPromptEmbedding').find(":selected").val();
+            if (+$('#selectedPromptEmbedding').find(":selected").val() > 0) {
+                this.editablePrompt.embedding_settings = { ...this.default_embedding_settings };
+                this.embedding_settings = { ...this.default_embedding_settings };
+            }
             ApiUpdatePrompt(this.editablePrompt).then(data => {
-                this.isContextLoading = false;
                 showNotify('SUCCESS', `Embedding updated.`)
             });
         },
@@ -536,6 +563,7 @@ const PromptsParams = {
                                         :step="1"
                                         :minValue="0"
                                         :maxValue="20"
+                                        :key="embedding_settings.top_k"
                                         v-model:modelValue="embedding_settings.top_k"
                                     ></prompts-range>
                                     <prompts-range
@@ -546,6 +574,7 @@ const PromptsParams = {
                                         :step="0.01"
                                         :minValue="0"
                                         :maxValue="1"
+                                        :key="embedding_settings.cutoff"
                                         v-model:modelValue="embedding_settings.cutoff"
                                     ></prompts-range>
                                 </div>
