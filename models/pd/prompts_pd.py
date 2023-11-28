@@ -55,7 +55,7 @@ class PredictPostModel(BaseModel):
     input_: str = ''
     integration_uid: str
     integration_settings: Optional[dict] = {}
-    embedding_settings: Optional[dict] = {"top_k": 20, "cutoff": 0.1}
+    embedding_settings: Optional[dict] = {"top_k": 3, "cutoff": 0.1}
     prompt_id: Optional[int] = None
     project_id: Optional[int] = None
     examples: Optional[list] = []
